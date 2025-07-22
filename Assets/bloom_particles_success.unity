@@ -5093,7 +5093,7 @@ GameObject:
   - component: {fileID: 10826895}
   - component: {fileID: 10826899}
   m_Layer: 3
-  m_Name: New Particles Cube
+  m_Name: Bloom effect cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5116,7 +5116,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -5181,14 +5181,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 10826892}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.6856179, z: -0, w: 0.7279616}
-  m_LocalPosition: {x: 4.248163, y: 0.98386765, z: -82.94347}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 578556054}
   m_Father: {fileID: 354893604}
-  m_LocalEulerAnglesHint: {x: 0, y: 86.568, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &10826899
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5316,12 +5316,12 @@ GameObject:
   - component: {fileID: 334887506}
   - component: {fileID: 334887505}
   m_Layer: 3
-  m_Name: ParticleCube
+  m_Name: ParticleCubemoveswithmouse
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &334887504
 Transform:
   m_ObjectHideFlags: 0
@@ -5331,7 +5331,7 @@ Transform:
   m_GameObject: {fileID: 334887503}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.77, y: 1.29, z: -36.32}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5422,7 +5422,7 @@ GameObject:
   - component: {fileID: 354893604}
   - component: {fileID: 354893605}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: MainObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5437,7 +5437,7 @@ Transform:
   m_GameObject: {fileID: 354893603}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.2481632, y: -1.0938677, z: 21.243465}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5514,6 +5514,7 @@ GameObject:
   m_Component:
   - component: {fileID: 527990701}
   - component: {fileID: 527990700}
+  - component: {fileID: 527990702}
   m_Layer: 3
   m_Name: ParticleManager
   m_TagString: Untagged
@@ -5537,8 +5538,9 @@ MonoBehaviour:
   s_life: 1.5
   s_count: 0
   symmetry: 4
-  splineSymmetry: 5
-  frequency: 25
+  splineSymmetry: 3
+  controlPointSpherePrefab: {fileID: 5226196431980889662, guid: 844f90834966a984794ced4f7c01dee7, type: 3}
+  frequency: 20
   splineList:
   - {fileID: 812688701}
   lifetimeOffset: 0.02
@@ -5565,6 +5567,22 @@ Transform:
   - {fileID: 1580949112}
   m_Father: {fileID: 354893604}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &527990702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 527990699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9dae62d76b1b6e84897401ca1f8bccf8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pointsPerSpline: 20
+  lineMaterial: {fileID: 0}
+  lineWidth: 0.02
+  controlPointSpherePrefab: {fileID: 5226196431980889662, guid: 844f90834966a984794ced4f7c01dee7, type: 3}
 --- !u!1 &544572502
 GameObject:
   m_ObjectHideFlags: 0
@@ -10631,7 +10649,7 @@ Transform:
   m_GameObject: {fileID: 812688699}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5, y: 17.6, z: 10}
+  m_LocalPosition: {x: 3, y: 4, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10651,9 +10669,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   points:
   - {x: 0, y: 0, z: 0}
-  - {x: 0.88817143, y: -0.13949585, z: 0}
-  - {x: 1.978615, y: 0.02206564, z: 0}
-  - {x: 12.402279, y: 6.4682465, z: 0}
+  - {x: -0.23531342, y: 14.020016, z: 0}
+  - {x: 26.024752, y: -8.989119, z: 0}
+  - {x: 8.022988, y: 16.333153, z: 0}
   splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
   lerpSpline: {fileID: 1865592915}
 --- !u!1 &830617000
@@ -10926,7 +10944,7 @@ Transform:
   m_GameObject: {fileID: 1580949110}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.2481632, y: -1.0938677, z: 21.243465}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11183,7 +11201,7 @@ Transform:
   m_GameObject: {fileID: 1755324294}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.4881632, y: 6.4438677, z: -21.243465}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11215,7 +11233,7 @@ Transform:
   m_GameObject: {fileID: 1865592913}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.5, y: -14.8, z: 10}
+  m_LocalPosition: {x: 3.53, y: 1.98, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11235,9 +11253,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   points:
   - {x: 0, y: 0, z: 0}
-  - {x: 0.9486847, y: 0.08110058, z: 0}
-  - {x: 1.979475, y: -0.0011934042, z: 0}
-  - {x: 28.0213, y: -0.34914994, z: 0}
+  - {x: 0.4120636, y: -2.3443246, z: 0}
+  - {x: 0.93191266, y: -3.832678, z: 0}
+  - {x: 3.297197, y: -3.2419364, z: 0}
   splinePrefab: {fileID: 0}
   lerpSpline: {fileID: 0}
 --- !u!1 &1986810287
