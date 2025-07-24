@@ -29,6 +29,10 @@ public class MouseLook : MonoBehaviour
         move = playerControls.Player.Move;
         fire = playerControls.Player.Fire;
         verticalupdown = playerControls.Player.VerticalUpDown;
+
+        move.Enable();
+        fire.Enable();
+        verticalupdown.Enable();
     }
 
     void OnDisable()

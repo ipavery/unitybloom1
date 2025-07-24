@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class SplinePicker : MonoBehaviour
 {
@@ -15,6 +16,66 @@ public class SplinePicker : MonoBehaviour
     private List<Color> originalColors = new List<Color>();
     private GameObject lastHighlighted = null;
     private Color lastOriginalColor;
+
+    //input variables
+    public PlayerInputActions playerControls;
+    private InputAction fire;
+
+    void Awake()
+    {
+        playerControls = new PlayerInputActions();
+    }
+
+    void OnEnable()
+    {
+        playerControls.Enable();
+        fire = playerControls.Player.Fire;
+        fire.Enable();
+        fire.performed += Fire;
+    }
+
+    void OnDisable()
+    {
+        fire.Disable();
+    }
+
+    void Fire(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, 100f))
+            {
+                int idx = controlSpheres.IndexOf(hit.collider.gameObject);
+                if (idx != -1)
+                {
+                    // Un-highlight previous
+                    if (lastHighlighted != null)
+                    {
+                        var rend = lastHighlighted.GetComponent<Renderer>();
+                        if (rend != null)
+                        {
+                            rend.material.color = lastOriginalColor;
+                            rend.material.SetColor("_EmissionColor", lastOriginalColor * .7f);
+                        }
+                    }
+
+                    // Highlight new
+                    var rendNew = hit.collider.GetComponent<Renderer>();
+                    if (rendNew != null)
+                    {
+                        lastHighlighted = hit.collider.gameObject;
+                        lastOriginalColor = originalColors[idx];
+                        rendNew.material.color = highlightColor;
+                        rendNew.material.SetColor("_EmissionColor", highlightColor * .7f);
+                    }
+
+                    Debug.Log("Clicked control point: " + controlIndices[idx]);
+                }
+            }
+        }
+    }
 
     void Start()
     {
@@ -68,39 +129,6 @@ public class SplinePicker : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, 100f))
-            {
-                int idx = controlSpheres.IndexOf(hit.collider.gameObject);
-                if (idx != -1)
-                {
-                    // Un-highlight previous
-                    if (lastHighlighted != null)
-                    {
-                        var rend = lastHighlighted.GetComponent<Renderer>();
-                        if (rend != null)
-                        {
-                            rend.material.color = Color.white;
-                            rend.material.SetColor("_EmissionColor", Color.white * .7f);
-                        }
-                    }
-
-                    // Highlight new
-                    var rendNew = hit.collider.GetComponent<Renderer>();
-                    if (rendNew != null)
-                    {
-                        lastHighlighted = hit.collider.gameObject;
-                        lastOriginalColor = Color.white;
-                        rendNew.material.color = Color.yellow;
-                        rendNew.material.SetColor("_EmissionColor", Color.yellow * .7f);
-                    }
-
-                    Debug.Log("Clicked control point: " + controlIndices[idx]);
-                }
-            }
-        }
+        
     }
 }
