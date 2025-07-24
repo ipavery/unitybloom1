@@ -1,0 +1,21 @@
+# Ignore everything
+/*
+
+# Except these folders (and their contents)
+!/.vscode/
+!/Assets/
+!/Assets/Scripts/
+!/Assets/Editor/
+
+# Ignore everything inside Assets except Scripts and Editor
+/Assets/*
+!/Assets/Scripts/
+!/Assets/Editor/
+
+# Allow all files inside Scripts, Editor, and .vscode
+/Assets/Scripts/*
+!/Assets/Scripts/**
+/Assets/Editor/*
+!/Assets/Editor/**
+/.vscode/*
+!/.vscode/**
