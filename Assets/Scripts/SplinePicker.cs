@@ -9,9 +9,13 @@ public class SplinePicker : MonoBehaviour
     public Material lineMaterial;
     public float lineWidth = 0.01f;
     public GameObject controlPointSpherePrefab;
+    public GameObject moveGizmoPrefab; // Assign a gizmo prefab in the inspector
+    public float gizmoScale = .5f; // Scale for gizmos
     public Color highlightColor = Color.yellow;
+    public float gizmoEmissionIntensity = 0.7f; // Emission intensity for gizmos
 
     private List<GameObject> controlSpheres = new List<GameObject>();
+    private List<GameObject> gizmoList = new List<GameObject>();
     private List<int> controlIndices = new List<int>();
     private List<Color> originalColors = new List<Color>();
     private GameObject lastHighlighted = null;
@@ -57,7 +61,7 @@ public class SplinePicker : MonoBehaviour
                         if (rend != null)
                         {
                             rend.material.color = lastOriginalColor;
-                            rend.material.SetColor("_EmissionColor", lastOriginalColor * .7f);
+                            rend.material.SetColor("_EmissionColor", lastOriginalColor * gizmoEmissionIntensity);
                         }
                     }
 
@@ -68,7 +72,8 @@ public class SplinePicker : MonoBehaviour
                         lastHighlighted = hit.collider.gameObject;
                         lastOriginalColor = originalColors[idx];
                         rendNew.material.color = highlightColor;
-                        rendNew.material.SetColor("_EmissionColor", highlightColor * .7f);
+                        rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
+                        ShowMoveGizmos(lastHighlighted.transform.position); // Show move gizmos at the highlighted control point
                     }
 
                     Debug.Log("Clicked control point: " + controlIndices[idx]);
@@ -116,7 +121,7 @@ public class SplinePicker : MonoBehaviour
                 {
                     rend.material.color = Color.white;
                     rend.material.EnableKeyword("_EMISSION");
-                    rend.material.SetColor("_EmissionColor", Color.white * .7f);
+                    rend.material.SetColor("_EmissionColor", Color.white * gizmoEmissionIntensity);
                     originalColors.Add(Color.white);
                 }
                 else
@@ -129,6 +134,59 @@ public class SplinePicker : MonoBehaviour
 
     void Update()
     {
+
+    }
+
+    void ShowMoveGizmos(Vector3 position)
+    {
+        // Clear existing gizmos
+        foreach (var gizmo in gizmoList)
+        {
+            Destroy(gizmo);
+        }
+        gizmoList.Clear();
+
+        // Create a new move gizmo at the specified position
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject moveGizmo = Instantiate(moveGizmoPrefab, position, Quaternion.identity);
+            gizmoList.Add(moveGizmo);
+            moveGizmo.transform.localScale *= gizmoScale; // Adjust scale as needed
+            moveGizmo.transform.SetParent(transform, false); // Set parent to the SplinePicker object
+            // Set the sphere to the "PP Layer"
+            moveGizmo.layer = LayerMask.NameToLayer("PP Layer");
+            Renderer rend = moveGizmo.GetComponent<Renderer>();
+            if (rend != null)
+            {
+                rend.material.EnableKeyword("_EMISSION");
+            }
+
+            // Set rotation and position based on index
+            if (i == 0)
+            {
+                moveGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90); // Forward
+
+
+                rend.material.color = Color.red;
+                rend.material.SetColor("_EmissionColor", Color.red * gizmoEmissionIntensity);
+            }
+            else if (i == 1)
+            {
+                moveGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0); // Right
+                rend.material.color = Color.green;
+                rend.material.SetColor("_EmissionColor", Color.green * gizmoEmissionIntensity);
+            }
+            else if (i == 2)
+            {
+                moveGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0); // Up
+                rend.material.color = Color.blue;
+                rend.material.SetColor("_EmissionColor", Color.blue * gizmoEmissionIntensity);
+            }
+
+            moveGizmo.transform.position = position + moveGizmo.transform.up * 3f; // Add control point position and offset
+            
+        }
+
         
     }
 }

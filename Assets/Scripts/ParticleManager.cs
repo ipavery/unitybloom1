@@ -204,7 +204,7 @@ public class ParticleManager : MonoBehaviour
 
         int mouseTickerTarg = 0;
 
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(0) && Input.GetKeyDown("t"))
         {
             // mouseTicker = mouseTickerTarg;
             if (mouseWorldTemp != worldPosition)
