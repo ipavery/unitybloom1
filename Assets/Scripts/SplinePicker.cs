@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class SplinePicker : MonoBehaviour
 {
+    [Header("Spline Settings")]
     public int pointsPerSpline = 32;
     public Material lineMaterial;
     public float lineWidth = 0.01f;
