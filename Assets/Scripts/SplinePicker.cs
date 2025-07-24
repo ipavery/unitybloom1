@@ -9,13 +9,23 @@ public class SplinePicker : MonoBehaviour
     public Material lineMaterial;
     public float lineWidth = 0.01f;
     public GameObject controlPointSpherePrefab;
+
+    [Header("Gizmo Settings")]
     public GameObject moveGizmoPrefab; // Assign a gizmo prefab in the inspector
+    Vector3 gizmoPrefabScale; // Store the original scale of the gizmo prefab
+    private float gizmoOffsetDistance = .15f; // Offset distance for gizmos
     public float gizmoScale = .5f; // Scale for gizmos
     public Color highlightColor = Color.yellow;
     public float gizmoEmissionIntensity = 0.7f; // Emission intensity for gizmos
-
-    private List<GameObject> controlSpheres = new List<GameObject>();
     private List<GameObject> gizmoList = new List<GameObject>();
+    private List<GameObject> controlSpheres = new List<GameObject>();
+
+    // Dragging gizmos
+    private int activeGizmoAxis = -1; // 0=X, 1=Y, 2=Z
+    private Vector3 dragStartPoint;
+    Plane dragPlane;
+
+
     private List<int> controlIndices = new List<int>();
     private List<Color> originalColors = new List<Color>();
     private GameObject lastHighlighted = null;
@@ -25,9 +35,11 @@ public class SplinePicker : MonoBehaviour
     public PlayerInputActions playerControls;
     private InputAction fire;
 
+
     void Awake()
     {
         playerControls = new PlayerInputActions();
+        playerControls.Player.Fire.canceled  += ctx => CancelFire();
     }
 
     void OnEnable()
@@ -41,6 +53,12 @@ public class SplinePicker : MonoBehaviour
     void OnDisable()
     {
         fire.Disable();
+    }
+
+    void CancelFire()
+    {
+        activeGizmoAxis = -1; // Reset the active gizmo axis
+        Debug.Log("Gizmo drag canceled");
     }
 
     void Fire(InputAction.CallbackContext context)
@@ -78,13 +96,25 @@ public class SplinePicker : MonoBehaviour
 
                     Debug.Log("Clicked control point: " + controlIndices[idx]);
                 }
+
+                // Check if the clicked point is one of the gizmos
+                for (int i = 0; i < gizmoList.Count; i++)
+                {
+                    if (hit.collider != null && hit.collider.gameObject == gizmoList[i])
+                    {
+                        activeGizmoAxis = i; // Set the active gizmo axis based on the clicked gizmo
+                        dragStartPoint = hit.point;
+                    }
+                }
             }
         }
+
     }
 
     void Start()
     {
         BezierSpline[] splineList = FindObjectsByType<BezierSpline>(FindObjectsSortMode.None);
+        gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
 
         foreach (var spline in splineList)
         {
@@ -134,7 +164,44 @@ public class SplinePicker : MonoBehaviour
 
     void Update()
     {
+        foreach (var gizmo in gizmoList)
+        {
+            if (gizmo != null && lastHighlighted != null)
+            {
+                // Update the gizmo position and scale based on the camera distance
+                // This assumes the gizmo is a child of the SplinePicker object
+                // and that it has been instantiated with the correct position
 
+                float distance = Vector3.Distance(Camera.main.transform.position, lastHighlighted.transform.position);
+                gizmo.transform.localScale = distance * gizmoScale * gizmoPrefabScale;
+                gizmo.transform.position = lastHighlighted.transform.position + gizmo.transform.up * gizmoOffsetDistance * distance; // Offset the gizmo position
+            }
+        }
+        if (lastHighlighted != null)
+        {
+            float distance = Vector3.Distance(Camera.main.transform.position, lastHighlighted.transform.position);
+            lastHighlighted.transform.localScale = distance * gizmoScale * Vector3.one;
+        }
+
+        if (activeGizmoAxis != -1)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            if (activeGizmoAxis == 0)
+            {
+                dragPlane = new Plane(Vector3.up, lastHighlighted.transform.position);
+            }
+            else if (activeGizmoAxis == 1)
+            {
+                dragPlane = new Plane(Vector3.right, lastHighlighted.transform.position);
+            }
+            else if (activeGizmoAxis == 2)
+            {
+                dragPlane = new Plane(Vector3.forward, lastHighlighted.transform.position);
+            }
+            Vector3 newControlPos;
+            FindGizmoAxisHitPoint(out newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
+            lastHighlighted.transform.position = newControlPos;
+        }
     }
 
     void ShowMoveGizmos(Vector3 position)
@@ -184,9 +251,36 @@ public class SplinePicker : MonoBehaviour
             }
 
             moveGizmo.transform.position = position + moveGizmo.transform.up * 3f; // Add control point position and offset
-            
+
         }
 
-        
+
+    }
+
+    void FindGizmoAxisHitPoint(out Vector3 intersection, Ray ray, Plane dragPlane, int gizmoAxisDir, Vector3 controlPointPosition)
+    {
+        intersection = Vector3.zero; // Initialize intersection
+        if (dragPlane.Raycast(ray, out float enter))
+        {
+            intersection = ray.GetPoint(enter);
+           
+        }
+
+        if (gizmoAxisDir == 0)
+        {
+            intersection.y = controlPointPosition.y;
+            intersection.z = controlPointPosition.z;
+        }
+        else if (gizmoAxisDir == 1)
+        {
+            intersection.x = controlPointPosition.x;
+            intersection.z = controlPointPosition.z;
+        }
+        else if (gizmoAxisDir == 2)
+        {
+            intersection.x = controlPointPosition.x;
+            intersection.y = controlPointPosition.y;
+        }
+
     }
 }
