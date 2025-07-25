@@ -204,8 +204,21 @@ public class SplinePicker : MonoBehaviour
 
             lastHighlighted.transform.position = newControlPos;
             //update spline data
-            lastHighlighted.transform.parent.parent.GetComponent<BezierSpline>().points[controlIndices[controlSpheres.IndexOf(lastHighlighted)]] = -lastHighlighted.transform.parent.parent.transform.position + newControlPos;
-            
+            var spline = lastHighlighted.transform.parent.parent.GetComponent<BezierSpline>();
+            int cpIdx = controlIndices[controlSpheres.IndexOf(lastHighlighted)];
+            spline.points[cpIdx] = -lastHighlighted.transform.parent.parent.transform.position + newControlPos;
+
+            // --- Update the LineRenderer for this spline ---
+            // Find the LineRenderer (assumes it's on a child of the spline GameObject)
+            LineRenderer lr = spline.GetComponentInChildren<LineRenderer>();
+            if (lr != null)
+            {
+                for (int i = 0; i <= pointsPerSpline; i++)
+                {
+                    float t = i / (float)pointsPerSpline;
+                    lr.SetPosition(i, spline.GetPoint(t));
+                }
+            }            
         }
     }
 
