@@ -58,7 +58,8 @@ public class SplinePicker : MonoBehaviour
     void CancelFire()
     {
         activeGizmoAxis = -1; // Reset the active gizmo axis
-        Debug.Log("Gizmo drag canceled");
+        lastHighlighted.transform.localScale = Vector3.one;
+        Debug.Log(lastHighlighted.transform.localScale);
     }
 
     void Fire(InputAction.CallbackContext context)
@@ -200,7 +201,11 @@ public class SplinePicker : MonoBehaviour
             }
             Vector3 newControlPos;
             FindGizmoAxisHitPoint(out newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
+
             lastHighlighted.transform.position = newControlPos;
+            //update spline data
+            lastHighlighted.transform.parent.parent.GetComponent<BezierSpline>().points[controlIndices[controlSpheres.IndexOf(lastHighlighted)]] = -lastHighlighted.transform.parent.parent.transform.position + newControlPos;
+            
         }
     }
 
