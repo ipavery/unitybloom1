@@ -27,6 +27,7 @@ public class MouseLook : MonoBehaviour
     public float acceleration = 80f;
     public float maxSpeed = 300f;
     public float deceleration = 10f;
+    public bool scrollMovementEnabled = false; // fix this so you can use ui and scroll movement
     private Vector3 currentVelocity = Vector3.zero;
 
     private Vector2 _rotation;
@@ -110,9 +111,9 @@ public class MouseLook : MonoBehaviour
         }
 
         // Scroll movement
-        if (Input.mouseScrollDelta.y != 0)
+        if (Input.mouseScrollDelta.y != 0 && scrollMovementEnabled)
         {
-            currentVelocity += transform.forward * Input.mouseScrollDelta.y * acceleration * .3f;
+            currentVelocity += .3f * acceleration * Input.mouseScrollDelta.y * transform.forward;
             currentVelocity = Vector3.ClampMagnitude(currentVelocity, maxSpeed * 2f);
         }
 
