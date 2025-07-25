@@ -28,10 +28,9 @@ public class MouseLook : MonoBehaviour
     public float maxSpeed = 300f;
     public float deceleration = 10f;
     private Vector3 currentVelocity = Vector3.zero;
-    private Vector2 _smoothVelocity;
-    private Vector2 _currentLooking;
+
     private Vector2 _rotation;
-    float precisionExponent = .01f; // Adjust this value to control the precision of the mouse movement
+
 
 
     void Awake()
