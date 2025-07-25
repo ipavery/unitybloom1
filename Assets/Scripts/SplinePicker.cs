@@ -39,7 +39,7 @@ public class SplinePicker : MonoBehaviour
     void Awake()
     {
         playerControls = new PlayerInputActions();
-        playerControls.Player.Fire.canceled  += ctx => CancelFire();
+        playerControls.Player.Fire.canceled += ctx => CancelFire();
     }
 
     void OnEnable()
@@ -58,8 +58,6 @@ public class SplinePicker : MonoBehaviour
     void CancelFire()
     {
         activeGizmoAxis = -1; // Reset the active gizmo axis
-        lastHighlighted.transform.localScale = Vector3.one;
-        Debug.Log(lastHighlighted.transform.localScale);
     }
 
     void Fire(InputAction.CallbackContext context)
@@ -74,15 +72,7 @@ public class SplinePicker : MonoBehaviour
                 if (idx != -1)
                 {
                     // Un-highlight previous
-                    if (lastHighlighted != null)
-                    {
-                        var rend = lastHighlighted.GetComponent<Renderer>();
-                        if (rend != null)
-                        {
-                            rend.material.color = lastOriginalColor;
-                            rend.material.SetColor("_EmissionColor", lastOriginalColor * gizmoEmissionIntensity);
-                        }
-                    }
+                    UnHighlightLast();
 
                     // Highlight new
                     var rendNew = hit.collider.GetComponent<Renderer>();
@@ -107,6 +97,13 @@ public class SplinePicker : MonoBehaviour
                         dragStartPoint = hit.point;
                     }
                 }
+            }
+            else
+            {
+                // If no control point or gizmo was clicked, un-highlight the last highlighted control point
+                UnHighlightLast();
+                DestroyGizmos(); // Clear existing gizmos
+                activeGizmoAxis = -1; // Reset the active gizmo axis
             }
         }
 
@@ -218,18 +215,13 @@ public class SplinePicker : MonoBehaviour
                     float t = i / (float)pointsPerSpline;
                     lr.SetPosition(i, spline.GetPoint(t));
                 }
-            }            
+            }
         }
     }
 
     void ShowMoveGizmos(Vector3 position)
     {
-        // Clear existing gizmos
-        foreach (var gizmo in gizmoList)
-        {
-            Destroy(gizmo);
-        }
-        gizmoList.Clear();
+        DestroyGizmos(); // Clear existing gizmos
 
         // Create a new move gizmo at the specified position
         for (int i = 0; i < 3; i++)
@@ -281,7 +273,7 @@ public class SplinePicker : MonoBehaviour
         if (dragPlane.Raycast(ray, out float enter))
         {
             intersection = ray.GetPoint(enter);
-           
+
         }
 
         if (gizmoAxisDir == 0)
@@ -300,5 +292,29 @@ public class SplinePicker : MonoBehaviour
             intersection.y = controlPointPosition.y;
         }
 
+    }
+
+    void UnHighlightLast()
+    {
+        if (lastHighlighted != null)
+        {
+            var rend = lastHighlighted.GetComponent<Renderer>();
+            if (rend != null)
+            {
+                rend.material.color = lastOriginalColor;
+                rend.material.SetColor("_EmissionColor", lastOriginalColor * gizmoEmissionIntensity);
+            }
+            lastHighlighted.transform.localScale = Vector3.one; // Reset scale
+            lastHighlighted = null; // Clear last highlighted
+        }
+    }
+    
+    void DestroyGizmos()
+    {
+        foreach (var gizmo in gizmoList)
+        {
+            Destroy(gizmo);
+        }
+        gizmoList.Clear();
     }
 }

@@ -1,22 +1,38 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public enum ControlMode
+{
+    Fly,
+    Fixed
+}
+
 public class MouseLook : MonoBehaviour
 {
     [Header("Mouse Look")]
+    public ControlMode controlMode = ControlMode.Fixed; // Default to fixed mode
     public PlayerInputActions playerControls;
     private InputAction move;
     private InputAction fire;
     private InputAction verticalupdown;
+    private InputAction look;
     public float mouseSensitivity = 2f;
+    [Tooltip("Smoothing factor (default ~0.05)")]
+    [Range(0f, 1f)]
+    public float smoothing = 0.05f;
     public Transform playerBody;
-    float xRotation = 0f;
+
 
     [Header("Movement")]
     public float acceleration = 80f;
     public float maxSpeed = 300f;
     public float deceleration = 10f;
     private Vector3 currentVelocity = Vector3.zero;
+    private Vector2 _smoothVelocity;
+    private Vector2 _currentLooking;
+    private Vector2 _rotation;
+    float precisionExponent = .01f; // Adjust this value to control the precision of the mouse movement
+
 
     void Awake()
     {
@@ -29,10 +45,12 @@ public class MouseLook : MonoBehaviour
         move = playerControls.Player.Move;
         fire = playerControls.Player.Fire;
         verticalupdown = playerControls.Player.VerticalUpDown;
+        look = playerControls.Player.Look;
 
         move.Enable();
         fire.Enable();
         verticalupdown.Enable();
+        look.Enable();
     }
 
     void OnDisable()
@@ -40,29 +58,32 @@ public class MouseLook : MonoBehaviour
         move.Disable();
         fire.Disable();
         verticalupdown.Disable();
+        look.Disable();
     }
 
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        UpdateCursorLock();
     }
 
-    void Update()
+    void UpdateCursorLock()
     {
-        // Mouse Look
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+        if (controlMode == ControlMode.Fly)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+        }
 
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
-
-        // Vertical look (camera)
-        transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-
-        // Horizontal look (player body)
-        playerBody.Rotate(Vector3.up * mouseX);
+        else if (controlMode == ControlMode.Fixed)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
 
 
+    }
+
+    void MovementInput()
+    {
         // Movement Input
         //left/right and forward/backward input using the new Input System
         // This assumes you have a PlayerInputActions class set up with a "Move" action
@@ -92,10 +113,42 @@ public class MouseLook : MonoBehaviour
         // Scroll movement
         if (Input.mouseScrollDelta.y != 0)
         {
-            currentVelocity += transform.forward * Input.mouseScrollDelta.y * acceleration;
+            currentVelocity += transform.forward * Input.mouseScrollDelta.y * acceleration * .3f;
             currentVelocity = Vector3.ClampMagnitude(currentVelocity, maxSpeed * 2f);
         }
 
         playerBody.position += currentVelocity * Time.deltaTime;
+    }
+
+    void Update()
+    {
+        if (Keyboard.current.tabKey.wasPressedThisFrame)
+        {
+            controlMode = (controlMode == ControlMode.Fly) ? ControlMode.Fixed : ControlMode.Fly;
+            UpdateCursorLock();
+        }
+
+        if (controlMode == ControlMode.Fixed)
+        {
+            MovementInput();
+        }
+        else if (controlMode == ControlMode.Fly)
+        {
+            // Mouse Look -- i tried to switch to the new Input System but it didn't work smoothly, so using the old Input System for mouse look
+            float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+            _rotation.x -= mouseY;
+            _rotation.x = Mathf.Clamp(_rotation.x, -90f, 90f);
+
+            // Vertical look (camera)
+            transform.localRotation = Quaternion.Euler(_rotation.x, 0f, 0f);
+
+            // Horizontal look (player body)
+            playerBody.Rotate(Vector3.up * mouseX);
+
+            MovementInput();
+        }
+
     }
 }
