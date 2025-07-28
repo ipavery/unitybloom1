@@ -8,22 +8,23 @@ public class ParticleManager : MonoBehaviour
     [SerializeField]
     ParticleSystem ps; //Particle system to use
     ParticleSystem.ColorOverLifetimeModule colorModule;
+
+    //move these to the spline itself so they can be set per spline. this script should be more of a manager
     [SerializeField] float s_life; //Lifetime of the particle in seconds
     [SerializeField] int s_count;
     [SerializeField] int symmetry;
     [SerializeField] int splineSymmetry;
-    [SerializeField] GameObject controlPointSpherePrefab; // Assign a sphere prefab in the inspector
     public int frequency;
-    public List<BezierSpline> splineList;
     public float lifetimeOffset;
     public float lerpLifetimeOffset;
     public int lerpTimes;
 
+
+    public List<BezierSpline> splineList;
     [SerializeField] Transform ParticleCubeTransform;
     [SerializeField] Transform symmetryPosition;
 
     ParticleSystem.Particle[] particleArray;
-
     Vector3[] posArray;
     Vector3 worldPosition;
     Vector3 mouseWorldTemp;
@@ -144,7 +145,7 @@ public class ParticleManager : MonoBehaviour
                     
                     while (life <= catchParticlesBufferTime)
                     {
-                        life += (s_life-catchParticlesBufferTime);
+                        life += s_life-catchParticlesBufferTime;
                     }
 
                     //IDEA to solve problems!!! change size over lifetime curve to end early so you have time to "catch" the particles
