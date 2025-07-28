@@ -178,7 +178,7 @@ public class SplinePicker : MonoBehaviour
         if (lastHighlighted != null)
         {
             float distance = Vector3.Distance(Camera.main.transform.position, lastHighlighted.transform.position);
-            lastHighlighted.transform.localScale = distance * gizmoScale * Vector3.one;
+            lastHighlighted.transform.localScale = .6f * distance * gizmoScale * Vector3.one;
         }
 
         if (activeGizmoAxis != -1)
