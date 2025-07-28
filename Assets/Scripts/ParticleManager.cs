@@ -14,7 +14,7 @@ public class ParticleManager : MonoBehaviour
     [SerializeField] int splineSymmetry;
     [SerializeField] GameObject controlPointSpherePrefab; // Assign a sphere prefab in the inspector
     public int frequency;
-    public BezierSpline[] splineList;
+    public List<BezierSpline> splineList;
     public float lifetimeOffset;
     public float lerpLifetimeOffset;
     public int lerpTimes;
@@ -46,6 +46,23 @@ public class ParticleManager : MonoBehaviour
     // void addParticle(Vector3[]) {
 
     // }
+
+    // Event system - restart particle system when clip drag ends
+    void OnEnable()
+    {
+        EventHub.Subscribe<ClipDragEnded>(OnClipDragEnded);
+    }
+
+    void OnDisable()
+    {
+        EventHub.Unsubscribe<ClipDragEnded>(OnClipDragEnded);
+    }
+
+    private void OnClipDragEnded(ClipDragEnded e)
+    {
+        //restart the particle system
+        Debug.Log($"Clip drag ended for {e.clip.name} at time {e.timePosition}");
+    }
 
     void Start()
     {
@@ -87,7 +104,7 @@ public class ParticleManager : MonoBehaviour
 
 
         //iterate thru all splines passed to ParticleManager
-        for (int j = 0; j < splineList.Length; j++)
+        for (int j = 0; j < splineList.Count; j++)
         {
             var currentSpline = splineList[j];
             float stepSize = 1f / frequency;

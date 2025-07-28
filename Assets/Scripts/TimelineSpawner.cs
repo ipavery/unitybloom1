@@ -8,15 +8,11 @@ public class TimelineSpawner : MonoBehaviour
     public RectTransform timelineContent;
     GameObject draggablePrefab;          // Prefab for draggable items
     public TimelineSettings timelineSettings;   // Reference to the settings scriptable object
-    
-
-    [Header("Items To Spawn")]
-    public List<string> items = new List<string>();  // Example list, can be anything
-
     float pixelsPerSecond;            // Matches your timeline scale
-    
     float snapInterval;             // Seconds per snap interval
 
+    public ParticleManager particleManager; // Reference to the ParticleManager if needed
+    List<BezierSpline> items; // List of spline items to spawn clips for
     private List<DraggableClip> spawnedClips = new List<DraggableClip>();
 
     void Start()
@@ -24,6 +20,7 @@ public class TimelineSpawner : MonoBehaviour
         pixelsPerSecond = timelineSettings.pixelsPerSecond;
         snapInterval = timelineSettings.snapInterval;
         draggablePrefab = timelineSettings.draggablePrefab;
+        items = particleManager.splineList;
         SpawnClips();
     }
 
@@ -41,6 +38,7 @@ public class TimelineSpawner : MonoBehaviour
         for (int i = 0; i < items.Count; i++)
         {
             GameObject clipObj = Instantiate(draggablePrefab, timelineContent);
+            clipObj.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = items[i].name; // Assuming BezierSpline has a name property
             clipObj.name = $"Clip_{i}_{items[i]}";
 
             // Position at 0s (left of the timeline)

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Events;
 
 public class DraggableClip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -53,6 +54,7 @@ public class DraggableClip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        //nothing
+        //restart the particle system
+        EventHub.Publish(new ClipDragEnded(gameObject, (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond));
     }
 }
