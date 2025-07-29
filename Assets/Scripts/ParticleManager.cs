@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Linq; // Needed for SequenceEqual
 
 public class ParticleManager : MonoBehaviour
 {
@@ -23,6 +24,7 @@ public class ParticleManager : MonoBehaviour
     [SerializeField] Transform symmetryPosition;
 
     ParticleSystem.Particle[] particleArray;
+    ParticleSystem.Particle[] combinedParticleArray; // used for setparticles
     Vector3[] posArray;
     Vector3 worldPosition;
     Vector3 mouseWorldTemp;
@@ -40,6 +42,12 @@ public class ParticleManager : MonoBehaviour
         {
             Debug.Log(arr[i]);
         }
+    }
+
+    bool AreArraysEqual<T>(T[] arr1, T[] arr2)
+    {
+        if (arr1 == null || arr2 == null) return false;
+        return arr1.SequenceEqual(arr2);
     }
 
     // void addParticle(Vector3[]) {
@@ -71,6 +79,7 @@ public class ParticleManager : MonoBehaviour
     void StartDelayed()
     {
         particleArray = new ParticleSystem.Particle[0];
+        combinedParticleArray = new ParticleSystem.Particle[0];
         posArray = new Vector3[0];
 
         var main = ps.main;
@@ -90,10 +99,11 @@ public class ParticleManager : MonoBehaviour
         for (int j = 0; j < splineParticleGroup.Count; j++)
         {
             BezierSpline currentSpline = splineParticleGroup[j].spline;
+            splineParticleGroup[j].particles = new ParticleSystem.Particle[0];
             currentSpline.frequency -= 1;
             currentSpline.lerpTimes -= 1;
             float stepSize = 1f / currentSpline.frequency;
-            
+
             //initial spline, place particles along it
             //loop along spline, placing particles along the way
 
@@ -122,14 +132,19 @@ public class ParticleManager : MonoBehaviour
 
                     ps.Emit(currentSpline.splineSymmetry);
                     Array.Resize<ParticleSystem.Particle>(ref particleArray, particleArray.Length + currentSpline.splineSymmetry);
+                    Array.Resize(ref splineParticleGroup[j].particles, splineParticleGroup[j].particles.Length + currentSpline.splineSymmetry);
+                    ps.GetParticles(splineParticleGroup[j].particles);
                     ps.GetParticles(particleArray);
+                    Debug.Log("particleArray: " + particleArray);
+                    Debug.Log("splineesefs: " + splineParticleGroup[j].particles);
+                    Debug.Log(AreArraysEqual(particleArray, splineParticleGroup[j].particles));
 
                     //life offset by distance along spline and lerp position
                     float life = currentSpline.s_life - (currentSpline.lifetimeOffset * i) - (currentSpline.lerpLifetimeOffset * k);
-                    
+
                     while (life <= catchParticlesBufferTime)
                     {
-                        life += s_life-catchParticlesBufferTime;
+                        life += s_life - catchParticlesBufferTime;
                     }
 
                     //IDEA to solve problems!!! change size over lifetime curve to end early so you have time to "catch" the particles
@@ -139,7 +154,7 @@ public class ParticleManager : MonoBehaviour
                     // if(life <= catchParticlesBufferTime) {
                     //     life = s_life;
                     // }
-                    
+
 
 
 
@@ -159,11 +174,11 @@ public class ParticleManager : MonoBehaviour
 
                         particleArray[particleArray.Length - currentSpline.splineSymmetry + z].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
                         // Debug.Log("im i"+i);
-                        
+
                     }
 
                     // Debug.Log("first i = "+i+"    "+life);
-                    
+
                     ps.SetParticles(particleArray, particleArray.Length);
                     // Debug.Log("second i = "+i+"    "+life);
                 }
@@ -247,7 +262,7 @@ public class ParticleManager : MonoBehaviour
             firstClick = true;
         }
 
-                
+
         if (Input.GetKeyDown("r"))
         {
             particleArray = new ParticleSystem.Particle[0];
