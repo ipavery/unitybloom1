@@ -78,22 +78,19 @@ public class ParticleManager : MonoBehaviour
 
     void StartDelayed()
     {
+        int particleCount = splineParticleGroup.Sum(group => group.spline.frequency * group.spline.lerpTimes * group.spline.splineSymmetry);
         particleArray = new ParticleSystem.Particle[0];
-        combinedParticleArray = new ParticleSystem.Particle[0];
+        combinedParticleArray = new ParticleSystem.Particle[particleCount];
+        Debug.Log(combinedParticleArray.Length);
         posArray = new Vector3[0];
 
         var main = ps.main;
-
-
+        main.startLifetime = s_life;
         //these two lines change all the particles to RED
         //colorModule = ps.colorOverLifetime;
         //colorModule.color = Color.red;
         // var emitParams = new ParticleSystem.EmitParams();
-        main.startLifetime = s_life;
-
-
-
-
+        int currentParticleIndex = 0;
 
         //iterate thru all splines passed to ParticleManager
         for (int j = 0; j < splineParticleGroup.Count; j++)
@@ -159,24 +156,25 @@ public class ParticleManager : MonoBehaviour
 
 
                     //initial symmetry and size offset
-                    particleArray[particleArray.Length - currentSpline.splineSymmetry].position = newParticlePosition;
-                    particleArray[particleArray.Length - currentSpline.splineSymmetry].remainingLifetime = life;
-                    particleArray[particleArray.Length - currentSpline.splineSymmetry].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
-
+                    particleArray[currentParticleIndex].position = newParticlePosition;
+                    particleArray[currentParticleIndex].remainingLifetime = life;
+                    particleArray[currentParticleIndex].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+                    
                     // set position and life with radial symmetry
                     for (int z = 1; z < currentSpline.splineSymmetry; z++)
                     {
+                        
                         symmetryPosition.transform.position = newParticlePosition;
                         symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * (360 / currentSpline.splineSymmetry));
-                        particleArray[particleArray.Length - currentSpline.splineSymmetry + z].position = symmetryPosition.transform.position;
+                        particleArray[currentParticleIndex+z].position = symmetryPosition.transform.position;
 
-                        particleArray[particleArray.Length - currentSpline.splineSymmetry + z].remainingLifetime = life;
+                        particleArray[currentParticleIndex+z].remainingLifetime = life;
 
-                        particleArray[particleArray.Length - currentSpline.splineSymmetry + z].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+                        particleArray[currentParticleIndex+z].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
                         // Debug.Log("im i"+i);
-
+                        
                     }
-
+                    currentParticleIndex += currentSpline.splineSymmetry;
                     // Debug.Log("first i = "+i+"    "+life);
 
                     ps.SetParticles(particleArray, particleArray.Length);
