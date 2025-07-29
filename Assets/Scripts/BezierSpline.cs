@@ -5,6 +5,12 @@ public class BezierSpline : MonoBehaviour
 {
 
     public Vector3[] points;
+    public float s_life; //Lifetime of the particle in seconds
+    public int splineSymmetry;
+    public int frequency;
+    public float lifetimeOffset;
+    public float lerpLifetimeOffset;
+    public int lerpTimes;
 
     public GameObject splinePrefab;
 

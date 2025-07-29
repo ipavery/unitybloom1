@@ -11,16 +11,14 @@ public class ParticleManager : MonoBehaviour
 
     //move these to the spline itself so they can be set per spline. this script should be more of a manager
     [SerializeField] float s_life; //Lifetime of the particle in seconds
-    [SerializeField] int s_count;
     [SerializeField] int symmetry;
-    [SerializeField] int splineSymmetry;
     public int frequency;
     public float lifetimeOffset;
     public float lerpLifetimeOffset;
     public int lerpTimes;
 
 
-    public List<BezierSpline> splineList;
+    public List<SplineParticleGroup> splineParticleGroup;
     [SerializeField] Transform ParticleCubeTransform;
     [SerializeField] Transform symmetryPosition;
 
@@ -67,21 +65,13 @@ public class ParticleManager : MonoBehaviour
 
     void Start()
     {
-        Invoke("StartDelayed", 0.5f);
+        Invoke(nameof(StartDelayed), 0.5f);
     }
 
     void StartDelayed()
     {
-        particleArray = new ParticleSystem.Particle[s_count];
-        posArray = new Vector3[s_count];
-        frequency -= 1; // Adjust frequency to match the number of segments
-        lerpTimes -= 1; // Adjust lerpTimes to match the number of segments
-
-        for (int i = 0; i < s_count; i++)
-        {
-            // Debug.Log("hello");
-            posArray[i] = UnityEngine.Random.insideUnitCircle * 5;
-        }
+        particleArray = new ParticleSystem.Particle[0];
+        posArray = new Vector3[0];
 
         var main = ps.main;
 
@@ -92,31 +82,25 @@ public class ParticleManager : MonoBehaviour
         // var emitParams = new ParticleSystem.EmitParams();
         main.startLifetime = s_life;
 
-        //old stuff
-        ps.Emit(s_count);
-        ps.GetParticles(particleArray);
 
-        for (int i = 0; i < posArray.Length; i++)
-        {
-            particleArray[i].position = posArray[i];
-        }
-        ps.SetParticles(particleArray, particleArray.Length);
 
 
 
         //iterate thru all splines passed to ParticleManager
-        for (int j = 0; j < splineList.Count; j++)
+        for (int j = 0; j < splineParticleGroup.Count; j++)
         {
-            var currentSpline = splineList[j];
-            float stepSize = 1f / frequency;
+            BezierSpline currentSpline = splineParticleGroup[j].spline;
+            currentSpline.frequency -= 1;
+            currentSpline.lerpTimes -= 1;
+            float stepSize = 1f / currentSpline.frequency;
             
             //initial spline, place particles along it
             //loop along spline, placing particles along the way
 
             //lerploop
-            for (float k = 0; k <= lerpTimes; k++)
+            for (float k = 0; k <= currentSpline.lerpTimes; k++)
             {
-                float l = k / lerpTimes;
+                float l = k / currentSpline.lerpTimes;
                 // Debug.Log(lerpTimes);
                 // Debug.Log(k);
                 // Debug.Log(l);
@@ -132,16 +116,16 @@ public class ParticleManager : MonoBehaviour
 
 
                 //loop along spline, placing particles along the way
-                for (int i = 0; i <= frequency; i++)
+                for (int i = 0; i <= currentSpline.frequency; i++)
                 {
                     Vector3 newParticlePosition = currentSpline.GetLerpPoint(i * stepSize, l);
 
-                    ps.Emit(splineSymmetry);
-                    Array.Resize<ParticleSystem.Particle>(ref particleArray, particleArray.Length + splineSymmetry);
+                    ps.Emit(currentSpline.splineSymmetry);
+                    Array.Resize<ParticleSystem.Particle>(ref particleArray, particleArray.Length + currentSpline.splineSymmetry);
                     ps.GetParticles(particleArray);
 
                     //life offset by distance along spline and lerp position
-                    float life = s_life - (lifetimeOffset * i) - (lerpLifetimeOffset * k);
+                    float life = currentSpline.s_life - (currentSpline.lifetimeOffset * i) - (currentSpline.lerpLifetimeOffset * k);
                     
                     while (life <= catchParticlesBufferTime)
                     {
@@ -160,20 +144,20 @@ public class ParticleManager : MonoBehaviour
 
 
                     //initial symmetry and size offset
-                    particleArray[particleArray.Length - splineSymmetry].position = newParticlePosition;
-                    particleArray[particleArray.Length - splineSymmetry].remainingLifetime = life;
-                    particleArray[particleArray.Length - splineSymmetry].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+                    particleArray[particleArray.Length - currentSpline.splineSymmetry].position = newParticlePosition;
+                    particleArray[particleArray.Length - currentSpline.splineSymmetry].remainingLifetime = life;
+                    particleArray[particleArray.Length - currentSpline.splineSymmetry].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
 
                     // set position and life with radial symmetry
-                    for (int z = 1; z < splineSymmetry; z++)
+                    for (int z = 1; z < currentSpline.splineSymmetry; z++)
                     {
                         symmetryPosition.transform.position = newParticlePosition;
-                        symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * (360 / splineSymmetry));
-                        particleArray[particleArray.Length - splineSymmetry + z].position = symmetryPosition.transform.position;
+                        symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * (360 / currentSpline.splineSymmetry));
+                        particleArray[particleArray.Length - currentSpline.splineSymmetry + z].position = symmetryPosition.transform.position;
 
-                        particleArray[particleArray.Length - splineSymmetry + z].remainingLifetime = life;
+                        particleArray[particleArray.Length - currentSpline.splineSymmetry + z].remainingLifetime = life;
 
-                        particleArray[particleArray.Length - splineSymmetry + z].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+                        particleArray[particleArray.Length - currentSpline.splineSymmetry + z].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
                         // Debug.Log("im i"+i);
                         
                     }
