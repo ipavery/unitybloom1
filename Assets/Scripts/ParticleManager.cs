@@ -67,7 +67,10 @@ public class ParticleManager : MonoBehaviour
 
     private void OnClipDragEnded(ClipDragEnded e)
     {
-        //restart the particle system
+        //restart the particle system - somehow we are losing particles when the clip is dragged
+        started = false;
+        ps.Clear();
+        StartDelayed();
         Debug.Log($"Clip drag ended for {e.clip.name} at time {e.timePosition}");
     }
 
@@ -82,13 +85,24 @@ public class ParticleManager : MonoBehaviour
         particleArray = new ParticleSystem.Particle[particleCount];
         combinedParticleArray = new ParticleSystem.Particle[particleCount];
         Debug.Log(combinedParticleArray.Length);
-        ps.Emit(particleCount);
-        ps.GetParticles(particleArray);
-        
+
+        ps.Emit(1);
+        ParticleSystem.Particle[] singleParticle = new ParticleSystem.Particle[1];
+        ps.GetParticles(singleParticle); // Should return 1 if it worked
+        ParticleSystem.Particle referenceParticle = singleParticle[0];
+
+        for (int i = 0; i < particleCount; i++)
+        {
+            particleArray[i] = referenceParticle;
+        }
+        ps.Clear();
+
         posArray = new Vector3[0];
 
+
         var main = ps.main;
-        main.startLifetime = s_life;
+
+
         //these two lines change all the particles to RED
         //colorModule = ps.colorOverLifetime;
         //colorModule.color = Color.red;
@@ -106,14 +120,11 @@ public class ParticleManager : MonoBehaviour
 
             //initial spline, place particles along it
             //loop along spline, placing particles along the way
-
             //lerploop
             for (float k = 0; k <= currentSpline.lerpTimes; k++)
             {
                 float l = k / currentSpline.lerpTimes;
-                // Debug.Log(lerpTimes);
-                // Debug.Log(k);
-                // Debug.Log(l);
+
                 if (!currentSpline.lerpSpline)
                 {
                     Debug.Log("add stuff here later");
@@ -123,7 +134,6 @@ public class ParticleManager : MonoBehaviour
                 {
                     return;
                 }
-
 
                 //loop along spline, placing particles along the way
                 for (int i = 0; i <= currentSpline.frequency; i++)
@@ -135,60 +145,45 @@ public class ParticleManager : MonoBehaviour
                     Array.Resize(ref splineParticleGroup[j].particles, splineParticleGroup[j].particles.Length + currentSpline.splineSymmetry);
                     ps.GetParticles(splineParticleGroup[j].particles);
                     //ps.GetParticles(particleArray);
-                    Debug.Log("particleArray length: " + particleArray.Length);
-                    Debug.Log("splineesefs: " + splineParticleGroup[j].particles);
-                    Debug.Log(AreArraysEqual(particleArray, splineParticleGroup[j].particles));
 
                     //life offset by distance along spline and lerp position
                     float life = currentSpline.s_life - (currentSpline.lifetimeOffset * i) - (currentSpline.lerpLifetimeOffset * k);
 
                     while (life <= catchParticlesBufferTime)
                     {
-                        life += s_life - catchParticlesBufferTime;
+                        life += currentSpline.s_life - catchParticlesBufferTime;
                     }
-
-                    //IDEA to solve problems!!! change size over lifetime curve to end early so you have time to "catch" the particles
 
                     life = (float)Math.Round(life, 3);
 
-                    // if(life <= catchParticlesBufferTime) {
-                    //     life = s_life;
-                    // }
-
-
-
-
                     //initial symmetry and size offset
-                    particleArray[currentParticleIndex].position = newParticlePosition;
-                    particleArray[currentParticleIndex].remainingLifetime = life;
-                    particleArray[currentParticleIndex].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
-                    
+
+
                     // set position and life with radial symmetry
-                    for (int z = 1; z < currentSpline.splineSymmetry; z++)
+                    for (int z = 0; z < currentSpline.splineSymmetry; z++)
                     {
-                        currentParticleIndex++;
+                        
                         symmetryPosition.transform.position = newParticlePosition;
                         symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * (360 / currentSpline.splineSymmetry));
-                        particleArray[currentParticleIndex].position = symmetryPosition.transform.position;
-
-                        particleArray[currentParticleIndex].remainingLifetime = life;
-
-                        particleArray[currentParticleIndex].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
-                        // Debug.Log("im i"+i);
-                        
+                        var p = particleArray[currentParticleIndex];
+                        p.position = symmetryPosition.transform.position;
+                        p.remainingLifetime = life;
+                        p.startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+                        p.startLifetime = currentSpline.s_life;
+                        particleArray[currentParticleIndex] = p;
+                        currentParticleIndex++;
                     }
-                    // currentParticleIndex += currentSpline.splineSymmetry;
-                    // Debug.Log("first i = "+i+"    "+life);
-                    currentParticleIndex++;
-                    //ps.SetParticles(particleArray, particleArray.Length);
-                    // Debug.Log("second i = "+i+"    "+life);
+
+                    
+
                 }
             }
 
         }
+
+        ps.Emit(particleCount);
         ps.SetParticles(particleArray, particleArray.Length);
-        //PrintArray(posArray);
-        //Debug.Log(particleArray[0]);
+
         started = true;
     }
 
@@ -199,19 +194,25 @@ public class ParticleManager : MonoBehaviour
         {
             return;
         }
+        //here getparticles resets the particleArray to the current particles in the system, so they are not in the same order as the original particleArray
         ps.GetParticles(particleArray);
         for (int i = 0; i < particleArray.Length; i++)
         {
             //CATCH particles, dobr let them escaoe
             // Debug.Log(particleArray[i].remainingLifetime);
+            //particleArray[i].remainingLifetime -= Time.deltaTime * .01f;
             if (particleArray[i].remainingLifetime < catchParticlesBufferTime)
             {
                 particleArray[i].remainingLifetime = s_life - (catchParticlesBufferTime - particleArray[i].remainingLifetime);
             }
         }
         ps.SetParticles(particleArray, particleArray.Length);
-
-
+        List<Vector2> lifeList = new();
+        for (int i = 0; i < particleArray.Length; i++)
+        {
+            lifeList.Add(new Vector2(particleArray[i].remainingLifetime, particleArray[i].GetCurrentSize(ps)));
+        }
+        //Debug.Log($"Particle life list: {string.Join(", ", lifeList)}");
         //input
         Vector3 mousePos = Input.mousePosition;
         mousePos.z = -1 * Camera.main.transform.position.z;
