@@ -79,9 +79,12 @@ public class ParticleManager : MonoBehaviour
     void StartDelayed()
     {
         int particleCount = splineParticleGroup.Sum(group => group.spline.frequency * group.spline.lerpTimes * group.spline.splineSymmetry);
-        particleArray = new ParticleSystem.Particle[0];
+        particleArray = new ParticleSystem.Particle[particleCount];
         combinedParticleArray = new ParticleSystem.Particle[particleCount];
         Debug.Log(combinedParticleArray.Length);
+        ps.Emit(particleCount);
+        ps.GetParticles(particleArray);
+        
         posArray = new Vector3[0];
 
         var main = ps.main;
@@ -127,12 +130,12 @@ public class ParticleManager : MonoBehaviour
                 {
                     Vector3 newParticlePosition = currentSpline.GetLerpPoint(i * stepSize, l);
 
-                    ps.Emit(currentSpline.splineSymmetry);
-                    Array.Resize<ParticleSystem.Particle>(ref particleArray, particleArray.Length + currentSpline.splineSymmetry);
+                    //ps.Emit(currentSpline.splineSymmetry);
+                    //Array.Resize<ParticleSystem.Particle>(ref particleArray, particleArray.Length + currentSpline.splineSymmetry);
                     Array.Resize(ref splineParticleGroup[j].particles, splineParticleGroup[j].particles.Length + currentSpline.splineSymmetry);
                     ps.GetParticles(splineParticleGroup[j].particles);
-                    ps.GetParticles(particleArray);
-                    Debug.Log("particleArray: " + particleArray);
+                    //ps.GetParticles(particleArray);
+                    Debug.Log("particleArray length: " + particleArray.Length);
                     Debug.Log("splineesefs: " + splineParticleGroup[j].particles);
                     Debug.Log(AreArraysEqual(particleArray, splineParticleGroup[j].particles));
 
@@ -163,27 +166,27 @@ public class ParticleManager : MonoBehaviour
                     // set position and life with radial symmetry
                     for (int z = 1; z < currentSpline.splineSymmetry; z++)
                     {
-                        
+                        currentParticleIndex++;
                         symmetryPosition.transform.position = newParticlePosition;
                         symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * (360 / currentSpline.splineSymmetry));
-                        particleArray[currentParticleIndex+z].position = symmetryPosition.transform.position;
+                        particleArray[currentParticleIndex].position = symmetryPosition.transform.position;
 
-                        particleArray[currentParticleIndex+z].remainingLifetime = life;
+                        particleArray[currentParticleIndex].remainingLifetime = life;
 
-                        particleArray[currentParticleIndex+z].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+                        particleArray[currentParticleIndex].startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
                         // Debug.Log("im i"+i);
                         
                     }
-                    currentParticleIndex += currentSpline.splineSymmetry;
+                    // currentParticleIndex += currentSpline.splineSymmetry;
                     // Debug.Log("first i = "+i+"    "+life);
-
-                    ps.SetParticles(particleArray, particleArray.Length);
+                    currentParticleIndex++;
+                    //ps.SetParticles(particleArray, particleArray.Length);
                     // Debug.Log("second i = "+i+"    "+life);
                 }
             }
 
         }
-
+        ps.SetParticles(particleArray, particleArray.Length);
         //PrintArray(posArray);
         //Debug.Log(particleArray[0]);
         started = true;
