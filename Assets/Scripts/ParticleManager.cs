@@ -114,16 +114,25 @@ public class ParticleManager : MonoBehaviour
         {
             BezierSpline currentSpline = splineParticleGroup[j].spline;
             splineParticleGroup[j].particles = new ParticleSystem.Particle[0];
-            currentSpline.frequency -= 1;
-            currentSpline.lerpTimes -= 1;
-            float stepSize = 1f / currentSpline.frequency;
+            int currentFrequency = currentSpline.frequency-1; //with offset to match the true number
+            int currentLerpTimes = currentSpline.lerpTimes-1;
+            if (currentFrequency <= 0)
+            {
+                currentFrequency = 1; // avoid division by zero
+            }
+            if (currentLerpTimes <= 0)
+            {
+                currentLerpTimes = 1; // avoid division by zero
+            }
+
+            float stepSize = 1f / currentFrequency;
 
             //initial spline, place particles along it
             //loop along spline, placing particles along the way
             //lerploop
-            for (float k = 0; k <= currentSpline.lerpTimes; k++)
+            for (float k = 0; k <= currentSpline.lerpTimes-1; k++)
             {
-                float l = k / currentSpline.lerpTimes;
+                float l = k / currentLerpTimes;
 
                 if (!currentSpline.lerpSpline)
                 {
@@ -136,14 +145,14 @@ public class ParticleManager : MonoBehaviour
                 }
 
                 //loop along spline, placing particles along the way
-                for (int i = 0; i <= currentSpline.frequency; i++)
+                for (int i = 0; i <= currentFrequency; i++)
                 {
                     Vector3 newParticlePosition = currentSpline.GetLerpPoint(i * stepSize, l);
 
                     //ps.Emit(currentSpline.splineSymmetry);
                     //Array.Resize<ParticleSystem.Particle>(ref particleArray, particleArray.Length + currentSpline.splineSymmetry);
-                    Array.Resize(ref splineParticleGroup[j].particles, splineParticleGroup[j].particles.Length + currentSpline.splineSymmetry);
-                    ps.GetParticles(splineParticleGroup[j].particles);
+                    //Array.Resize(ref splineParticleGroup[j].particles, splineParticleGroup[j].particles.Length + currentSpline.splineSymmetry);
+                    //ps.GetParticles(splineParticleGroup[j].particles);
                     //ps.GetParticles(particleArray);
 
                     //life offset by distance along spline and lerp position
@@ -194,6 +203,7 @@ public class ParticleManager : MonoBehaviour
         {
             return;
         }
+
         //here getparticles resets the particleArray to the current particles in the system, so they are not in the same order as the original particleArray
         ps.GetParticles(particleArray);
         for (int i = 0; i < particleArray.Length; i++)
@@ -203,7 +213,7 @@ public class ParticleManager : MonoBehaviour
             //particleArray[i].remainingLifetime -= Time.deltaTime * .01f;
             if (particleArray[i].remainingLifetime < catchParticlesBufferTime)
             {
-                particleArray[i].remainingLifetime = s_life - (catchParticlesBufferTime - particleArray[i].remainingLifetime);
+                particleArray[i].remainingLifetime = particleArray[i].startLifetime - (catchParticlesBufferTime - particleArray[i].remainingLifetime);
             }
         }
         ps.SetParticles(particleArray, particleArray.Length);
