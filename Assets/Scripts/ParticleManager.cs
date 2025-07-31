@@ -11,12 +11,7 @@ public class ParticleManager : MonoBehaviour
     ParticleSystem.ColorOverLifetimeModule colorModule;
 
     //move these to the spline itself so they can be set per spline. this script should be more of a manager
-    [SerializeField] float s_life; //Lifetime of the particle in seconds
     [SerializeField] int symmetry;
-    public int frequency;
-    public float lifetimeOffset;
-    public float lerpLifetimeOffset;
-    public int lerpTimes;
 
 
     public List<SplineParticleGroup> splineParticleGroup;
@@ -32,7 +27,7 @@ public class ParticleManager : MonoBehaviour
     int mouseTicker = 0;
     bool firstClick = true;
     int mouseDownCount = 0;
-    float catchParticlesBufferTime = 0.5f;
+    public float catchParticlesBufferTimeRatio = 0.2f;
 
     private bool started = false;
 
@@ -114,8 +109,8 @@ public class ParticleManager : MonoBehaviour
         {
             BezierSpline currentSpline = splineParticleGroup[j].spline;
             splineParticleGroup[j].particles = new ParticleSystem.Particle[0];
-            int currentFrequency = currentSpline.frequency-1; //with offset to match the true number
-            int currentLerpTimes = currentSpline.lerpTimes-1;
+            int currentFrequency = currentSpline.frequency - 1; //with offset to match the true number
+            int currentLerpTimes = currentSpline.lerpTimes - 1;
             if (currentFrequency <= 0)
             {
                 currentFrequency = 1; // avoid division by zero
@@ -124,24 +119,25 @@ public class ParticleManager : MonoBehaviour
             {
                 currentLerpTimes = 1; // avoid division by zero
             }
+            float catchParticlesBufferTime = currentSpline.s_life * catchParticlesBufferTimeRatio;
 
             float stepSize = 1f / currentFrequency;
 
             //initial spline, place particles along it
             //loop along spline, placing particles along the way
             //lerploop
-            for (float k = 0; k <= currentSpline.lerpTimes-1; k++)
+            for (float k = 0; k <= currentSpline.lerpTimes - 1; k++)
             {
                 float l = k / currentLerpTimes;
 
                 if (!currentSpline.lerpSpline)
                 {
-                    Debug.Log("add stuff here later");
-                    return;
+                    currentSpline.lerpSpline = currentSpline;
                 }
-                if (frequency <= 0)
+                if (currentSpline.frequency <= 0)
                 {
-                    return;
+                    currentSpline.frequency = 1; // avoid problems
+
                 }
 
                 //loop along spline, placing particles along the way
@@ -156,7 +152,14 @@ public class ParticleManager : MonoBehaviour
                     //ps.GetParticles(particleArray);
 
                     //life offset by distance along spline and lerp position
-                    float life = currentSpline.s_life - (currentSpline.lifetimeOffset * i) - (currentSpline.lerpLifetimeOffset * k);
+                    float life;
+                    if (currentSpline.s_life < .2f)
+                    {
+                        currentSpline.s_life = .2f;
+                        Debug.Log("minimum life set to .2f so particles don't yeet themselves");
+                    }
+
+                    life = currentSpline.s_life - (currentSpline.lifetimeOffset * i) - (currentSpline.lerpLifetimeOffset * k);
 
                     while (life <= catchParticlesBufferTime)
                     {
@@ -171,7 +174,7 @@ public class ParticleManager : MonoBehaviour
                     // set position and life with radial symmetry
                     for (int z = 0; z < currentSpline.splineSymmetry; z++)
                     {
-                        
+
                         symmetryPosition.transform.position = newParticlePosition;
                         symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * (360 / currentSpline.splineSymmetry));
                         var p = particleArray[currentParticleIndex];
@@ -182,8 +185,6 @@ public class ParticleManager : MonoBehaviour
                         particleArray[currentParticleIndex] = p;
                         currentParticleIndex++;
                     }
-
-                    
 
                 }
             }
@@ -211,10 +212,13 @@ public class ParticleManager : MonoBehaviour
             //CATCH particles, dobr let them escaoe
             // Debug.Log(particleArray[i].remainingLifetime);
             //particleArray[i].remainingLifetime -= Time.deltaTime * .01f;
+            //fix bug here where the expression results in lifetime below the buffer.
+            float catchParticlesBufferTime = particleArray[i].startLifetime * catchParticlesBufferTimeRatio;
             if (particleArray[i].remainingLifetime < catchParticlesBufferTime)
             {
                 particleArray[i].remainingLifetime = particleArray[i].startLifetime - (catchParticlesBufferTime - particleArray[i].remainingLifetime);
             }
+            
         }
         ps.SetParticles(particleArray, particleArray.Length);
         List<Vector2> lifeList = new();
