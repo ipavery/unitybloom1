@@ -2,12 +2,12 @@ using UnityEngine;
 
 public struct ClipDragEnded
 {
-    public GameObject clip;
+    public BezierSpline spline;
     public float timePosition;
 
-    public ClipDragEnded(GameObject clip, float timePosition)
+    public ClipDragEnded(BezierSpline spline, float timePosition)
     {
-        this.clip = clip;
+        this.spline = spline;
         this.timePosition = timePosition;
     }
 

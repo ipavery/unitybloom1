@@ -8,6 +8,7 @@ public class DraggableClip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public TimelineSettings timelineSettings;
     public float pixelsPerSecond; // Horizontal scale of the timeline
     public float snapInterval;     // Seconds per snap interval
+    public BezierSpline attachedSpline; // Reference to the current spline
 
 
     private Vector2 offset;
@@ -55,6 +56,6 @@ public class DraggableClip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public void OnEndDrag(PointerEventData eventData)
     {
         //restart the particle system
-        EventHub.Publish(new ClipDragEnded(gameObject, (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond));
+        EventHub.Publish(new ClipDragEnded(attachedSpline, (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond));
     }
 }

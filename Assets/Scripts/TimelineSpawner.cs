@@ -40,6 +40,7 @@ public class TimelineSpawner : MonoBehaviour
             GameObject clipObj = Instantiate(draggablePrefab, timelineContent);
             clipObj.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = items[i].spline.name; // Assuming BezierSpline has a name property
             clipObj.name = $"Clip_{i}_{items[i]}";
+            clipObj.GetComponent<DraggableClip>().attachedSpline = items[i].spline; // Assign the spline to the draggable clip
 
             // Position at 0s (left of the timeline)
             RectTransform rt = clipObj.GetComponent<RectTransform>();

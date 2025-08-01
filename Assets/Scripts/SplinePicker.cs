@@ -10,6 +10,8 @@ public class SplinePicker : MonoBehaviour
     public Material lineMaterial;
     public float lineWidth = 0.01f;
     public GameObject controlPointSpherePrefab;
+    public GameObject particleManager;
+    private List<BezierSpline> splineList;
 
     [Header("Gizmo Settings")]
     public GameObject moveGizmoPrefab; // Assign a gizmo prefab in the inspector
@@ -17,11 +19,12 @@ public class SplinePicker : MonoBehaviour
     Vector3 gizmoPrefabScale; // Store the original scale of the gizmo prefab
     Vector3 planarGizmoPrefabScale; // Store the original scale of the planar gizmo prefab
     private float gizmoOffsetDistance = .15f; // Offset distance for gizmos
-    public float gizmoScale = .5f; // Scale for gizmos
+    public float gizmoScale = .1f; // Scale for gizmos
     public Color highlightColor = Color.yellow;
-    public float gizmoEmissionIntensity = 0.5f; // Emission intensity for gizmos
+    public float gizmoEmissionIntensity = 0.6f; // Emission intensity for gizmos
     private List<GameObject> gizmoList = new();
     private List<GameObject> controlSpheres = new List<GameObject>();
+    private List<GameObject> selectedSpheres = new();
 
     // Dragging gizmos
     private int activeGizmoAxis = -1; // 0=X, 1=Y, 2=Z
@@ -32,17 +35,30 @@ public class SplinePicker : MonoBehaviour
     private List<int> controlIndices = new List<int>();
     private List<Color> originalColors = new List<Color>();
     private GameObject lastHighlighted = null;
-    private Color lastOriginalColor;
+    public Color unselectedOriginalColor;
 
     //input variables
     public PlayerInputActions playerControls;
     private InputAction fire;
+    private InputAction mousePosition;
+    private InputAction select;
+
+    // Selection box variables
+    private Vector2 selectionStart;
+    private Vector2 selectionEnd;
+    private bool isSelecting = false;
+    public GameObject selectionBoxUI; // Reference to the SelectionBoxUI component
 
 
     void Awake()
     {
         playerControls = new PlayerInputActions();
         playerControls.Player.Fire.canceled += ctx => CancelFire();
+
+        mousePosition = playerControls.Player.MousePosition;
+        select = playerControls.Player.Select;
+        select.started += OnSelectStart;
+        select.canceled += OnSelectEnd;
     }
 
     void OnEnable()
@@ -51,11 +67,16 @@ public class SplinePicker : MonoBehaviour
         fire = playerControls.Player.Fire;
         fire.Enable();
         fire.performed += Fire;
+
+        mousePosition.Enable();
+        select.Enable();
     }
 
     void OnDisable()
     {
         fire.Disable();
+        mousePosition.Disable();
+        select.Disable();
     }
 
     void CancelFire()
@@ -65,7 +86,49 @@ public class SplinePicker : MonoBehaviour
         {
             EventHub.Publish(new GizmoDragEnded(lastHighlighted, lastHighlighted.transform.position));
         }
-        
+
+    }
+
+    void OnSelectStart(InputAction.CallbackContext ctx)
+    {
+        selectionStart = mousePosition.ReadValue<Vector2>();
+        isSelecting = true;
+        selectionBoxUI.GetComponent<SelectionBoxUI>().BeginSelection(selectionStart);
+    }
+
+    void OnSelectEnd(InputAction.CallbackContext ctx)
+    {
+        selectionEnd = mousePosition.ReadValue<Vector2>();
+        isSelecting = false;
+        selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
+        //SelectControlPointsInRect();
+    }
+
+    void SelectControlPointsInRect()
+    {
+        Vector2 min = Vector2.Min(selectionStart, mousePosition.ReadValue<Vector2>());
+        Vector2 max = Vector2.Max(selectionStart, mousePosition.ReadValue<Vector2>());
+
+        foreach (var sphere in controlSpheres)
+        {
+            Vector3 screenPos = Camera.main.WorldToScreenPoint(sphere.transform.position);
+            if (screenPos.z > 0 && screenPos.x >= min.x && screenPos.x <= max.x && screenPos.y >= min.y && screenPos.y <= max.y)
+            {
+                selectedSpheres.Add(sphere);
+
+                var rend = sphere.GetComponent<Renderer>();
+                if (rend != null)
+                {
+                    rend.material.color = highlightColor;
+                    rend.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
+                }
+                else
+                {
+                    Debug.LogWarning("Renderer not found on control sphere: " + sphere.name);
+                }
+                Debug.Log("Selected control point: " + sphere.name);
+            }
+        }
     }
 
     void Fire(InputAction.CallbackContext context)
@@ -87,7 +150,7 @@ public class SplinePicker : MonoBehaviour
                     if (rendNew != null)
                     {
                         lastHighlighted = hit.collider.gameObject;
-                        lastOriginalColor = originalColors[idx];
+
                         rendNew.material.color = highlightColor;
                         rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
                         ShowMoveGizmos(lastHighlighted.transform.position); // Show move gizmos at the highlighted control point
@@ -112,6 +175,16 @@ public class SplinePicker : MonoBehaviour
                 UnHighlightLast();
                 DestroyGizmos(); // Clear existing gizmos
                 activeGizmoAxis = -1; // Reset the active gizmo axis
+                foreach (var sphere in selectedSpheres)
+                {
+                    var rend = sphere.GetComponent<Renderer>();
+                    if (rend != null)
+                    {
+                        rend.material.color = unselectedOriginalColor; // Reset to original color
+                        rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
+                    }
+                }
+                selectedSpheres.Clear(); // Clear selected spheres
             }
         }
 
@@ -119,7 +192,7 @@ public class SplinePicker : MonoBehaviour
 
     void Start()
     {
-        BezierSpline[] splineList = FindObjectsByType<BezierSpline>(FindObjectsSortMode.None);
+        splineList = particleManager.GetComponent<ParticleManager>().splineParticleGroup.Select(g => g.spline).ToList();
         gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
         planarGizmoPrefabScale = planarGizmoPrefab.transform.localScale;
 
@@ -187,7 +260,7 @@ public class SplinePicker : MonoBehaviour
                 else if (gizmo.name.Contains("PlanarGizmoPrefab"))
                 {
                     gizmo.transform.localScale = distance * gizmoScale * planarGizmoPrefabScale;
-                    gizmo.transform.position = lastHighlighted.transform.position + (gizmo.transform.up+gizmo.transform.right*.5f) * gizmoOffsetDistance * distance; // Offset the gizmo position
+                    gizmo.transform.position = lastHighlighted.transform.position + (gizmo.transform.up + gizmo.transform.right * .5f) * gizmoOffsetDistance * distance; // Offset the gizmo position
                 }
             }
         }
@@ -226,24 +299,43 @@ public class SplinePicker : MonoBehaviour
             }
             Vector3 newControlPos;
             FindGizmoAxisHitPoint(out newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
+            Vector3 offset = newControlPos - lastHighlighted.transform.position;
 
-            lastHighlighted.transform.position = newControlPos;
-            //update spline data
-            var spline = lastHighlighted.transform.parent.parent.GetComponent<BezierSpline>();
-            int cpIdx = controlIndices[controlSpheres.IndexOf(lastHighlighted)];
-            spline.points[cpIdx] = -lastHighlighted.transform.parent.parent.transform.position + newControlPos;
-
-            // --- Update the LineRenderer for this spline ---
-            // Find the LineRenderer (assumes it's on a child of the spline GameObject)
-            LineRenderer lr = spline.GetComponentInChildren<LineRenderer>();
-            if (lr != null)
+            foreach (var sphere in selectedSpheres)
             {
-                for (int i = 0; i <= pointsPerSpline; i++)
+
+                sphere.transform.position += offset; // Move all selected spheres to the new position
+                var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
+                int cpIdx = controlIndices[controlSpheres.IndexOf(sphere)];
+                spline.points[cpIdx] += offset; // Update the spline point position
+                
+                //update spline data
+
+            }
+
+
+            foreach (var spline in splineList)
+            {
+                // --- Update the LineRenderer for this spline ---
+                // Find the LineRenderer (assumes it's on a child of the spline GameObject)
+                LineRenderer lr = spline.GetComponentInChildren<LineRenderer>();
+                if (lr != null)
                 {
-                    float t = i / (float)pointsPerSpline;
-                    lr.SetPosition(i, spline.GetPoint(t));
+                    for (int i = 0; i <= pointsPerSpline; i++)
+                    {
+                        float t = i / (float)pointsPerSpline;
+                        lr.SetPosition(i, spline.GetPoint(t));
+                    }
                 }
             }
+        }
+
+        // Handle selection box
+        if (isSelecting)
+        {
+            Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
+            selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
+            SelectControlPointsInRect();
         }
     }
 
@@ -377,10 +469,10 @@ public class SplinePicker : MonoBehaviour
             var rend = lastHighlighted.GetComponent<Renderer>();
             if (rend != null)
             {
-                rend.material.color = lastOriginalColor;
-                rend.material.SetColor("_EmissionColor", lastOriginalColor * gizmoEmissionIntensity);
+                rend.material.color = unselectedOriginalColor;
+                rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
             }
-            lastHighlighted.transform.localScale = Vector3.one; // Reset scale
+            //lastHighlighted.transform.localScale = Vector3.one; // Reset scale
             lastHighlighted = null; // Clear last highlighted
         }
     }

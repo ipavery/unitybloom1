@@ -67,8 +67,9 @@ public class ParticleManager : MonoBehaviour
         //restart the particle system - somehow we are losing particles when the clip is dragged
         started = false;
         ps.Clear();
+        e.spline.startTimeOffset = e.timePosition;
         StartDelayed();
-        Debug.Log($"Clip drag ended for {e.clip.name} at time {e.timePosition}");
+        Debug.Log($"Clip drag ended for {e.spline.name} at time {e.timePosition}");
     }
 
     private void OnGizmoDragEnded(GizmoDragEnded e)
@@ -77,7 +78,7 @@ public class ParticleManager : MonoBehaviour
         started = false;
         ps.Clear();
         StartDelayed();
-        Debug.Log($"Gizmo drag ended for {e.gizmo.name} at position {e.position}");
+        //Debug.Log($"Gizmo drag ended for {e.gizmo.name} at position {e.position}");
     }
 
     void Start()
@@ -90,7 +91,7 @@ public class ParticleManager : MonoBehaviour
         int particleCount = splineParticleGroup.Sum(group => group.spline.frequency * group.spline.lerpTimes * group.spline.splineSymmetry);
         particleArray = new ParticleSystem.Particle[particleCount];
         combinedParticleArray = new ParticleSystem.Particle[particleCount];
-        Debug.Log(combinedParticleArray.Length);
+        //Debug.Log(combinedParticleArray.Length);
 
         //Copy the settings from a single particle (with settings set in the particle system interface) to the array
         ps.Emit(1);
@@ -122,7 +123,7 @@ public class ParticleManager : MonoBehaviour
             splineParticleGroup[j].particles = new ParticleSystem.Particle[0];
 
             int splineParticleCount = currentSpline.frequency * currentSpline.lerpTimes;
-            Debug.Log($"splineParticleCount: {splineParticleCount}");
+            //Debug.Log($"splineParticleCount: {splineParticleCount}");
 
             int currentFrequency = currentSpline.frequency - 1; //with offset to match the true number
             int currentLerpTimes = currentSpline.lerpTimes - 1;
@@ -177,7 +178,7 @@ public class ParticleManager : MonoBehaviour
                         Debug.Log("minimum life set to .2f so particles don't yeet themselves");
                     }
 
-                    life = currentSpline.s_life - (currentSpline.lifetimeOffset * i) - (currentSpline.lerpLifetimeOffset * k);
+                    life = currentSpline.s_life - (currentSpline.lifetimeOffset * i) - (currentSpline.lerpLifetimeOffset * k) - currentSpline.startTimeOffset;
 
                     while (life <= catchParticlesBufferTime)
                     {
