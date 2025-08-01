@@ -81,11 +81,11 @@ public class ParticleManager : MonoBehaviour
         combinedParticleArray = new ParticleSystem.Particle[particleCount];
         Debug.Log(combinedParticleArray.Length);
 
+        //Copy the settings from a single particle (with settings set in the particle system interface) to the array
         ps.Emit(1);
         ParticleSystem.Particle[] singleParticle = new ParticleSystem.Particle[1];
         ps.GetParticles(singleParticle); // Should return 1 if it worked
         ParticleSystem.Particle referenceParticle = singleParticle[0];
-
         for (int i = 0; i < particleCount; i++)
         {
             particleArray[i] = referenceParticle;
@@ -109,6 +109,10 @@ public class ParticleManager : MonoBehaviour
         {
             BezierSpline currentSpline = splineParticleGroup[j].spline;
             splineParticleGroup[j].particles = new ParticleSystem.Particle[0];
+
+            int splineParticleCount = currentSpline.frequency * currentSpline.lerpTimes;
+            Debug.Log($"splineParticleCount: {splineParticleCount}");
+
             int currentFrequency = currentSpline.frequency - 1; //with offset to match the true number
             int currentLerpTimes = currentSpline.lerpTimes - 1;
             if (currentFrequency <= 0)
@@ -125,7 +129,7 @@ public class ParticleManager : MonoBehaviour
 
             //initial spline, place particles along it
             //loop along spline, placing particles along the way
-            //lerploop
+            //lerploop - idk why this uses <= and -1 in the condition, but it works
             for (float k = 0; k <= currentSpline.lerpTimes - 1; k++)
             {
                 float l = k / currentLerpTimes;
@@ -140,16 +144,19 @@ public class ParticleManager : MonoBehaviour
 
                 }
 
-                //loop along spline, placing particles along the way
+                //loop along spline, placing particles along the way. This loop controls particles, the z loop controls symmetry
                 for (int i = 0; i <= currentFrequency; i++)
                 {
                     Vector3 newParticlePosition = currentSpline.GetLerpPoint(i * stepSize, l);
-
+                    //Debug.Log($"particle index within spline:  {k*(currentFrequency+1) + i + 1}");
+                    //Debug.Log($"sample t value: {(k*(currentFrequency+1) + i + 1)/splineParticleCount}");
                     //ps.Emit(currentSpline.splineSymmetry);
                     //Array.Resize<ParticleSystem.Particle>(ref particleArray, particleArray.Length + currentSpline.splineSymmetry);
                     //Array.Resize(ref splineParticleGroup[j].particles, splineParticleGroup[j].particles.Length + currentSpline.splineSymmetry);
                     //ps.GetParticles(splineParticleGroup[j].particles);
                     //ps.GetParticles(particleArray);
+                    float t = (k * (currentFrequency + 1) + i + 1) / splineParticleCount;
+                    Color particleColor = Color.Lerp(currentSpline.lerpColor1, currentSpline.lerpColor2, t);
 
                     //life offset by distance along spline and lerp position
                     float life;
@@ -168,9 +175,6 @@ public class ParticleManager : MonoBehaviour
 
                     life = (float)Math.Round(life, 3);
 
-                    //initial symmetry and size offset
-
-
                     // set position and life with radial symmetry
                     for (int z = 0; z < currentSpline.splineSymmetry; z++)
                     {
@@ -180,7 +184,7 @@ public class ParticleManager : MonoBehaviour
                         var p = particleArray[currentParticleIndex];
                         p.position = symmetryPosition.transform.position;
                         p.remainingLifetime = life;
-                        p.startColor = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+                        p.startColor = particleColor;
                         p.startLifetime = currentSpline.s_life;
                         particleArray[currentParticleIndex] = p;
                         currentParticleIndex++;

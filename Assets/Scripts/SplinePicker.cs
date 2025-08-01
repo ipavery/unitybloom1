@@ -12,6 +12,7 @@ public class SplinePicker : MonoBehaviour
 
     [Header("Gizmo Settings")]
     public GameObject moveGizmoPrefab; // Assign a gizmo prefab in the inspector
+    public GameObject planarGizmoPrefab; // Assign a planar gizmo prefab in the inspector
     Vector3 gizmoPrefabScale; // Store the original scale of the gizmo prefab
     private float gizmoOffsetDistance = .15f; // Offset distance for gizmos
     public float gizmoScale = .5f; // Scale for gizmos

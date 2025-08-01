@@ -11,6 +11,8 @@ public class BezierSpline : MonoBehaviour
     public float lifetimeOffset;
     public float lerpLifetimeOffset;
     public int lerpTimes;
+    public Color lerpColor1;
+    public Color lerpColor2;
 
     public GameObject splinePrefab;
 
