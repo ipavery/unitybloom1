@@ -53,11 +53,13 @@ public class ParticleManager : MonoBehaviour
     void OnEnable()
     {
         EventHub.Subscribe<ClipDragEnded>(OnClipDragEnded);
+        EventHub.Subscribe<GizmoDragEnded>(OnGizmoDragEnded);
     }
 
     void OnDisable()
     {
         EventHub.Unsubscribe<ClipDragEnded>(OnClipDragEnded);
+        EventHub.Subscribe<GizmoDragEnded>(OnGizmoDragEnded);
     }
 
     private void OnClipDragEnded(ClipDragEnded e)
@@ -67,6 +69,15 @@ public class ParticleManager : MonoBehaviour
         ps.Clear();
         StartDelayed();
         Debug.Log($"Clip drag ended for {e.clip.name} at time {e.timePosition}");
+    }
+
+    private void OnGizmoDragEnded(GizmoDragEnded e)
+    {
+        //restart the particle system - somehow we are losing particles when the clip is dragged
+        started = false;
+        ps.Clear();
+        StartDelayed();
+        Debug.Log($"Gizmo drag ended for {e.gizmo.name} at position {e.position}");
     }
 
     void Start()

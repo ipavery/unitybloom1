@@ -10,4 +10,17 @@ public struct ClipDragEnded
         this.clip = clip;
         this.timePosition = timePosition;
     }
+
+
+}
+
+public struct GizmoDragEnded
+{
+    public Vector3 position;
+    public GameObject gizmo;
+    public GizmoDragEnded(GameObject gizmo, Vector3 position)
+    {
+        this.position = position;
+        this.gizmo = gizmo;
+    }
 }
