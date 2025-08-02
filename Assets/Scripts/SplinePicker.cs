@@ -23,8 +23,7 @@ public class SplinePicker : MonoBehaviour
     public Color highlightColor = Color.yellow;
     public float gizmoEmissionIntensity = 0.6f; // Emission intensity for gizmos
     private List<GameObject> gizmoList = new();
-    private List<GameObject> controlSpheres = new List<GameObject>();
-    private List<GameObject> selectedSpheres = new();
+    private List<ControlPointGroup> controlSphereGroup = new();
 
     // Dragging gizmos
     private int activeGizmoAxis = -1; // 0=X, 1=Y, 2=Z
@@ -94,6 +93,7 @@ public class SplinePicker : MonoBehaviour
         selectionStart = mousePosition.ReadValue<Vector2>();
         isSelecting = true;
         selectionBoxUI.GetComponent<SelectionBoxUI>().BeginSelection(selectionStart);
+        Debug.Log("Selection started at: " + selectionStart);
     }
 
     void OnSelectEnd(InputAction.CallbackContext ctx)
@@ -102,6 +102,7 @@ public class SplinePicker : MonoBehaviour
         isSelecting = false;
         selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
         //SelectControlPointsInRect();
+        Debug.Log("Selection ended at: " + selectionEnd);
     }
 
     void SelectControlPointsInRect()
@@ -109,13 +110,22 @@ public class SplinePicker : MonoBehaviour
         Vector2 min = Vector2.Min(selectionStart, mousePosition.ReadValue<Vector2>());
         Vector2 max = Vector2.Max(selectionStart, mousePosition.ReadValue<Vector2>());
 
-        foreach (var sphere in controlSpheres)
+        foreach (var sphereGroup in controlSphereGroup)
         {
+            if (sphereGroup.isSelected == true)
+            {
+                continue; // Skip spheres that are not selected
+            }
+            GameObject sphere = sphereGroup.sphereObject;
             Vector3 screenPos = Camera.main.WorldToScreenPoint(sphere.transform.position);
             if (screenPos.z > 0 && screenPos.x >= min.x && screenPos.x <= max.x && screenPos.y >= min.y && screenPos.y <= max.y)
             {
-                selectedSpheres.Add(sphere);
-
+                if (lastHighlighted == null)
+                {
+                    lastHighlighted = sphere; // Set the first highlighted sphere
+                    ShowMoveGizmos(lastHighlighted.transform.position);
+                }
+                sphereGroup.isSelected = true; // Mark the control point as selected
                 var rend = sphere.GetComponent<Renderer>();
                 if (rend != null)
                 {
@@ -126,7 +136,7 @@ public class SplinePicker : MonoBehaviour
                 {
                     Debug.LogWarning("Renderer not found on control sphere: " + sphere.name);
                 }
-                Debug.Log("Selected control point: " + sphere.name);
+                //Debug.Log("Selected control point: " + sphere.name);
             }
         }
     }
@@ -139,24 +149,24 @@ public class SplinePicker : MonoBehaviour
             RaycastHit hit;
             if (Physics.Raycast(ray, out hit, 100f))
             {
-                int idx = controlSpheres.IndexOf(hit.collider.gameObject);
+
+                int idx = controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
                 if (idx != -1)
                 {
                     // Un-highlight previous
-                    UnHighlightLast();
-
+                    //UnHighlightLast();
+                    var sphere = controlSphereGroup[idx];
                     // Highlight new
-                    var rendNew = hit.collider.GetComponent<Renderer>();
-                    if (rendNew != null)
+                    if (sphere.sphereObject.TryGetComponent<Renderer>(out var rendNew))
                     {
                         lastHighlighted = hit.collider.gameObject;
-
+                        sphere.isSelected = true; // Mark the control point as selected
                         rendNew.material.color = highlightColor;
                         rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
                         ShowMoveGizmos(lastHighlighted.transform.position); // Show move gizmos at the highlighted control point
                     }
 
-                    Debug.Log("Clicked control point: " + controlIndices[idx]);
+                    //Debug.Log("Clicked control point: " + controlIndices[idx]);
                 }
 
                 // Check if the clicked point is one of the gizmos
@@ -175,16 +185,15 @@ public class SplinePicker : MonoBehaviour
                 UnHighlightLast();
                 DestroyGizmos(); // Clear existing gizmos
                 activeGizmoAxis = -1; // Reset the active gizmo axis
-                foreach (var sphere in selectedSpheres)
+                foreach (var sphereGroup in controlSphereGroup)
                 {
-                    var rend = sphere.GetComponent<Renderer>();
-                    if (rend != null)
+                    sphereGroup.isSelected = false; // Unselect current control point
+                    if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rend))
                     {
                         rend.material.color = unselectedOriginalColor; // Reset to original color
                         rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
                     }
                 }
-                selectedSpheres.Clear(); // Clear selected spheres
             }
         }
 
@@ -221,9 +230,12 @@ public class SplinePicker : MonoBehaviour
 
                 // Set the sphere to the "PP Layer"
                 sphere.layer = LayerMask.NameToLayer("PP Layer");
-
-                controlSpheres.Add(sphere);
-                controlIndices.Add(i);
+                controlSphereGroup.Add(new ControlPointGroup
+                {
+                    sphereObject = sphere,
+                    isSelected = false,
+                    index = i
+                });
 
                 // Set and store original color as white
                 var rend = sphere.GetComponent<Renderer>();
@@ -244,6 +256,7 @@ public class SplinePicker : MonoBehaviour
 
     void Update()
     {
+        //Debug.Log($"spheres ({controlSphereGroup.Count}): {string.Join(", ", controlSphereGroup.Select(s => s.isSelected))}");
         foreach (var gizmo in gizmoList)
         {
             float distance = Vector3.Distance(Camera.main.transform.position, lastHighlighted.transform.position);
@@ -297,22 +310,29 @@ public class SplinePicker : MonoBehaviour
             {
                 dragPlane = new Plane(Vector3.forward, lastHighlighted.transform.position);
             }
-            Vector3 newControlPos;
-            FindGizmoAxisHitPoint(out newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
-            Vector3 offset = newControlPos - lastHighlighted.transform.position;
+            // Vector3 newControlPos;
+            // FindGizmoAxisHitPoint(out newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
+            // Vector3 offset = newControlPos - lastHighlighted.transform.position;
 
-            foreach (var sphere in selectedSpheres)
+            // 
+            FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
+            Vector3 lastHighlightedPos = lastHighlighted.transform.position;
+            foreach (var sphereGroup in controlSphereGroup)
             {
-
-                sphere.transform.position += offset; // Move all selected spheres to the new position
+                if (!sphereGroup.isSelected)
+                {
+                    continue; // Skip spheres that are not selected
+                }
+                var sphere = sphereGroup.sphereObject;
+                Vector3 diff = sphere.transform.position - lastHighlightedPos;
+                Vector3 offset = newControlPos - lastHighlightedPos; // Calculate the offset based on the new position and the difference from the last highlighted position
+                sphere.transform.position = lastHighlightedPos + diff + offset; // Move all selected spheres to the new position
                 var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                int cpIdx = controlIndices[controlSpheres.IndexOf(sphere)];
-                spline.points[cpIdx] += offset; // Update the spline point position
-                
+                spline.points[sphereGroup.index] += offset; // Update the spline point position
+
                 //update spline data
 
             }
-
 
             foreach (var spline in splineList)
             {
@@ -328,15 +348,15 @@ public class SplinePicker : MonoBehaviour
                     }
                 }
             }
-        }
-
-        // Handle selection box
-        if (isSelecting)
+        } else if (isSelecting)
         {
+            // Update the selection box UI only if not dragging
             Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
             selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
             SelectControlPointsInRect();
         }
+
+        
     }
 
     void ShowMoveGizmos(Vector3 position)
