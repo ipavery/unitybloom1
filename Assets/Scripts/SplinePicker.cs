@@ -47,12 +47,12 @@ public class SplinePicker : MonoBehaviour
     private Vector2 selectionEnd;
     private bool isSelecting = false;
     public GameObject selectionBoxUI; // Reference to the SelectionBoxUI component
+    private bool raycastHit = false;
 
 
     void Awake()
     {
         playerControls = new PlayerInputActions();
-        playerControls.Player.Fire.canceled += ctx => CancelFire();
 
         mousePosition = playerControls.Player.MousePosition;
         select = playerControls.Player.Select;
@@ -63,9 +63,6 @@ public class SplinePicker : MonoBehaviour
     void OnEnable()
     {
         playerControls.Enable();
-        fire = playerControls.Player.Fire;
-        fire.Enable();
-        fire.performed += Fire;
 
         mousePosition.Enable();
         select.Enable();
@@ -73,36 +70,93 @@ public class SplinePicker : MonoBehaviour
 
     void OnDisable()
     {
-        fire.Disable();
         mousePosition.Disable();
         select.Disable();
-    }
-
-    void CancelFire()
-    {
-        activeGizmoAxis = -1; // Reset the active gizmo axis
-        if (lastHighlighted != null)
-        {
-            EventHub.Publish(new GizmoDragEnded(lastHighlighted, lastHighlighted.transform.position));
-        }
-
     }
 
     void OnSelectStart(InputAction.CallbackContext ctx)
     {
         selectionStart = mousePosition.ReadValue<Vector2>();
         isSelecting = true;
-        selectionBoxUI.GetComponent<SelectionBoxUI>().BeginSelection(selectionStart);
-        Debug.Log("Selection started at: " + selectionStart);
+
+        Ray ray = Camera.main.ScreenPointToRay(selectionStart);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, 100f))
+        {
+            raycastHit = true;
+            int idx = controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
+            if (idx != -1)
+            {
+                // Un-highlight previous
+                //UnHighlightLast();
+                var sphere = controlSphereGroup[idx];
+                // Highlight new
+                if (sphere.sphereObject.TryGetComponent<Renderer>(out var rendNew))
+                {
+                    lastHighlighted = hit.collider.gameObject;
+                    sphere.isSelected = true; // Mark the control point as selected
+                    rendNew.material.color = highlightColor;
+                    rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
+                    ShowMoveGizmos(lastHighlighted.transform.position); // Show move gizmos at the highlighted control point
+                }
+
+                //Debug.Log("Clicked control point: " + controlIndices[idx]);
+            }
+
+            // Check if the clicked point is one of the gizmos
+            for (int i = 0; i < gizmoList.Count; i++)
+            {
+                if (hit.collider != null && hit.collider.gameObject == gizmoList[i])
+                {
+                    activeGizmoAxis = i; // Set the active gizmo axis based on the clicked gizmo
+                    dragStartPoint = hit.point;
+                    isSelecting = false;
+                }
+            }
+        }
+        else
+        {
+            raycastHit = false;
+
+        }
+        if (isSelecting)
+        {
+            selectionBoxUI.GetComponent<SelectionBoxUI>().BeginSelection(selectionStart);
+
+        }
     }
 
     void OnSelectEnd(InputAction.CallbackContext ctx)
     {
+
         selectionEnd = mousePosition.ReadValue<Vector2>();
+
         isSelecting = false;
         selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
         //SelectControlPointsInRect();
-        Debug.Log("Selection ended at: " + selectionEnd);
+        activeGizmoAxis = -1; // Reset the active gizmo axis
+        if (lastHighlighted != null)
+        {
+            EventHub.Publish(new GizmoDragEnded(lastHighlighted, lastHighlighted.transform.position));
+        }
+
+        // If no control point or gizmo was clicked and the mouse was not dragged too much, unselect all control points
+        float selectDist = (selectionEnd - selectionStart).magnitude;
+        if (raycastHit == false && selectDist < 5)
+        {
+            UnHighlightLast();
+            DestroyGizmos(); // Clear existing gizmos
+            activeGizmoAxis = -1; // Reset the active gizmo axis
+            foreach (var sphereGroup in controlSphereGroup)
+            {
+                sphereGroup.isSelected = false; // Unselect current control point
+                if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rend))
+                {
+                    rend.material.color = unselectedOriginalColor; // Reset to original color
+                    rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
+                }
+            }
+        }
     }
 
     void SelectControlPointsInRect()
@@ -139,64 +193,6 @@ public class SplinePicker : MonoBehaviour
                 //Debug.Log("Selected control point: " + sphere.name);
             }
         }
-    }
-
-    void Fire(InputAction.CallbackContext context)
-    {
-        if (context.performed)
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            RaycastHit hit;
-            if (Physics.Raycast(ray, out hit, 100f))
-            {
-
-                int idx = controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
-                if (idx != -1)
-                {
-                    // Un-highlight previous
-                    //UnHighlightLast();
-                    var sphere = controlSphereGroup[idx];
-                    // Highlight new
-                    if (sphere.sphereObject.TryGetComponent<Renderer>(out var rendNew))
-                    {
-                        lastHighlighted = hit.collider.gameObject;
-                        sphere.isSelected = true; // Mark the control point as selected
-                        rendNew.material.color = highlightColor;
-                        rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
-                        ShowMoveGizmos(lastHighlighted.transform.position); // Show move gizmos at the highlighted control point
-                    }
-
-                    //Debug.Log("Clicked control point: " + controlIndices[idx]);
-                }
-
-                // Check if the clicked point is one of the gizmos
-                for (int i = 0; i < gizmoList.Count; i++)
-                {
-                    if (hit.collider != null && hit.collider.gameObject == gizmoList[i])
-                    {
-                        activeGizmoAxis = i; // Set the active gizmo axis based on the clicked gizmo
-                        dragStartPoint = hit.point;
-                    }
-                }
-            }
-            else
-            {
-                // If no control point or gizmo was clicked, un-highlight the last highlighted control point
-                UnHighlightLast();
-                DestroyGizmos(); // Clear existing gizmos
-                activeGizmoAxis = -1; // Reset the active gizmo axis
-                foreach (var sphereGroup in controlSphereGroup)
-                {
-                    sphereGroup.isSelected = false; // Unselect current control point
-                    if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rend))
-                    {
-                        rend.material.color = unselectedOriginalColor; // Reset to original color
-                        rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
-                    }
-                }
-            }
-        }
-
     }
 
     void Start()
@@ -348,7 +344,8 @@ public class SplinePicker : MonoBehaviour
                     }
                 }
             }
-        } else if (isSelecting)
+        }
+        else if (isSelecting)
         {
             // Update the selection box UI only if not dragging
             Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
@@ -356,7 +353,7 @@ public class SplinePicker : MonoBehaviour
             SelectControlPointsInRect();
         }
 
-        
+
     }
 
     void ShowMoveGizmos(Vector3 position)
