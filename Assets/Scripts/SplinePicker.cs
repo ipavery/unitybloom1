@@ -8,6 +8,7 @@ public class SplinePicker : MonoBehaviour
     [Header("Spline Settings")]
     public int pointsPerSpline = 32;
     public Material lineMaterial;
+    public Material highlightedLineMaterial;
     public float lineWidth = 0.01f;
     public GameObject controlPointSpherePrefab;
     public GameObject particleManager;
@@ -48,6 +49,7 @@ public class SplinePicker : MonoBehaviour
     private bool isSelecting = false;
     public GameObject selectionBoxUI; // Reference to the SelectionBoxUI component
     private bool raycastHit = false;
+    private BezierSpline selectedSpline = null;
 
 
     void Awake()
@@ -89,7 +91,15 @@ public class SplinePicker : MonoBehaviour
             {
                 // Un-highlight previous
                 //UnHighlightLast();
+
                 var sphere = controlSphereGroup[idx];
+                if (selectedSpline == null)
+                {
+                    selectedSpline = sphere.sphereObject.GetComponentInParent<BezierSpline>();
+                    EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
+                    sphere.sphereObject.GetComponentInParent<LineRenderer>().material = highlightedLineMaterial;
+                }
+
                 // Highlight new
                 if (sphere.sphereObject.TryGetComponent<Renderer>(out var rendNew))
                 {
@@ -156,6 +166,13 @@ public class SplinePicker : MonoBehaviour
                     rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
                 }
             }
+
+            if (selectedSpline != null)
+            {
+                EventHub.Publish(new SplineSelectionChange(selectedSpline, false));
+                selectedSpline.GetComponentInChildren<LineRenderer>().material = lineMaterial;
+                selectedSpline = null;
+            }
         }
     }
 
@@ -168,7 +185,7 @@ public class SplinePicker : MonoBehaviour
         {
             if (sphereGroup.isSelected == true)
             {
-                continue; // Skip spheres that are not selected
+                continue; // Skip spheres that are selected
             }
             GameObject sphere = sphereGroup.sphereObject;
             Vector3 screenPos = Camera.main.WorldToScreenPoint(sphere.transform.position);

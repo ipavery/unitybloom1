@@ -24,3 +24,14 @@ public struct GizmoDragEnded
         this.gizmo = gizmo;
     }
 }
+
+public struct SplineSelectionChange
+{
+    public BezierSpline spline;
+    public bool isSelected;
+    public SplineSelectionChange(BezierSpline spline, bool isSelected)
+    {
+        this.spline = spline;
+        this.isSelected = isSelected;
+    }
+}

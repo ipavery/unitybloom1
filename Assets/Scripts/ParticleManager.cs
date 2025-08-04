@@ -59,7 +59,7 @@ public class ParticleManager : MonoBehaviour
     void OnDisable()
     {
         EventHub.Unsubscribe<ClipDragEnded>(OnClipDragEnded);
-        EventHub.Subscribe<GizmoDragEnded>(OnGizmoDragEnded);
+        EventHub.Unsubscribe<GizmoDragEnded>(OnGizmoDragEnded);
     }
 
     private void OnClipDragEnded(ClipDragEnded e)

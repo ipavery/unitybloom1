@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public static class EventHub
 {
@@ -8,26 +9,51 @@ public static class EventHub
     // Subscribe to an event
     public static void Subscribe<T>(Action<T> listener)
     {
-        if (!eventTable.ContainsKey(typeof(T)))
-            eventTable[typeof(T)] = null;
-
-        eventTable[typeof(T)] = (Action<T>)eventTable[typeof(T)] + listener;
+        Delegate existing;
+        if (eventTable.TryGetValue(typeof(T), out existing))
+        {
+            eventTable[typeof(T)] = Delegate.Combine(existing, listener);
+        }
+        else
+        {
+            eventTable[typeof(T)] = listener;
+        }
     }
 
     // Unsubscribe from an event
     public static void Unsubscribe<T>(Action<T> listener)
     {
-        if (eventTable.ContainsKey(typeof(T)))
-            eventTable[typeof(T)] = (Action<T>)eventTable[typeof(T)] - listener;
+        if (eventTable.TryGetValue(typeof(T), out var existing))
+        {
+            var currentDel = Delegate.Remove(existing, listener);
+            if (currentDel == null)
+            {
+                eventTable.Remove(typeof(T));
+            }
+            else
+            {
+                eventTable[typeof(T)] = currentDel;
+            }
+        }
     }
 
     // Publish (broadcast) an event
     public static void Publish<T>(T eventData)
     {
-        if (eventTable.ContainsKey(typeof(T)))
+        if (eventTable.TryGetValue(typeof(T), out var del))
         {
-            var action = eventTable[typeof(T)] as Action<T>;
-            action?.Invoke(eventData);
+            if (del is Action<T> callback)
+            {
+                callback.Invoke(eventData);
+            }
+            else
+            {
+                Debug.LogWarning($"[EventHub] Event type mismatch for {typeof(T)}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[EventHub] No listeners for event type {typeof(T)}");
         }
     }
 }
