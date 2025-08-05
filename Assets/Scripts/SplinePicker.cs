@@ -39,7 +39,6 @@ public class SplinePicker : MonoBehaviour
 
     //input variables
     public PlayerInputActions playerControls;
-    private InputAction fire;
     private InputAction mousePosition;
     private InputAction select;
 

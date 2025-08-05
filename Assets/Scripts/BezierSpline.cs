@@ -126,6 +126,15 @@ public class BezierSpline : MonoBehaviour
         points[points.Length - 1] = point;
     }
 
+    public void AddDefinedCurve(Vector3 point2, Vector3 point3, Vector3 point4)
+    {
+        Vector3 lastPoint = points[points.Length - 1];
+        Array.Resize(ref points, points.Length + 3);
+        points[points.Length - 3] = point2;
+        points[points.Length - 2] = point3;
+        points[points.Length - 1] = point4;
+    }
+
     public void RemoveCurve()
     {
         Array.Resize(ref points, points.Length - 3);

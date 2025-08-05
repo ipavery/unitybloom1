@@ -8,8 +8,12 @@ public static class InputBlocker
     /// Checks if input is blocked by any UI, excluding elements on a specific layer.
     /// </summary>
     /// <param name="excludedUILayer">Optional: the layer you want to ignore (e.g. "IgnoreUIBlock")</param>
+    /// 
+    public static bool inputBlockOverride = false;
     public static bool IsInputBlocked(string excludedUILayer = null)
     {
+        if (inputBlockOverride == true)
+            return true;
         if (EventSystem.current == null)
             return false;
 
