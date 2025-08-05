@@ -1,0 +1,59 @@
+[33mcommit 26b1dac89e80e574aa212469c04f11a6e6ee9b12[m[33m ([m[1;36mHEAD -> [m[1;32mbasic-version[m[33m)[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Thu Jul 24 14:08:25 2025 -0400
+
+    chatgpt failed to make gizmos
+
+[33mcommit 9a922ae4a903167c4237cfce0ad88695ea8ed611[m[33m ([m[1;31morigin/basic-version[m[33m)[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Thu Jul 24 13:37:08 2025 -0400
+
+    switched splinepicker to new input system
+
+[33mcommit ba6bc5d050845afa897410907101b28edb135aad[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Wed Jul 23 22:52:49 2025 -0400
+
+    added header
+
+[33mcommit c366ee5f7b0b5cff76a0dc502d32900f8134e1e0[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Wed Jul 23 22:46:20 2025 -0400
+
+    maybe this time
+
+[33mcommit 9b1cbeec7c4d8e0adb1e0c72675ca55a31fec05d[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Wed Jul 23 22:38:05 2025 -0400
+
+    3rd tries the charm
+
+[33mcommit b0c79ea218006b02ecbc34fe729650672c49db6e[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Wed Jul 23 22:31:23 2025 -0400
+
+    update gitignoreand cleanup
+
+[33mcommit af7fd5e729c1c30634a82153aad1c1082f14d21d[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Wed Jul 23 22:22:49 2025 -0400
+
+    Initial commit
+
+[33mcommit f72ebd7334c1ea941d0dc9acdcb9f19f61ce428e[m[33m ([m[1;31mbloom/master[m[33m)[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Wed Jul 23 16:07:35 2025 -0400
+
+    changed to new input system
+
+[33mcommit 87635eab534a1520ad08d87840132a4e5a5c2b78[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Mon Jul 21 20:17:47 2025 -0400
+
+    fixed splines
+
+[33mcommit db7f39a659d7d57e53e2e6fff7200f625835feb0[m
+Author: iyoman <isaac.p.avery@gmail.com>
+Date:   Mon Jul 21 15:00:57 2025 -0400
+
+    initial commit for random assets and added .gitignore

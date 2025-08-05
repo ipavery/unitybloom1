@@ -1,21 +1,62 @@
-# Ignore everything
-/*
+# === Unity generated folders ===
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Mm]emoryCaptures/
+Logs/
+UserSettings/
 
-# Except these folders (and their contents)
-!/.vscode/
-!/Assets/
-!/Assets/Scripts/
-!/Assets/Editor/
+# === IDE generated files ===
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+.vscode/
+.idea/
 
-# Ignore everything inside Assets except Scripts and Editor
-/Assets/*
-!/Assets/Scripts/
-!/Assets/Editor/
+# === OS generated files ===
+.DS_Store
+Thumbs.db
 
-# Allow all files inside Scripts, Editor, and .vscode
-/Assets/Scripts/*
-!/Assets/Scripts/**
-/Assets/Editor/*
-!/Assets/Editor/**
-/.vscode/*
-!/.vscode/**
+# === Visual Studio cache ===
+.vs/
+
+# === Rider project files ===
+*.sln.iml
+
+# === JetBrains Rider ===
+.idea/
+*.sln.iml
+
+# === Unity Asset meta-data ===
+*.pidb.meta
+*.pdb.meta
+
+# === Crash & profiler data ===
+sysinfo.txt
+
+# === Unity Burst ===
+*.dylib
+*.dll
+
+# === Git LFS (optional) ===
+# If you use Git LFS, add your tracked file types below:
+# *.psd
+# *.fbx
+# *.wav
+# *.mp4
+# *.tga
+# *.png
+
+# === Don't ignore these folders ===
+!Assets/
+!ProjectSettings/
+!Packages/

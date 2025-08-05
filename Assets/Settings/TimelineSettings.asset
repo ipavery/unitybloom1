@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7893881d461dc4b46a8cfceea7e81087, type: 3}
+  m_Name: TimelineSettings
+  m_EditorClassIdentifier: 
+  pixelsPerSecond: 10000
+  snapInterval: 0.01
+  duration: 2
+  timestampPrefab: {fileID: 4197225218296781180, guid: 5175e1dc5056517429b32f9191df2df3, type: 3}
+  draggablePrefab: {fileID: 6185872106838918347, guid: 1ee3c592b3723bf43bcc5b4cca957343, type: 3}
