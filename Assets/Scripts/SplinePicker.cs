@@ -50,6 +50,7 @@ public class SplinePicker : MonoBehaviour
     public GameObject selectionBoxUI; // Reference to the SelectionBoxUI component
     private bool raycastHit = false;
     private BezierSpline selectedSpline = null;
+    private bool isInputBlocked = false;
 
 
     void Awake()
@@ -76,14 +77,25 @@ public class SplinePicker : MonoBehaviour
         select.Disable();
     }
 
+    private void UpdateSelectedSpline(GameObject sphereObject)
+    {
+        if (selectedSpline == null)
+                {
+                    selectedSpline = sphereObject.GetComponentInParent<BezierSpline>();
+                    EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
+                    sphereObject.GetComponentInParent<LineRenderer>().material = highlightedLineMaterial;
+                }
+    }
+
     void OnSelectStart(InputAction.CallbackContext ctx)
     {
+        if (isInputBlocked) return;
         selectionStart = mousePosition.ReadValue<Vector2>();
         isSelecting = true;
 
         Ray ray = Camera.main.ScreenPointToRay(selectionStart);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, 100f))
+        if (Physics.Raycast(ray, out hit, 300f))
         {
             raycastHit = true;
             int idx = controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
@@ -93,12 +105,7 @@ public class SplinePicker : MonoBehaviour
                 //UnHighlightLast();
 
                 var sphere = controlSphereGroup[idx];
-                if (selectedSpline == null)
-                {
-                    selectedSpline = sphere.sphereObject.GetComponentInParent<BezierSpline>();
-                    EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
-                    sphere.sphereObject.GetComponentInParent<LineRenderer>().material = highlightedLineMaterial;
-                }
+                UpdateSelectedSpline(sphere.sphereObject);
 
                 // Highlight new
                 if (sphere.sphereObject.TryGetComponent<Renderer>(out var rendNew))
@@ -138,7 +145,7 @@ public class SplinePicker : MonoBehaviour
 
     void OnSelectEnd(InputAction.CallbackContext ctx)
     {
-
+        if (isInputBlocked) return;
         selectionEnd = mousePosition.ReadValue<Vector2>();
 
         isSelecting = false;
@@ -191,6 +198,7 @@ public class SplinePicker : MonoBehaviour
             Vector3 screenPos = Camera.main.WorldToScreenPoint(sphere.transform.position);
             if (screenPos.z > 0 && screenPos.x >= min.x && screenPos.x <= max.x && screenPos.y >= min.y && screenPos.y <= max.y)
             {
+                UpdateSelectedSpline(sphere);
                 if (lastHighlighted == null)
                 {
                     lastHighlighted = sphere; // Set the first highlighted sphere
@@ -269,6 +277,8 @@ public class SplinePicker : MonoBehaviour
 
     void Update()
     {
+
+        isInputBlocked = InputBlocker.IsInputBlocked("Unblocked UI Layer");
         //Debug.Log($"spheres ({controlSphereGroup.Count}): {string.Join(", ", controlSphereGroup.Select(s => s.isSelected))}");
         foreach (var gizmo in gizmoList)
         {

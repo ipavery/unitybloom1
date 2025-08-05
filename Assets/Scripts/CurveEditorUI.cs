@@ -51,6 +51,11 @@ public class CurveEditorUI : MonoBehaviour
         EventHub.Unsubscribe<SplineSelectionChange>(SelectObject);
     }
 
+    void ReloadParticles()
+    {
+        EventHub.Publish(new ReloadParticles(true));
+    }
+
     void Start()
     {
         inspectorPanel.SetActive(false);
@@ -92,14 +97,16 @@ public class CurveEditorUI : MonoBehaviour
             {
                 input.text = val.ToString("0.##");
                 f.setter(val);
+                ReloadParticles();
             });
             input.onEndEdit.AddListener(str =>
             {
                 if (float.TryParse(str, out float v))
                 {
-                    v = Mathf.Clamp01(v);
+                    v = Mathf.Clamp(v, f.minMax.x, f.minMax.y);
                     slider.value = v;
                     f.setter(v);
+                    ReloadParticles();
                 }
             });
         }
@@ -178,6 +185,7 @@ public class CurveEditorUI : MonoBehaviour
 
         // Apply color
         selectedObject.lerpColor1 = c;
+        ReloadParticles();
         colorPickerPanel.SetActive(false);
     }
 

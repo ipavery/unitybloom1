@@ -54,12 +54,22 @@ public class ParticleManager : MonoBehaviour
     {
         EventHub.Subscribe<ClipDragEnded>(OnClipDragEnded);
         EventHub.Subscribe<GizmoDragEnded>(OnGizmoDragEnded);
+        EventHub.Subscribe<ReloadParticles>(OnReloadParticles);
     }
 
     void OnDisable()
     {
         EventHub.Unsubscribe<ClipDragEnded>(OnClipDragEnded);
         EventHub.Unsubscribe<GizmoDragEnded>(OnGizmoDragEnded);
+        EventHub.Unsubscribe<ReloadParticles>(OnReloadParticles);
+    }
+
+    private void OnReloadParticles(ReloadParticles e)
+    {
+        //simple restart of the particle system
+        started = false;
+        ps.Clear();
+        StartDelayed();
     }
 
     private void OnClipDragEnded(ClipDragEnded e)

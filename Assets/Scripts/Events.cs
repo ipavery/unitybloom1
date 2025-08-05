@@ -25,6 +25,15 @@ public struct GizmoDragEnded
     }
 }
 
+public struct ReloadParticles
+{
+    public bool reload;
+    public ReloadParticles(bool reload)
+    {
+        this.reload = reload;
+    }
+}
+
 public struct SplineSelectionChange
 {
     public BezierSpline spline;
