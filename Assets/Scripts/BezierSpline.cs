@@ -27,6 +27,18 @@ public class BezierSpline : MonoBehaviour
         }
     }
 
+    public void CopyFrom(BezierSpline other)
+    {
+        s_life           = other.s_life;
+        splineSymmetry   = other.splineSymmetry;
+        frequency        = other.frequency;
+        lifetimeOffset   = other.lifetimeOffset;
+        lerpLifetimeOffset = other.lerpLifetimeOffset;
+        lerpTimes        = other.lerpTimes;
+        lerpColor1       = other.lerpColor1;
+        lerpColor2       = other.lerpColor2;
+    }
+
     public Vector3 GetPoint(float t)
     {
         if (points.Length > 0)

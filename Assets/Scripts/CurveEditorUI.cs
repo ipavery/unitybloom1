@@ -142,7 +142,7 @@ public class CurveEditorUI : MonoBehaviour
                 fieldName = "Quantity",
                 getter = () => selectedObject.frequency,
                 setter = v => { var p = selectedObject.frequency; p = (int)v; selectedObject.frequency = p; },
-                minMax = new(1,60)
+                minMax = new(2,60)
             },
             new InspectorField
             {
@@ -189,7 +189,7 @@ public class CurveEditorUI : MonoBehaviour
         colorPickerPanel.SetActive(false);
     }
 
-    void OnSelectClicked() => Debug.Log("Select event triggered for " + selectedObject.name);
+    void OnSelectClicked() => EventHub.Publish(new SelectSpline(selectedObject));
     void OnDeleteClicked()
     {
         Debug.Log("Delete event triggered for " + selectedObject.name);

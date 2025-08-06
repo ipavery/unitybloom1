@@ -34,6 +34,9 @@ public class DrawSpline : MonoBehaviour
     private Vector2 previousMousePos = new Vector2(0, 0);
     private bool isSplineCreated;
     private BezierSpline newSpline;
+    public float velocityFactor = 2;
+    private float distanceFactor;
+    public GameObject drawSplineContainer;
 
     void Awake()
     {
@@ -91,7 +94,7 @@ public class DrawSpline : MonoBehaviour
         {
             drawingSpline = false;
             isSplineCreated = false;
-            samplePoints.ForEach(s => Debug.Log("point: " + s.velocity + " pos: " + s.position));
+            //samplePoints.ForEach(s => Debug.Log("point: " + s.velocity + " pos: " + s.position));
         }
 
     }
@@ -105,20 +108,40 @@ public class DrawSpline : MonoBehaviour
         previousMousePos = mousePosition2D;
         Vector3 mousePosition3D = ProjectToPlane(mousePosition2D);
         Vector3 mouseVelocity3D = ProjectToPlane(mousePosition2D + Mouse.current.delta.ReadValue()) - mousePosition3D;
+        if (mouseVelocity3D.magnitude == 0)
+        {
+            return;
+        }
         samplePoints.Add(new SamplePoints { position = mousePosition3D, velocity = mouseVelocity3D });
+
 
         if (samplePoints.Count >= 2 && isSplineCreated == false)
         {
             //calculate control points and draw spline
-            //if there is no spline created yet make one and set it's first and last points
+            //if there is no spline created yet make one and set its first and last points
             newSpline = Instantiate(splinePrefab, samplePoints[0].position, Quaternion.identity);
-            newSpline.points[3] = samplePoints[1].position;
+            newSpline.transform.SetParent(drawSplineContainer.transform);
+
+
+            newSpline.points[3] = samplePoints[1].position - newSpline.transform.position;
+
+            newSpline.points[1] = samplePoints[0].position + velocityFactor * samplePoints[0].velocity - newSpline.transform.position;
+            newSpline.points[2] = samplePoints[1].position - velocityFactor * samplePoints[1].velocity - newSpline.transform.position;
             isSplineCreated = true;
+            EventHub.Publish(new NewSplineCreated(newSpline));
         }
         else if (isSplineCreated == true)
         {
+            distanceFactor = (samplePoints[^1].position - samplePoints[^2].position).magnitude;
+            //create the new curve and set the last point on the curve
             newSpline.AddCurve();
-            newSpline.points[samplePoints.Count - 1] = samplePoints[samplePoints.Count - 1].position;
+            newSpline.points[^1] = samplePoints[^1].position - newSpline.transform.position;
+
+            //compute curve control points to match the velocity of the sample point
+            newSpline.points[^3] = samplePoints[^2].position + velocityFactor * samplePoints[^2].velocity - newSpline.transform.position;
+            newSpline.points[^2] = samplePoints[^1].position - velocityFactor * samplePoints[^1].velocity - newSpline.transform.position;
+            int pointCount = newSpline.points.Length;
+            EventHub.Publish(new SplineUpdated(newSpline, new List<int>{pointCount-3,pointCount-2,pointCount-1}));
         }
     }
 

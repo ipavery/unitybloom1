@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public struct ClipDragEnded
@@ -42,5 +43,32 @@ public struct SplineSelectionChange
     {
         this.spline = spline;
         this.isSelected = isSelected;
+    }
+}
+
+public struct NewSplineCreated
+{
+    public BezierSpline spline;
+    public NewSplineCreated(BezierSpline spline)
+    { this.spline = spline; }
+}
+
+public struct SplineUpdated
+{
+    public BezierSpline spline;
+    public List<int> updatedIndices;
+    public SplineUpdated(BezierSpline spline, List<int> updatedIndices)
+    {
+        this.spline = spline;
+        this.updatedIndices = updatedIndices;
+    }
+}
+
+public struct SelectSpline
+{
+    public BezierSpline spline;
+    public SelectSpline(BezierSpline spline)
+    {
+        this.spline = spline;
     }
 }

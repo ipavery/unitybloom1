@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
-using System.Linq; // Needed for SequenceEqual
+using System.Linq;
+using Unity.Mathematics; // Needed for SequenceEqual
 
 public class ParticleManager : MonoBehaviour
 {
@@ -55,6 +56,8 @@ public class ParticleManager : MonoBehaviour
         EventHub.Subscribe<ClipDragEnded>(OnClipDragEnded);
         EventHub.Subscribe<GizmoDragEnded>(OnGizmoDragEnded);
         EventHub.Subscribe<ReloadParticles>(OnReloadParticles);
+        EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
+        EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
     }
 
     void OnDisable()
@@ -62,9 +65,27 @@ public class ParticleManager : MonoBehaviour
         EventHub.Unsubscribe<ClipDragEnded>(OnClipDragEnded);
         EventHub.Unsubscribe<GizmoDragEnded>(OnGizmoDragEnded);
         EventHub.Unsubscribe<ReloadParticles>(OnReloadParticles);
+        EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
+        EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
+    }
+
+    void OnNewSplineCreated(NewSplineCreated e)
+    {
+        e.spline.CopyFrom(splineParticleGroup[^1].spline);
+        splineParticleGroup.Add(new SplineParticleGroup { spline = e.spline });
+    }
+
+    void OnSplineUpdated(SplineUpdated e)
+    {
+        RestartParticleSystem();
     }
 
     private void OnReloadParticles(ReloadParticles e)
+    {
+        RestartParticleSystem();
+    }
+
+    private void RestartParticleSystem()
     {
         //simple restart of the particle system
         started = false;
@@ -74,21 +95,15 @@ public class ParticleManager : MonoBehaviour
 
     private void OnClipDragEnded(ClipDragEnded e)
     {
-        //restart the particle system - somehow we are losing particles when the clip is dragged
-        started = false;
-        ps.Clear();
+        
         e.spline.startTimeOffset = e.timePosition;
-        StartDelayed();
+        RestartParticleSystem();
         Debug.Log($"Clip drag ended for {e.spline.name} at time {e.timePosition}");
     }
 
     private void OnGizmoDragEnded(GizmoDragEnded e)
     {
-        //restart the particle system - somehow we are losing particles when the clip is dragged
-        started = false;
-        ps.Clear();
-        StartDelayed();
-        //Debug.Log($"Gizmo drag ended for {e.gizmo.name} at position {e.position}");
+        RestartParticleSystem();
     }
 
     void Start()
