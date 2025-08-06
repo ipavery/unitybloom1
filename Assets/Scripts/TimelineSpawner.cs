@@ -46,7 +46,10 @@ public class TimelineSpawner : MonoBehaviour
             RectTransform rt = clipObj.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0, 0.5f);
             rt.anchorMax = new Vector2(0, 0.5f);
-            rt.anchoredPosition = new Vector2(draggablePrefab.GetComponent<RectTransform>().rect.width / 2, -i * (rt.sizeDelta.y + 10)); 
+            // (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond
+            float timePosition = items[i].spline.startTimeOffset * timelineSettings.pixelsPerSecond;
+            rt.anchoredPosition = new Vector2(draggablePrefab.GetComponent<RectTransform>().rect.width / 2 + timePosition, -i * (rt.sizeDelta.y + 10)); 
+            
             // Offset vertically so they don't overlap (just for visibility)
 
             // Configure draggable behavior

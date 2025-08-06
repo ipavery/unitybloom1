@@ -5763,7 +5763,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0.66922396
+  m_Size: 0.6695272
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -6314,7 +6314,6 @@ Transform:
   - {fileID: 433620540}
   - {fileID: 1755324296}
   - {fileID: 10826898}
-  - {fileID: 812688700}
   - {fileID: 598567111}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -6692,7 +6691,6 @@ MonoBehaviour:
   symmetry: 4
   splineParticleGroup:
   - spline: {fileID: 598567112}
-  - spline: {fileID: 812688701}
   ParticleCubeTransform: {fileID: 334887504}
   symmetryPosition: {fileID: 2124562818}
   catchParticlesBufferTimeRatio: 0.4
@@ -11828,7 +11826,7 @@ Transform:
   m_GameObject: {fileID: 598567110}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 8.71, y: 1.29, z: 10}
+  m_LocalPosition: {x: 0, y: 0, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11848,12 +11846,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   points:
   - {x: 0, y: 0, z: 0}
-  - {x: -3.3296313, y: 0.9641187, z: 0}
-  - {x: -6.197318, y: 1.0647521, z: 0}
-  - {x: -6.9587336, y: -0.24930155, z: 0}
+  - {x: 25, y: 0, z: 0}
+  - {x: 75, y: 0, z: 0}
+  - {x: 100, y: 0, z: 0}
   s_life: 0.8
-  splineSymmetry: 5
-  frequency: 10
+  splineSymmetry: 4
+  frequency: 2
   lifetimeOffset: 0.05
   lerpLifetimeOffset: 0.07
   lerpTimes: 1
@@ -12087,66 +12085,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &812688699
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 812688700}
-  - component: {fileID: 812688701}
-  m_Layer: 0
-  m_Name: Spline A
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &812688700
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 812688699}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 8.48, y: 2.67, z: 10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 354893604}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &812688701
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 812688699}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c6365704403259478dea51c177e61f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  points:
-  - {x: 0, y: 0, z: 0}
-  - {x: -2.0384521, y: -1.5594006, z: 0}
-  - {x: -4.7658844, y: 0.56793547, z: 0}
-  - {x: -5.774126, y: -0.24625587, z: 0}
-  s_life: 0.8
-  splineSymmetry: 5
-  frequency: 5
-  lifetimeOffset: 0.05
-  lerpLifetimeOffset: 0.07
-  lerpTimes: 1
-  lerpColor1: {r: 0.16078432, g: 0.60784316, b: 0.28235295, a: 1}
-  lerpColor2: {r: 0.25882354, g: 0.81568635, b: 0.61960787, a: 1}
-  startTimeOffset: 0
-  splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
-  lerpSpline: {fileID: 0}
 --- !u!1 &822530119
 GameObject:
   m_ObjectHideFlags: 0
@@ -13735,7 +13673,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -1887.0001, y: -0.000030517578}
+  m_AnchoredPosition: {x: -1886.9999, y: -0.000030517578}
   m_SizeDelta: {x: 5710, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1927305298
@@ -13775,7 +13713,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 76.38}
-  m_SizeDelta: {x: 160, y: 30}
+  m_SizeDelta: {x: 259.78, y: 30}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1927305300
 MonoBehaviour:
@@ -13916,7 +13854,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Button
+  m_text: Select Just This Curve
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

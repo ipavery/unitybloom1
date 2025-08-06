@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class DraggableClip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -9,6 +10,7 @@ public class DraggableClip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public float pixelsPerSecond; // Horizontal scale of the timeline
     public float snapInterval;     // Seconds per snap interval
     public BezierSpline attachedSpline; // Reference to the current spline
+    public Button lerpButton;
 
 
     private Vector2 offset;
@@ -24,6 +26,16 @@ public class DraggableClip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     {
         pixelsPerSecond = timelineSettings.pixelsPerSecond;
         snapInterval = timelineSettings.snapInterval;
+    }
+
+    void Start()
+    {
+        lerpButton.onClick.AddListener(LerpButton);
+    }
+
+    void LerpButton()
+    {
+        EventHub.Publish(new ClipLerpClick(gameObject));
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -56,6 +68,6 @@ public class DraggableClip : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     public void OnEndDrag(PointerEventData eventData)
     {
         //restart the particle system
-        EventHub.Publish(new ClipDragEnded(attachedSpline, (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond));
+        EventHub.Publish(new ClipDragEnded(attachedSpline, (rectTransform.anchoredPosition.x - rectTransform.rect.width/2) / pixelsPerSecond));
     }
 }

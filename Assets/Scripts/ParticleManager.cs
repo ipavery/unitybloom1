@@ -212,12 +212,13 @@ public class ParticleManager : MonoBehaviour
 
                     life = (float)Math.Round(life, 3);
 
+                    float angleStep = 360f / currentSpline.splineSymmetry;
                     // set position and life with radial symmetry
                     for (int z = 0; z < currentSpline.splineSymmetry; z++)
                     {
 
                         symmetryPosition.transform.position = newParticlePosition;
-                        symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * (360 / currentSpline.splineSymmetry));
+                        symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * angleStep);
                         var p = particleArray[currentParticleIndex];
                         p.position = symmetryPosition.transform.position;
                         p.remainingLifetime = life;

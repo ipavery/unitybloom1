@@ -13,6 +13,7 @@ public class InspectorField
     public Func<float> getter;
     public Action<float> setter;
     public Vector2 minMax;
+    public bool wholeNumbers = true;
 }
 
 public class CurveEditorUI : MonoBehaviour
@@ -25,9 +26,11 @@ public class CurveEditorUI : MonoBehaviour
 
     [Header("Color Picker")]
     public Button colorPickerButton;
+    public Button colorPickerButton2;
     public GameObject colorPickerPanel;
     public RawImage colorPaletteImage;
     public RectTransform previousColorMarker;
+    private int pickingColor = 0;
 
     [Header("Actions")]
     public Button selectButton;
@@ -63,12 +66,24 @@ public class CurveEditorUI : MonoBehaviour
 
         // Setup color picker
         paletteTexture = colorPaletteImage.texture as Texture2D;
-        colorPickerButton.onClick.AddListener(() => colorPickerPanel.SetActive(true));
+        colorPickerButton.onClick.AddListener(ColorButton1);
+        colorPickerButton2.onClick.AddListener(ColorButton2);
         colorPaletteImage.GetComponent<Button>().onClick.AddListener(OnPaletteClicked);
 
         // Action buttons
         selectButton.onClick.AddListener(OnSelectClicked);
         deleteButton.onClick.AddListener(OnDeleteClicked);
+    }
+
+    void ColorButton1()
+    {
+        colorPickerPanel.SetActive(true);
+        pickingColor = 1;
+    }
+    void ColorButton2()
+    {
+        colorPickerPanel.SetActive(true);
+        pickingColor = 2;
     }
 
     public void InitializeFields(List<InspectorField> inspectorFields)
@@ -84,10 +99,11 @@ public class CurveEditorUI : MonoBehaviour
             var slider = go.GetComponentInChildren<Slider>();
             var input = go.GetComponentInChildren<TMP_InputField>();
             var label = go.GetComponentInChildren<TextMeshProUGUI>();
-            
+
             label.text = f.fieldName;
             slider.minValue = f.minMax.x;
             slider.maxValue = f.minMax.y;
+            slider.wholeNumbers = f.wholeNumbers;
             slider.value = f.getter();
             input.contentType = TMP_InputField.ContentType.EmailAddress;
             input.text = f.getter().ToString("0.##");
@@ -135,7 +151,7 @@ public class CurveEditorUI : MonoBehaviour
                 fieldName = "Symmetry",
                 getter = () => selectedObject.splineSymmetry,
                 setter = v => { var p = selectedObject.splineSymmetry; p = (int)v; selectedObject.splineSymmetry = p; },
-                minMax = new(1,50)
+                minMax = new(1,70)
             },
             new InspectorField
             {
@@ -146,10 +162,19 @@ public class CurveEditorUI : MonoBehaviour
             },
             new InspectorField
             {
-                fieldName = "Speed",
+                fieldName = "Lifetime",
                 getter = () => selectedObject.s_life,
                 setter = v => { var p = selectedObject.s_life; p = v; selectedObject.s_life = p; },
-                minMax = new(.4f,8)
+                minMax = new(.2f,4),
+                wholeNumbers = false
+            },
+            new InspectorField
+            {
+                fieldName = "Offset",
+                getter = () => selectedObject.lifetimeOffset,
+                setter = v => { var p = selectedObject.lifetimeOffset; p = v; selectedObject.lifetimeOffset = p; },
+                minMax = new(0,.5f),
+                wholeNumbers = false
             }
         });
 
@@ -184,8 +209,13 @@ public class CurveEditorUI : MonoBehaviour
         Color c = paletteTexture.GetPixelBilinear(u, v);
 
         // Apply color
-        selectedObject.lerpColor1 = c;
+        if (pickingColor == 1)
+            selectedObject.lerpColor1 = c;
+        if (pickingColor == 2)
+            selectedObject.lerpColor2 = c;
+        pickingColor = 0;
         ReloadParticles();
+
         colorPickerPanel.SetActive(false);
     }
 

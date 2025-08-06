@@ -72,3 +72,12 @@ public struct SelectSpline
         this.spline = spline;
     }
 }
+
+public struct ClipLerpClick
+{
+    public GameObject clipObj;
+    public ClipLerpClick(GameObject clipObj)
+    {
+        this.clipObj = clipObj;
+    }
+}
