@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using System;
+using System.Linq;
 
 [Serializable]
 public class LerpLines
@@ -22,6 +23,14 @@ public class ClipLerper : MonoBehaviour
     private bool selectingLerp = false;
     private GameObject firstSelectedClip;
     Camera cam;
+    public GameObject cancelButtonObject;
+    public ParticleManager particleManager;
+
+    //scrolling variables
+    public float scrollSpeed;
+    private RawImage rawImage;
+    private Rect uvRect;
+    public Vector2 scrollBounds;  //scroller will start at y and decrease until x
 
     void OnEnable()
     {
@@ -35,32 +44,80 @@ public class ClipLerper : MonoBehaviour
 
     void OnClipLerpClick(ClipLerpClick e)
     {
+        EventHub.Publish(new SplineSelectionChange(e.clipObj.GetComponent<DraggableClip>().attachedSpline, true));
         if (selectingLerp == false)
         {
             selectingLerp = true;
             var newLerpLine = Instantiate(lerpLinePrefab, gameObject.GetComponent<RectTransform>());
-            newLerpLine.GetComponent<Image>().color = lerpLineColor;
+            rawImage = newLerpLine.GetComponent<RawImage>();
+            rawImage.color = lerpLineColor;
+            uvRect = rawImage.uvRect;
+            uvRect.x = scrollBounds.y;
             newLerpGroup = new LerpLines { firstClip = e.clipObj, lerpLine = newLerpLine, nowSelecting = true };
             lerpLines.Add(newLerpGroup);
-
+            cancelButtonObject.SetActive(true);
         }
         else
         {
             //check if selected clip is different to original
             if (newLerpGroup != null && newLerpGroup.firstClip != e.clipObj)
             {
-                newLerpGroup.firstClip.GetComponent<DraggableClip>().attachedSpline.lerpSpline = e.clipObj.GetComponent<DraggableClip>().attachedSpline;
+                foreach (var lerpGroup in lerpLines)
+                {
+                    if (lerpGroup.firstClip == newLerpGroup.firstClip && lerpGroup.secondClip != null)
+                    {
+                        lerpLines.Remove(lerpGroup);
+                        Destroy(lerpGroup.lerpLine);
+                        break;
+                    }
+                }
+
+                //newLerpGroup.firstClip.GetComponent<DraggableClip>().attachedSpline.lerpSpline = e.clipObj.GetComponent<DraggableClip>().attachedSpline;
                 newLerpGroup.nowSelecting = false;
                 newLerpGroup.secondClip = e.clipObj;
             }
+            else if (newLerpGroup != null && newLerpGroup.firstClip == e.clipObj)
+            {
+                Debug.Log("same button clicked");
+                OnCancel();
+            }
             selectingLerp = false;
+            cancelButtonObject.SetActive(false);
         }
+        UpdateLerpSplines();
+    }
+
+    void OnCancel()
+    {
+        selectingLerp = false;
+        
+        lerpLines.Remove(newLerpGroup);
+        Destroy(newLerpGroup.lerpLine);
+        cancelButtonObject.SetActive(false);
+    }
+
+    void UpdateLerpSplines()
+    {
+        foreach (var splineParticle in particleManager.splineParticleGroup)
+        {
+            splineParticle.spline.lerpSpline = splineParticle.spline;
+        }
+        foreach (var lerpGroup in lerpLines)
+        {
+            if (lerpGroup.firstClip != null && lerpGroup.secondClip != null)
+            {
+                newLerpGroup.firstClip.GetComponent<DraggableClip>().attachedSpline.lerpSpline = lerpGroup.secondClip.GetComponent<DraggableClip>().attachedSpline;
+            }
+        }
+        EventHub.Publish(new ReloadParticles(true));
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         lerpLines = new();
+        cancelButtonObject.SetActive(false);
+        cancelButtonObject.GetComponent<Button>().onClick.AddListener(OnCancel);
     }
 
     // Update is called once per frame
@@ -70,29 +127,44 @@ public class ClipLerper : MonoBehaviour
         {
             if (lerpGroup.nowSelecting == false)
             {
-                var target1 = lerpGroup.firstClip.transform.Find("LerpButton");
-                var target2 = lerpGroup.secondClip.transform.Find("LerpButton");
-                Vector2 dir = target2.position - target1.position;
-                var dist = dir.magnitude;
-                float angleTo = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-                var lerpLineT = lerpGroup.lerpLine.transform;
-                lerpLineT.localPosition = target1.position;
-                lerpLineT.localScale = new Vector3(dist, lerpLineT.localScale.y, lerpLineT.localScale.z);
-                lerpLineT.rotation = Quaternion.Euler(0f, 0f, angleTo);
+                var target1 = lerpGroup.firstClip.transform.Find("LerpButton").position;
+                var target2 = lerpGroup.secondClip.transform.Find("LerpButton").position;
+
+                MakeLine(target1, target2, lerpGroup);
+
+                ScrollRect(lerpGroup);
             }
             else
             {
-                var target1 = lerpGroup.firstClip.transform.Find("LerpButton");
+                var target1 = lerpGroup.firstClip.transform.Find("LerpButton").position;
                 var target2 = Mouse.current.position.ReadValue();
-                Vector2 dir = target2 - (Vector2)target1.position;
-                var dist = dir.magnitude;
-                float angleTo = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-                var lerpLineT = lerpGroup.lerpLine.transform;
-                lerpLineT.localPosition = target1.position;
-                lerpLineT.localScale = new Vector3(dist, lerpLineT.localScale.y, lerpLineT.localScale.z);
-                lerpLineT.rotation = Quaternion.Euler(0f, 0f, angleTo);
+
+                MakeLine(target1, target2, lerpGroup);
+
+                ScrollRect(lerpGroup);
             }
 
         }
+    }
+
+    void ScrollRect(LerpLines lerpGroup)
+    {
+        rawImage = lerpGroup.lerpLine.GetComponent<RawImage>();
+        uvRect = rawImage.uvRect;
+        uvRect.x -= scrollSpeed * Time.deltaTime;
+        if (uvRect.x < scrollBounds.x)
+            uvRect.x += scrollBounds.y;  // Loop back smoothly
+        rawImage.uvRect = uvRect;
+    }
+
+    void MakeLine(Vector2 target1, Vector2 target2, LerpLines lerpGroup)
+    {
+        Vector2 dir = target2 - target1;
+        var dist = dir.magnitude;
+        float angleTo = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+        var lerpLineT = lerpGroup.lerpLine.transform;
+        lerpLineT.localPosition = target1;
+        lerpLineT.localScale = new Vector3(dist, lerpLineT.localScale.y, lerpLineT.localScale.z);
+        lerpLineT.rotation = Quaternion.Euler(0f, 0f, angleTo);
     }
 }

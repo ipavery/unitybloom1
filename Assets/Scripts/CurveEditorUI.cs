@@ -35,6 +35,7 @@ public class CurveEditorUI : MonoBehaviour
     [Header("Actions")]
     public Button selectButton;
     public Button deleteButton;
+    public Button activateButton;
 
     [Header("Inspector Setup")]
     public List<InspectorField> fields = new List<InspectorField>();
@@ -73,6 +74,7 @@ public class CurveEditorUI : MonoBehaviour
         // Action buttons
         selectButton.onClick.AddListener(OnSelectClicked);
         deleteButton.onClick.AddListener(OnDeleteClicked);
+        activateButton.onClick.AddListener(ActivateButton);
     }
 
     void ColorButton1()
@@ -84,6 +86,13 @@ public class CurveEditorUI : MonoBehaviour
     {
         colorPickerPanel.SetActive(true);
         pickingColor = 2;
+    }
+
+    void ActivateButton()
+    {
+
+        selectedObject.isActive = !selectedObject.isActive; // flips between true and false
+        ReloadParticles();
     }
 
     public void InitializeFields(List<InspectorField> inspectorFields)
@@ -173,6 +182,21 @@ public class CurveEditorUI : MonoBehaviour
                 fieldName = "Offset",
                 getter = () => selectedObject.lifetimeOffset,
                 setter = v => { var p = selectedObject.lifetimeOffset; p = v; selectedObject.lifetimeOffset = p; },
+                minMax = new(0,.5f),
+                wholeNumbers = false
+            },
+            new InspectorField
+            {
+                fieldName = "Repeats",
+                getter = () => selectedObject.lerpTimes,
+                setter = v => { var p = selectedObject.lerpTimes; p = (int)v; selectedObject.lerpTimes = p; },
+                minMax = new(1,30)
+            },
+            new InspectorField
+            {
+                fieldName = "Repeat Offset",
+                getter = () => selectedObject.lerpLifetimeOffset,
+                setter = v => { var p = selectedObject.lerpLifetimeOffset; p = v; selectedObject.lerpLifetimeOffset = p; },
                 minMax = new(0,.5f),
                 wholeNumbers = false
             }

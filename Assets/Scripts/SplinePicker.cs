@@ -71,6 +71,7 @@ public class SplinePicker : MonoBehaviour
         EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
         EventHub.Subscribe<SelectSpline>(OnSelectSpline);
+        EventHub.Subscribe<SplineSelectionChange>(OnSplineSelectionChanged);
 
     }
 
@@ -81,7 +82,24 @@ public class SplinePicker : MonoBehaviour
         EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
         EventHub.Unsubscribe<SelectSpline>(OnSelectSpline);
+        EventHub.Unsubscribe<SplineSelectionChange>(OnSplineSelectionChanged);
     }
+
+    void OnSplineSelectionChanged(SplineSelectionChange e)
+    {
+        if (e.isSelected == true)
+        {
+            selectedSpline = e.spline;
+            e.spline.GetComponentInChildren<LineRenderer>().material = highlightedLineMaterial;
+        }
+        else if (e.isSelected == false)
+        {
+            e.spline.GetComponentInChildren<LineRenderer>().material = lineMaterial;
+            selectedSpline = null;
+        }
+
+    }
+
 
     void OnSelectSpline(SelectSpline e)
     {
@@ -100,7 +118,6 @@ public class SplinePicker : MonoBehaviour
 
         selectedSpline = e.spline;
         EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
-        selectedSpline.GetComponentInChildren<LineRenderer>().material = highlightedLineMaterial;
         var lineObj = selectedSpline.transform.Find("SplineLine");
 
         foreach (Transform sphereTransform in lineObj)
@@ -181,7 +198,6 @@ public class SplinePicker : MonoBehaviour
         {
             selectedSpline = sphereObject.GetComponentInParent<BezierSpline>();
             EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
-            sphereObject.GetComponentInParent<LineRenderer>().material = highlightedLineMaterial;
         }
     }
 
@@ -275,8 +291,6 @@ public class SplinePicker : MonoBehaviour
             if (selectedSpline != null)
             {
                 EventHub.Publish(new SplineSelectionChange(selectedSpline, false));
-                selectedSpline.GetComponentInChildren<LineRenderer>().material = lineMaterial;
-                selectedSpline = null;
             }
         }
     }

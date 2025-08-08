@@ -113,7 +113,7 @@ public class ParticleManager : MonoBehaviour
 
     void StartDelayed()
     {
-        int particleCount = splineParticleGroup.Sum(group => group.spline.frequency * group.spline.lerpTimes * group.spline.splineSymmetry);
+        int particleCount = splineParticleGroup.Sum(group => group.spline.frequency * group.spline.lerpTimes * group.spline.splineSymmetry * (group.spline.isActive ? 1 : 0));
         particleArray = new ParticleSystem.Particle[particleCount];
         combinedParticleArray = new ParticleSystem.Particle[particleCount];
         //Debug.Log(combinedParticleArray.Length);
@@ -145,6 +145,8 @@ public class ParticleManager : MonoBehaviour
         for (int j = 0; j < splineParticleGroup.Count; j++)
         {
             BezierSpline currentSpline = splineParticleGroup[j].spline;
+            if (currentSpline.isActive == false)
+                continue;
             splineParticleGroup[j].particles = new ParticleSystem.Particle[0];
 
             int splineParticleCount = currentSpline.frequency * currentSpline.lerpTimes;

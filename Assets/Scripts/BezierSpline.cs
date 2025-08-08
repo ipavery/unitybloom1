@@ -3,7 +3,7 @@ using System;
 
 public class BezierSpline : MonoBehaviour
 {
-
+    public bool isActive = true;
     public Vector3[] points;
     public float s_life; //Lifetime of the particle in seconds
     public int splineSymmetry;
@@ -29,14 +29,15 @@ public class BezierSpline : MonoBehaviour
 
     public void CopyFrom(BezierSpline other)
     {
-        s_life           = other.s_life;
-        splineSymmetry   = other.splineSymmetry;
-        frequency        = other.frequency;
-        lifetimeOffset   = other.lifetimeOffset;
+        s_life = other.s_life;
+        splineSymmetry = other.splineSymmetry;
+        frequency = other.frequency;
+        lifetimeOffset = other.lifetimeOffset;
         lerpLifetimeOffset = other.lerpLifetimeOffset;
-        lerpTimes        = other.lerpTimes;
-        lerpColor1       = other.lerpColor1;
-        lerpColor2       = other.lerpColor2;
+        lerpTimes = other.lerpTimes;
+        lerpColor1 = other.lerpColor1;
+        lerpColor2 = other.lerpColor2;
+        isActive = other.isActive;
     }
 
     public Vector3 GetPoint(float t)
