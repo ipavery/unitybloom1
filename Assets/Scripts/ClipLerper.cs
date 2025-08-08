@@ -1,10 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
+using System;
+
+[Serializable]
+public class LerpLines
+{
+    public GameObject firstClip;              // or whatever your “line” type is
+    public GameObject secondClip; // list of particles for this line
+    public GameObject lerpLine; // Index of the control point in the spline
+    public bool nowSelecting;
+}
 
 public class ClipLerper : MonoBehaviour
 {
-    public LineRenderer lr;
+    public GameObject lerpLinePrefab;
+    public Color lerpLineColor;
+    private List<LerpLines> lerpLines;
+    private LerpLines newLerpGroup;
     private bool selectingLerp = false;
     private GameObject firstSelectedClip;
     Camera cam;
@@ -24,46 +38,61 @@ public class ClipLerper : MonoBehaviour
         if (selectingLerp == false)
         {
             selectingLerp = true;
-            lr.enabled = true;
-            firstSelectedClip = e.clipObj;
+            var newLerpLine = Instantiate(lerpLinePrefab, gameObject.GetComponent<RectTransform>());
+            newLerpLine.GetComponent<Image>().color = lerpLineColor;
+            newLerpGroup = new LerpLines { firstClip = e.clipObj, lerpLine = newLerpLine, nowSelecting = true };
+            lerpLines.Add(newLerpGroup);
+
         }
         else
         {
             //check if selected clip is different to original
-            if (firstSelectedClip != e.clipObj)
+            if (newLerpGroup != null && newLerpGroup.firstClip != e.clipObj)
             {
-                firstSelectedClip.GetComponent<DraggableClip>().attachedSpline.lerpSpline = e.clipObj.GetComponent<DraggableClip>().attachedSpline;
+                newLerpGroup.firstClip.GetComponent<DraggableClip>().attachedSpline.lerpSpline = e.clipObj.GetComponent<DraggableClip>().attachedSpline;
+                newLerpGroup.nowSelecting = false;
+                newLerpGroup.secondClip = e.clipObj;
             }
             selectingLerp = false;
-            firstSelectedClip = null;
         }
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        lr.enabled = false;
-        cam = Camera.main;
-        lr.positionCount = 2;
-        lr.startWidth = lr.endWidth = 0.01f; // world units
+        lerpLines = new();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (selectingLerp)
+        foreach (var lerpGroup in lerpLines)
         {
-            Vector3 wa = cam.ScreenToWorldPoint(
-            RectTransformUtility.WorldToScreenPoint(cam, firstSelectedClip.transform.Find("LerpButton").GetComponent<RectTransform>().position)
-        );
-            Vector3 wb = cam.ScreenToWorldPoint(
-                Mouse.current.position.ReadValue()
-            );
-            wa.z = wb.z = 0f; // ensure both lie on the same plane
+            if (lerpGroup.nowSelecting == false)
+            {
+                var target1 = lerpGroup.firstClip.transform.Find("LerpButton");
+                var target2 = lerpGroup.secondClip.transform.Find("LerpButton");
+                Vector2 dir = target2.position - target1.position;
+                var dist = dir.magnitude;
+                float angleTo = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                var lerpLineT = lerpGroup.lerpLine.transform;
+                lerpLineT.localPosition = target1.position;
+                lerpLineT.localScale = new Vector3(dist, lerpLineT.localScale.y, lerpLineT.localScale.z);
+                lerpLineT.rotation = Quaternion.Euler(0f, 0f, angleTo);
+            }
+            else
+            {
+                var target1 = lerpGroup.firstClip.transform.Find("LerpButton");
+                var target2 = Mouse.current.position.ReadValue();
+                Vector2 dir = target2 - (Vector2)target1.position;
+                var dist = dir.magnitude;
+                float angleTo = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                var lerpLineT = lerpGroup.lerpLine.transform;
+                lerpLineT.localPosition = target1.position;
+                lerpLineT.localScale = new Vector3(dist, lerpLineT.localScale.y, lerpLineT.localScale.z);
+                lerpLineT.rotation = Quaternion.Euler(0f, 0f, angleTo);
+            }
 
-            lr.SetPosition(0, wa);
-            lr.SetPosition(1, wb);
-            Debug.Log(lr.positionCount);
         }
     }
 }
