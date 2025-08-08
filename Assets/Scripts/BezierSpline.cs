@@ -87,10 +87,10 @@ public class BezierSpline : MonoBehaviour
             i *= 3;
         }
 
-        Vector3 p0 = Vector3.Lerp(transform.position+points[i], lerpSpline.points[i]+lerpSpline.transform.position, l);
-        Vector3 p1 = Vector3.Lerp(transform.position+points[i + 1], lerpSpline.points[i+1]+lerpSpline.transform.position, l);
-        Vector3 p2 = Vector3.Lerp(transform.position+points[i + 2], lerpSpline.points[i+2]+lerpSpline.transform.position, l);
-        Vector3 p3 = Vector3.Lerp(transform.position+points[i + 3], lerpSpline.points[i+3]+lerpSpline.transform.position, l);
+        Vector3 p0 = Vector3.Lerp(transform.position + points[i], lerpSpline.points[i] + lerpSpline.transform.position, l);
+        Vector3 p1 = Vector3.Lerp(transform.position + points[i + 1], lerpSpline.points[i + 1] + lerpSpline.transform.position, l);
+        Vector3 p2 = Vector3.Lerp(transform.position + points[i + 2], lerpSpline.points[i + 2] + lerpSpline.transform.position, l);
+        Vector3 p3 = Vector3.Lerp(transform.position + points[i + 3], lerpSpline.points[i + 3] + lerpSpline.transform.position, l);
         return Bezier.GetPoint(
             p0, p1, p2, p3, t);
     }
