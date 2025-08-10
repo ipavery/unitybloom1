@@ -73,6 +73,15 @@ public struct SelectSpline
     }
 }
 
+public struct DeleteSpline
+{
+    public BezierSpline spline;
+    public DeleteSpline(BezierSpline spline)
+    {
+        this.spline = spline;
+    }
+}
+
 public struct ClipLerpClick
 {
     public GameObject clipObj;

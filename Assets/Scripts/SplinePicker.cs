@@ -72,6 +72,7 @@ public class SplinePicker : MonoBehaviour
         EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
         EventHub.Subscribe<SelectSpline>(OnSelectSpline);
         EventHub.Subscribe<SplineSelectionChange>(OnSplineSelectionChanged);
+        EventHub.Subscribe<DeleteSpline>(OnDeleteSpline);
 
     }
 
@@ -83,6 +84,12 @@ public class SplinePicker : MonoBehaviour
         EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
         EventHub.Unsubscribe<SelectSpline>(OnSelectSpline);
         EventHub.Unsubscribe<SplineSelectionChange>(OnSplineSelectionChanged);
+        EventHub.Unsubscribe<DeleteSpline>(OnDeleteSpline);
+    }
+
+    void OnDeleteSpline(DeleteSpline e)
+    {
+        
     }
 
     void OnSplineSelectionChanged(SplineSelectionChange e)

@@ -23,6 +23,7 @@ public class CurveEditorUI : MonoBehaviour
     public GameObject inspectorPanel;
     public RectTransform fieldContainer; // VerticalLayoutGroup container
     public GameObject fieldPrefab;      // prefab with Slider + InputField
+    public ParticleManager particleManager;
 
     [Header("Color Picker")]
     public Button colorPickerButton;
@@ -247,7 +248,9 @@ public class CurveEditorUI : MonoBehaviour
     void OnDeleteClicked()
     {
         Debug.Log("Delete event triggered for " + selectedObject.name);
-        Destroy(selectedObject);
+        particleManager.splineParticleGroup.RemoveAll(splineGroup => splineGroup.spline == selectedObject);
+        Destroy(selectedObject.gameObject);
         DeselectObject();
+        ReloadParticles();
     }
 }

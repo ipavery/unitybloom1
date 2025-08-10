@@ -5765,8 +5765,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 479538059}
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 0.66951615
+  m_Value: 1.0000002
+  m_Size: 0.66946685
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -13974,6 +13974,7 @@ MonoBehaviour:
   inspectorPanel: {fileID: 101165729}
   fieldContainer: {fileID: 1779265057}
   fieldPrefab: {fileID: 728314200318611590, guid: 14b2a2a7234c0af4ebb0f264d64d8e30, type: 3}
+  particleManager: {fileID: 527990700}
   colorPickerButton: {fileID: 822530121}
   colorPickerButton2: {fileID: 516817011}
   colorPickerPanel: {fileID: 2026329043}
@@ -14516,7 +14517,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -1887, y: -0.000030517578}
+  m_AnchoredPosition: {x: -1887.0004, y: -0.000030517578}
   m_SizeDelta: {x: 5710, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1927305298
