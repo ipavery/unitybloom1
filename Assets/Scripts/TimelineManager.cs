@@ -1,10 +1,12 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class TimelineManager : MonoBehaviour
 {
     public RectTransform content;            // The main timeline track
+    public ScrollRect scrollRect;
     public RectTransform timestampContainer; // Container for timestamps
     GameObject timestampPrefab;       // Prefab (TextMeshProUGUI)
 
@@ -14,6 +16,7 @@ public class TimelineManager : MonoBehaviour
     {
         timestampPrefab = timelineSettings.timestampPrefab;
         GenerateTimestamps();
+        scrollRect.horizontalNormalizedPosition = 0f;
     }
 
     public void GenerateTimestamps()

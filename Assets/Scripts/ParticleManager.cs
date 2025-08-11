@@ -71,7 +71,14 @@ public class ParticleManager : MonoBehaviour
 
     void OnNewSplineCreated(NewSplineCreated e)
     {
-        e.spline.CopyFrom(splineParticleGroup[^1].spline);
+        if (splineParticleGroup.Count <= 0)
+        {
+            //would be nice to save spline settings even if they are all deleted
+        }
+        else
+        {
+            e.spline.CopyFrom(splineParticleGroup[^1].spline);
+        }
         splineParticleGroup.Add(new SplineParticleGroup { spline = e.spline });
     }
 

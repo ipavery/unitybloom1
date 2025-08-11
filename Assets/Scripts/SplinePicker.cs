@@ -11,7 +11,7 @@ public class SplinePicker : MonoBehaviour
     public Material highlightedLineMaterial;
     public float lineWidth = 0.01f;
     public GameObject controlPointSpherePrefab;
-    public GameObject particleManager;
+    public ParticleManager particleManager;
     private List<BezierSpline> splineList;
 
     [Header("Gizmo Settings")]
@@ -158,48 +158,53 @@ public class SplinePicker : MonoBehaviour
 
     void OnSplineUpdated(SplineUpdated e)
     {
-        var spline = e.spline;
-        for (int i = 0; i < e.updatedIndices.Count; i++)
+        if (particleManager.splineParticleGroup.Count > 0)
         {
-            Vector3 point = spline.points[e.updatedIndices[i]];
-            GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
-            GameObject lineObj = e.spline.transform.Find("SplineLine").gameObject;
-            sphere.transform.SetParent(lineObj.transform, false);
 
-            // Set the sphere to the "PP Layer"
-            sphere.layer = LayerMask.NameToLayer("PP Layer");
-            controlSphereGroup.Add(new ControlPointGroup
+            var spline = e.spline;
+            for (int i = 0; i < e.updatedIndices.Count; i++)
             {
-                sphereObject = sphere,
-                isSelected = false,
-                index = e.updatedIndices[i]
-            });
+                Vector3 point = spline.points[e.updatedIndices[i]];
+                GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
+                GameObject lineObj = e.spline.transform.Find("SplineLine").gameObject;
+                sphere.transform.SetParent(lineObj.transform, false);
 
-            // Set and store original color as white
-            var rend = sphere.GetComponent<Renderer>();
-            if (rend != null)
-            {
-                rend.material.color = Color.white;
-                rend.material.EnableKeyword("_EMISSION");
-                rend.material.SetColor("_EmissionColor", Color.white * gizmoEmissionIntensity);
-                originalColors.Add(Color.white);
+                // Set the sphere to the "PP Layer"
+                sphere.layer = LayerMask.NameToLayer("PP Layer");
+                controlSphereGroup.Add(new ControlPointGroup
+                {
+                    sphereObject = sphere,
+                    isSelected = false,
+                    index = e.updatedIndices[i]
+                });
+
+                // Set and store original color as white
+                var rend = sphere.GetComponent<Renderer>();
+                if (rend != null)
+                {
+                    rend.material.color = Color.white;
+                    rend.material.EnableKeyword("_EMISSION");
+                    rend.material.SetColor("_EmissionColor", Color.white * gizmoEmissionIntensity);
+                    originalColors.Add(Color.white);
+                }
+                else
+                {
+                    originalColors.Add(Color.white);
+                }
             }
-            else
+
+            LineRenderer lr = spline.GetComponentInChildren<LineRenderer>();
+            if (lr != null)
             {
-                originalColors.Add(Color.white);
+                lr.positionCount = spline.points.Length * 20;
+                for (int i = 0; i < lr.positionCount; i++)
+                {
+                    float t = i / (float)lr.positionCount;
+                    lr.SetPosition(i, spline.GetPoint(t));
+                }
             }
         }
 
-        LineRenderer lr = spline.GetComponentInChildren<LineRenderer>();
-        if (lr != null)
-        {
-            lr.positionCount = spline.points.Length * 20;
-            for (int i = 0; i < lr.positionCount; i++)
-            {
-                float t = i / (float)lr.positionCount;
-                lr.SetPosition(i, spline.GetPoint(t));
-            }
-        }
     }
 
 
@@ -394,7 +399,7 @@ public class SplinePicker : MonoBehaviour
 
     void Start()
     {
-        splineList = particleManager.GetComponent<ParticleManager>().splineParticleGroup.Select(g => g.spline).ToList();
+        splineList = particleManager.splineParticleGroup.Select(g => g.spline).ToList();
         gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
         planarGizmoPrefabScale = planarGizmoPrefab.transform.localScale;
 

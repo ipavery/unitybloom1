@@ -35,11 +35,27 @@ public class ClipLerper : MonoBehaviour
     void OnEnable()
     {
         EventHub.Subscribe<ClipLerpClick>(OnClipLerpClick);
+        EventHub.Subscribe<DeleteSpline>(OnSplineChange);
     }
 
     void OnDisable()
     {
         EventHub.Unsubscribe<ClipLerpClick>(OnClipLerpClick);
+        EventHub.Unsubscribe<DeleteSpline>(OnSplineChange);
+    }
+
+    void OnSplineChange(DeleteSpline e)
+    {
+        var oldLerpLines = new List<LerpLines>(lerpLines);
+        foreach (var lerpLine in oldLerpLines)
+        {
+            if (lerpLine.firstClip.GetComponent<DraggableClip>().attachedSpline == e.spline || lerpLine.secondClip.GetComponent<DraggableClip>().attachedSpline == e.spline)
+            {
+                lerpLines.Remove(lerpLine);
+                Destroy(lerpLine.lerpLine);
+            }
+
+        }
     }
 
     void OnClipLerpClick(ClipLerpClick e)
@@ -64,16 +80,28 @@ public class ClipLerper : MonoBehaviour
             {
                 foreach (var lerpGroup in lerpLines)
                 {
-                    if (lerpGroup.firstClip == newLerpGroup.firstClip && lerpGroup.secondClip != null)
+                    if (lerpGroup.firstClip == newLerpGroup.firstClip && lerpGroup.secondClip == e.clipObj)
+                    {
+                        lerpLines.Remove(lerpGroup);
+                        Destroy(lerpGroup.lerpLine);
+                        OnCancel();
+                        break;
+                    }
+                    else if (lerpGroup.firstClip == newLerpGroup.firstClip && lerpGroup.secondClip != null)
                     {
                         lerpLines.Remove(lerpGroup);
                         Destroy(lerpGroup.lerpLine);
                         break;
                     }
                 }
-
+                if (newLerpGroup.firstClip.GetComponent<DraggableClip>().attachedSpline.points.Length > e.clipObj.GetComponent<DraggableClip>().attachedSpline.points.Length)
+                {
+                    Debug.Log("connect to smaller spline not allowed");
+                    OnCancel();
+                }
                 //newLerpGroup.firstClip.GetComponent<DraggableClip>().attachedSpline.lerpSpline = e.clipObj.GetComponent<DraggableClip>().attachedSpline;
-                newLerpGroup.nowSelecting = false;
+
+                    newLerpGroup.nowSelecting = false;
                 newLerpGroup.secondClip = e.clipObj;
             }
             else if (newLerpGroup != null && newLerpGroup.firstClip == e.clipObj)
@@ -90,7 +118,7 @@ public class ClipLerper : MonoBehaviour
     void OnCancel()
     {
         selectingLerp = false;
-        
+
         lerpLines.Remove(newLerpGroup);
         Destroy(newLerpGroup.lerpLine);
         cancelButtonObject.SetActive(false);
@@ -106,7 +134,7 @@ public class ClipLerper : MonoBehaviour
         {
             if (lerpGroup.firstClip != null && lerpGroup.secondClip != null)
             {
-                newLerpGroup.firstClip.GetComponent<DraggableClip>().attachedSpline.lerpSpline = lerpGroup.secondClip.GetComponent<DraggableClip>().attachedSpline;
+                lerpGroup.firstClip.GetComponent<DraggableClip>().attachedSpline.lerpSpline = lerpGroup.secondClip.GetComponent<DraggableClip>().attachedSpline;
             }
         }
         EventHub.Publish(new ReloadParticles(true));
