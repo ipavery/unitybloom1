@@ -249,6 +249,7 @@ public class CurveEditorUI : MonoBehaviour
     {
         Debug.Log("Delete event triggered for " + selectedObject.name);
         particleManager.splineParticleGroup.RemoveAll(splineGroup => splineGroup.spline == selectedObject);
+        EventHub.Publish(new DeleteSpline(selectedObject));
         Destroy(selectedObject.gameObject);
         DeselectObject();
         ReloadParticles();

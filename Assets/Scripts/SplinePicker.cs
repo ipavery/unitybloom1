@@ -30,9 +30,9 @@ public class SplinePicker : MonoBehaviour
     private int activeGizmoAxis = -1; // 0=X, 1=Y, 2=Z
     private Vector3 dragStartPoint;
     Plane dragPlane;
+    float distance;
 
 
-    private List<int> controlIndices = new List<int>();
     private List<Color> originalColors = new List<Color>();
     private GameObject lastHighlighted = null;
     public Color unselectedOriginalColor;
@@ -89,7 +89,12 @@ public class SplinePicker : MonoBehaviour
 
     void OnDeleteSpline(DeleteSpline e)
     {
-        
+        for (int i = 0; i < e.spline.transform.GetChild(0).childCount; i++)
+        {
+            var child = e.spline.transform.GetChild(0).GetChild(i).gameObject;
+            controlSphereGroup.RemoveAll(sphereGroup => sphereGroup.sphereObject == child);
+        }
+        splineList.Remove(e.spline);
     }
 
     void OnSplineSelectionChanged(SplineSelectionChange e)
@@ -404,9 +409,14 @@ public class SplinePicker : MonoBehaviour
 
         isInputBlocked = InputBlocker.IsInputBlocked("Unblocked UI Layer");
         //Debug.Log($"spheres ({controlSphereGroup.Count}): {string.Join(", ", controlSphereGroup.Select(s => s.isSelected))}");
+
+        if (lastHighlighted != null)
+        {
+            distance = Vector3.Distance(Camera.main.transform.position, lastHighlighted.transform.position);
+        }
         foreach (var gizmo in gizmoList)
         {
-            float distance = Vector3.Distance(Camera.main.transform.position, lastHighlighted.transform.position);
+
             if (gizmo != null && lastHighlighted != null)
             {
                 // Update the gizmo position and scale based on the camera distance

@@ -84,6 +84,7 @@ public class DrawSpline : MonoBehaviour
         {
             drawingSpline = true;
             samplePoints.Clear();
+            _timer = sampleInterval - Time.deltaTime;
         }
 
     }
