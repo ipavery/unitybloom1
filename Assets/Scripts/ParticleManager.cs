@@ -75,7 +75,7 @@ public class ParticleManager : MonoBehaviour
         {
             //would be nice to save spline settings even if they are all deleted
         }
-        else
+        else if (e.isDrawSpline == true)
         {
             e.spline.CopyFrom(splineParticleGroup[^1].spline);
         }

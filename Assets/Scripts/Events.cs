@@ -49,8 +49,12 @@ public struct SplineSelectionChange
 public struct NewSplineCreated
 {
     public BezierSpline spline;
-    public NewSplineCreated(BezierSpline spline)
-    { this.spline = spline; }
+    public bool isDrawSpline;
+    public NewSplineCreated(BezierSpline spline, bool isDrawSpline = true)
+    {
+        this.spline = spline;
+        this.isDrawSpline = isDrawSpline;
+     }
 }
 
 public struct SplineUpdated
