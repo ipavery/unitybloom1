@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Reflection;
 
 public class SaveLoadUI : MonoBehaviour
 {
@@ -27,7 +28,13 @@ public class SaveLoadUI : MonoBehaviour
         currentIndex = SaveSystem.LoadIndex();
         if (saveWindowPanel) saveWindowPanel.SetActive(false);
         loadButton.onClick.AddListener(OpenSaveWindow);
-        clearButton.onClick.AddListener(SaveSystem.ClearAllSaves);
+        clearButton.onClick.AddListener(ClearAllSaves);
+    }
+
+    void ClearAllSaves()
+    {
+        SaveSystem.ClearAllSaves();
+        PopulateSaveList();
     }
 
     // Called by your "Load" UI button
@@ -42,7 +49,7 @@ public class SaveLoadUI : MonoBehaviour
     private void QuickSaveCurrentScene()
     {
         var sd = BuildSaveDataFromRoot();
-        string name = $"Saved_File_{DateTime.UtcNow:HH:mm_on_yyyy-MM-dd}";
+        string name = $"Saved_File";
         SaveSystem.SaveSceneAs(sd, name);
         currentIndex = SaveSystem.LoadIndex();
     }
@@ -76,6 +83,11 @@ public class SaveLoadUI : MonoBehaviour
                 }
             }
 
+            //ids for lerping
+            s.id = bs.Guid;
+            if (bs.lerpSpline != null)
+                s.lerpSplineId = bs.lerpSpline.Guid;
+
             s.s_life = bs.s_life;
             s.splineSymmetry = bs.splineSymmetry;
             s.frequency = bs.frequency;
@@ -90,7 +102,7 @@ public class SaveLoadUI : MonoBehaviour
         }
 
         var tmp = new SaveData();
-        
+
         return data;
     }
 
@@ -146,9 +158,9 @@ public class SaveLoadUI : MonoBehaviour
     // 4) Clear the savedObjectsRoot and instantiate the splines from the chosen save
     private void LoadSaveGroup(string filename)
     {
-        if (savedObjectsRoot == null)
+        if (savableRoot == null)
         {
-            Debug.LogError("savedObjectsRoot not assigned in SaveLoadUI.");
+            Debug.LogError("savableroot not assigned in SaveLoadUI.");
             return;
         }
 
@@ -167,10 +179,12 @@ public class SaveLoadUI : MonoBehaviour
             return;
         }
 
+        var lookup = new Dictionary<string, BezierSpline>();
+
         foreach (var sd in data.splines)
         {
             // Instantiate the single spline prefab for every saved spline
-            var go = Instantiate(splinePrefab, savedObjectsRoot);
+            var go = Instantiate(splinePrefab, savableRoot);
             go.name = sd.name;
 
             // set world position
@@ -197,6 +211,7 @@ public class SaveLoadUI : MonoBehaviour
                     Debug.LogWarning($"Spline '{sd.name}' has invalid points list (count {sd.points?.Count ?? 0}). Using prefab defaults.");
                 }
 
+                
                 bs.s_life = sd.s_life;
                 bs.splineSymmetry = sd.splineSymmetry;
                 bs.frequency = sd.frequency;
@@ -207,22 +222,39 @@ public class SaveLoadUI : MonoBehaviour
                 bs.lerpColor2 = sd.lerpColor2;
                 bs.isActive = sd.isActive;
 
-                go.SetActive(sd.isActive);
+                typeof(BezierSpline).GetField("guid", BindingFlags.NonPublic | BindingFlags.Instance)
+                        .SetValue(bs, sd.id);
 
-                EventHub.Publish(new NewSplineCreated(bs));
+                lookup[sd.id] = bs;
+
+                go.SetActive(true);
+
+                EventHub.Publish(new NewSplineCreated(bs, false));
             }
             else
             {
                 Debug.LogWarning("Instantiated prefab does not contain a BezierSpline component.");
             }
         }
+        foreach (var sd in data.splines)
+        {
+            if (!string.IsNullOrEmpty(sd.lerpSplineId) && lookup.TryGetValue(sd.lerpSplineId, out var target))
+            {
+                lookup[sd.id].lerpSpline = target;
+            }
+        }
+
+        EventHub.Publish(new ReloadParticles(true));
     }
 
     private void ClearSavedObjects()
     {
-        if (savedObjectsRoot == null) return;
+        if (savableRoot == null) return;
         var children = new List<GameObject>();
-        foreach (Transform t in savedObjectsRoot) children.Add(t.gameObject);
-        foreach (var c in children) Destroy(c);
+        foreach (Transform t in savableRoot) children.Add(t.gameObject);
+        foreach (var c in children)
+        {
+            EventHub.Publish(new DeleteSpline(c.GetComponent<BezierSpline>()));
+        }
     }
 }

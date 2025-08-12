@@ -49,12 +49,25 @@ public class CurveEditorUI : MonoBehaviour
     void OnEnable()
     {
         EventHub.Subscribe<SplineSelectionChange>(SelectObject);
+        EventHub.Subscribe<DeleteSpline>(OnDeleteSpline);
     }
 
     void OnDisable()
     {
         EventHub.Unsubscribe<SplineSelectionChange>(SelectObject);
+        EventHub.Unsubscribe<DeleteSpline>(OnDeleteSpline);
     }
+
+    void OnDeleteSpline(DeleteSpline e)
+    {
+        Debug.Log("Delete event triggered for " + e.spline.name);
+        particleManager.splineParticleGroup.RemoveAll(splineGroup => splineGroup.spline == e.spline);
+        Destroy(e.spline.gameObject);
+        DeselectObject();
+        Debug.Log("reloading now");
+        ReloadParticles();
+    }
+
 
     void ReloadParticles()
     {
@@ -247,11 +260,8 @@ public class CurveEditorUI : MonoBehaviour
     void OnSelectClicked() => EventHub.Publish(new SelectSpline(selectedObject));
     void OnDeleteClicked()
     {
-        Debug.Log("Delete event triggered for " + selectedObject.name);
-        particleManager.splineParticleGroup.RemoveAll(splineGroup => splineGroup.spline == selectedObject);
+        
         EventHub.Publish(new DeleteSpline(selectedObject));
-        Destroy(selectedObject.gameObject);
-        DeselectObject();
-        ReloadParticles();
+
     }
 }

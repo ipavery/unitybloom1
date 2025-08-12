@@ -16,6 +16,8 @@ public class SplineData
     public Color lerpColor1;
     public Color lerpColor2;
     public bool isActive;
+    public string id; // <-- persistent spline GUID
+    public string lerpSplineId; // <-- GUID of linked lerp spline
 }
 
 [System.Serializable]

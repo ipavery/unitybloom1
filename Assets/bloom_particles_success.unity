@@ -12558,7 +12558,7 @@ MonoBehaviour:
   frequency: 5
   lifetimeOffset: 0.05
   lerpLifetimeOffset: 0.07
-  lerpTimes: 3
+  lerpTimes: 1
   lerpColor1: {r: 1, g: 0, b: 0, a: 1}
   lerpColor2: {r: 0, g: 0.27450982, b: 0.60784316, a: 1}
   startTimeOffset: 0
@@ -12740,7 +12740,7 @@ MonoBehaviour:
   frequency: 5
   lifetimeOffset: 0.05
   lerpLifetimeOffset: 0.07
-  lerpTimes: 3
+  lerpTimes: 1
   lerpColor1: {r: 0.093753815, g: 1, b: 0, a: 1}
   lerpColor2: {r: 0, g: 0.27450982, b: 0.60784316, a: 1}
   startTimeOffset: 0
@@ -13818,7 +13818,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1702106792}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99919134
+  m_Size: 0.9999946
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -15450,7 +15450,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.00005822594}
+  m_AnchoredPosition: {x: 0, y: 0.00050594757}
   m_SizeDelta: {x: 0, y: 1114.6}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1747170247
@@ -17031,7 +17031,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

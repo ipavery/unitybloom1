@@ -15,6 +15,17 @@ public class BezierSpline : MonoBehaviour
     public Color lerpColor2;
     public float startTimeOffset;
 
+    //id so saving lerping works correctly
+    [SerializeField, HideInInspector]
+    private string guid;
+    public string Guid => guid; // public read-only accessor
+    private void Awake()
+    {
+        // If GUID is missing, generate a new one
+        if (string.IsNullOrEmpty(guid))
+            guid = System.Guid.NewGuid().ToString();
+    }
+
     public GameObject splinePrefab;
 
     public BezierSpline lerpSpline;
