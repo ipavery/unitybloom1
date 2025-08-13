@@ -32,8 +32,12 @@ public class ParticleManager : MonoBehaviour
     Vector3 mouseWorldTemp;
 
     public float catchParticlesBufferTimeRatio = 0.2f;
+    public float musicModeWait;
 
     private bool started = false;
+    [Header("audio debug")]
+    public Vector3 audioDebugPos;
+    bool midRunning = false;
 
     void PrintArray(Vector3[] arr)
     {
@@ -61,6 +65,9 @@ public class ParticleManager : MonoBehaviour
         EventHub.Subscribe<ReloadParticles>(OnReloadParticles);
         EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
+
+        if (RealtimeAudioAnalyzer.Instance != null)
+            RealtimeAudioAnalyzer.Instance.OnBandsUpdated += HandleAudioBands;
     }
 
     void OnDisable()
@@ -70,6 +77,63 @@ public class ParticleManager : MonoBehaviour
         EventHub.Unsubscribe<ReloadParticles>(OnReloadParticles);
         EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
+
+        if (RealtimeAudioAnalyzer.Instance != null)
+            RealtimeAudioAnalyzer.Instance.OnBandsUpdated -= HandleAudioBands;
+    }
+
+    void HandleAudioBands(RealtimeAudioAnalyzer.AudioBands bands)
+    {
+
+        Debug.DrawLine(audioDebugPos, audioDebugPos + 10 * bands.bass * Vector3.up, Color.green, .1f);
+        Debug.DrawLine(audioDebugPos + 1 * Vector3.left, audioDebugPos + 1 * Vector3.left + 10 * bands.mid * Vector3.up, Color.red, .1f);
+        Debug.DrawLine(audioDebugPos + 2 * Vector3.left, audioDebugPos + 2 * Vector3.left + 10 * bands.treble * Vector3.up, Color.blue, .1f);
+        Debug.DrawLine(audioDebugPos + 3 * Vector3.left, audioDebugPos + 3 * Vector3.left + 10 * bands.rms * Vector3.up, Color.yellow, .1f);
+        // example: call a function when bass is strong
+        bool runChannel = bands.bass > 0.05f;
+        // if (runChannel && !IsInvoking(nameof(InvokeBass)))
+        //     InvokeRepeating(nameof(InvokeBass), 0f, musicModeWait);
+        // else if (!runChannel && IsInvoking(nameof(InvokeBass)))
+        //     CancelInvoke(nameof(InvokeBass));
+            
+        // runChannel = bands.treble > .01f;
+        // if (runChannel && !IsInvoking(nameof(InvokeTreble)))
+        //     InvokeRepeating(nameof(InvokeTreble), 0f, musicModeWait);
+        // else if (!runChannel && IsInvoking(nameof(InvokeTreble)))
+        //     CancelInvoke(nameof(InvokeTreble));
+        
+        // runChannel = bands.mid > .05f;
+        // if (runChannel && !midRunning)
+        // {
+        //     midRunning = true;
+        //     StartCoroutine(InvokeMid());
+        // }
+        // else if (!runChannel && midRunning)
+        // {
+        //     midRunning = false;
+        //     StopCoroutine(InvokeMid());
+        // }
+            
+
+    }
+
+    IEnumerator InvokeMid()
+    {
+        while (true)
+        {
+            Debug.Log("heres the mid");
+        SimulateSpline(splineParticleGroup[1].spline);
+        yield return new WaitForSeconds(musicModeWait);
+        }
+        
+    }
+    void InvokeBass()
+    {
+        SimulateSpline(splineParticleGroup[0].spline);
+    }
+    void InvokeTreble()
+    {
+        SimulateSpline(splineParticleGroup[2].spline);
     }
 
     void OnNewSplineCreated(NewSplineCreated e)
@@ -297,7 +361,7 @@ public class ParticleManager : MonoBehaviour
 
                     }
 
-                    StartCoroutine(SplineLoop(currentSpline, (currentSpline.startTimeOffset + currentSpline.lerpLifetimeOffset*k), currentFrequency, splineParticleCount, stepSize, l, k, currentSpline.lifetimeOffset));
+                    StartCoroutine(SplineLoop(currentSpline, (currentSpline.startTimeOffset + currentSpline.lerpLifetimeOffset * k), currentFrequency, splineParticleCount, stepSize, l, k, currentSpline.lifetimeOffset));
                 }
 
             }
@@ -322,7 +386,7 @@ public class ParticleManager : MonoBehaviour
             // set position and life with radial symmetry
             for (int z = 0; z < currentSpline.splineSymmetry; z++)
             {
-                
+
                 symmetryPosition.transform.position = newParticlePosition;
                 symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * angleStep);
 
@@ -336,6 +400,51 @@ public class ParticleManager : MonoBehaviour
             }
             yield return new WaitForSeconds(particleTimeOffset);
         }
+    }
+
+    void SimulateSpline(BezierSpline spline)
+    {
+
+        BezierSpline currentSpline = spline;
+        if (currentSpline.isActive == true)
+        {
+            int splineParticleCount = currentSpline.frequency * currentSpline.lerpTimes;
+
+            int currentFrequency = currentSpline.frequency - 1; //with offset to match the true number
+            int currentLerpTimes = currentSpline.lerpTimes - 1;
+            if (currentFrequency <= 0)
+            {
+                currentFrequency = 1; // avoid division by zero
+            }
+            if (currentLerpTimes <= 0)
+            {
+                currentLerpTimes = 1; // avoid division by zero
+            }
+
+            float stepSize = 1f / currentFrequency;
+
+            //initial spline, place particles along it
+            //loop along spline, placing particles along the way
+            //lerploop - idk why this uses <= and -1 in the condition, but it works
+            for (float k = 0; k <= currentSpline.lerpTimes - 1; k++)
+            {
+                //here in the lerploop, it should start coroutines for each lerped spline
+                float l = k / currentLerpTimes;
+
+                if (!currentSpline.lerpSpline)
+                {
+                    currentSpline.lerpSpline = currentSpline;
+                }
+                if (currentSpline.frequency <= 0)
+                {
+                    currentSpline.frequency = 1; // avoid problems
+
+                }
+
+                StartCoroutine(SplineLoop(currentSpline, (currentSpline.startTimeOffset + currentSpline.lerpLifetimeOffset * k), currentFrequency, splineParticleCount, stepSize, l, k, currentSpline.lifetimeOffset));
+            }
+        }
+
     }
 
     void Update()
@@ -366,7 +475,8 @@ public class ParticleManager : MonoBehaviour
         }
         if (spawnMode == ParticleSpawnMode.Music)
         {
-            if (Input.GetMouseButton(0)){
+            if (Input.GetMouseButton(0))
+            {
                 StartDelayed();
             }
         }
