@@ -119,6 +119,8 @@ public class CurveEditorUI : MonoBehaviour
         foreach (var f in fields)
         {
             var go = Instantiate(fieldPrefab, fieldContainer);
+            go.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
+go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
             var slider = go.GetComponentInChildren<Slider>();
             var input = go.GetComponentInChildren<TMP_InputField>();
             var label = go.GetComponentInChildren<TextMeshProUGUI>();
@@ -149,11 +151,6 @@ public class CurveEditorUI : MonoBehaviour
                 }
             });
         }
-    }
-
-    void Update()
-    {
-
     }
 
     bool IsPointerOverUI() => EventSystem.current.IsPointerOverGameObject();

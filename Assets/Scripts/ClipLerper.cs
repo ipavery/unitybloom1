@@ -25,6 +25,7 @@ public class ClipLerper : MonoBehaviour
     Camera cam;
     public GameObject cancelButtonObject;
     public ParticleManager particleManager;
+    public RectTransform canvasrt;
 
     //scrolling variables
     public float scrollSpeed;
@@ -172,8 +173,8 @@ public class ClipLerper : MonoBehaviour
         {
             if (lerpGroup.nowSelecting == false)
             {
-                var target1 = lerpGroup.firstClip.transform.Find("LerpButton").position;
-                var target2 = lerpGroup.secondClip.transform.Find("LerpButton").position;
+                var target1 = lerpGroup.firstClip.transform.Find("LerpButton").position/ (Vector2)canvasrt.localScale;
+                var target2 = lerpGroup.secondClip.transform.Find("LerpButton").position/ (Vector2)canvasrt.localScale;
 
                 MakeLine(target1, target2, lerpGroup);
 
@@ -181,8 +182,8 @@ public class ClipLerper : MonoBehaviour
             }
             else
             {
-                var target1 = lerpGroup.firstClip.transform.Find("LerpButton").position;
-                var target2 = Mouse.current.position.ReadValue();
+                var target1 = lerpGroup.firstClip.transform.Find("LerpButton").position / (Vector2)canvasrt.localScale;
+                var target2 = Mouse.current.position.ReadValue() / canvasrt.localScale;
 
                 MakeLine(target1, target2, lerpGroup);
 

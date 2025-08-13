@@ -31,9 +31,6 @@ public class ParticleManager : MonoBehaviour
     Vector3 worldPosition;
     Vector3 mouseWorldTemp;
 
-    int mouseTicker = 0;
-    bool firstClick = true;
-    int mouseDownCount = 0;
     public float catchParticlesBufferTimeRatio = 0.2f;
 
     private bool started = false;
