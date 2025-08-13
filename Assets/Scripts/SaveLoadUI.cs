@@ -14,44 +14,102 @@ public class SaveLoadUI : MonoBehaviour
     [Header("Prefab (single)")]
     public GameObject splinePrefab;      // single prefab used for all splines (must have BezierSpline component)
 
-    [Header("UI")]
+    [Header("UI - main")]
     public GameObject saveWindowPanel;      // modal panel to show save list
     public Transform saveListContent;       // content parent inside ScrollRect
     public GameObject saveSlotButtonPrefab; // button prefab for each save entry (must have Button + TMP_Text)
-    public Button loadButton;
-    public Button clearButton;
+    public Button loadButton;               // opens the save list
+    public Button clearButton;              // clears all saves
+    public Button closeButton;
 
-    private List<SaveMeta> currentIndex;
+    [Header("UI - new blank")]
+    public Button newBlankFileButton;       // create/save & clear and create an empty file
+
+    [Header("UI - rename (shared)")]
+    public GameObject renamePanel;          // panel that contains the TMP input & confirm/cancel. Set inactive by default.
+    public TMP_InputField renameInputField; // shared input field used to rename a selected save meta
+    public Button renameConfirmButton;
+    public Button renameCancelButton;
+
+    [Header("UI - delete confirm (shared)")]
+    public GameObject confirmDeleteDialog;  // panel for delete confirmation
+    public TMP_Text confirmDeleteText;
+    public Button confirmDeleteButton;
+    public Button cancelDeleteButton;
+
+    // Internal state
+    private List<SaveMeta> currentIndex = new();
+    private string activeFilename;         // currently-active save file (set when user selects a save or creates new blank)
+    private string pendingRenameTarget;    // filename being renamed
+    private string pendingDeleteTarget;    // filename pending deletion
 
     void Start()
     {
-        currentIndex = SaveSystem.LoadIndex();
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
         if (saveWindowPanel) saveWindowPanel.SetActive(false);
-        loadButton.onClick.AddListener(OpenSaveWindow);
-        clearButton.onClick.AddListener(ClearAllSaves);
+        if (renamePanel) renamePanel.SetActive(false);
+        if (confirmDeleteDialog) confirmDeleteDialog.SetActive(false);
+
+        if (loadButton != null) loadButton.onClick.AddListener(OpenSaveWindow);
+        if (clearButton != null) clearButton.onClick.AddListener(ClearAllSaves);
+        if (closeButton != null) closeButton.onClick.AddListener(() => { if (saveWindowPanel) saveWindowPanel.SetActive(false); });
+        if (newBlankFileButton != null) newBlankFileButton.onClick.AddListener(OnNewBlankFileClicked);
+
+        if (renameCancelButton != null) renameCancelButton.onClick.AddListener(CancelRename);
+        if (cancelDeleteButton != null) cancelDeleteButton.onClick.AddListener(CancelDelete);
+
+        // confirm buttons wired when used to avoid stale listeners, but it's safe to clear here
+        if (renameConfirmButton != null) renameConfirmButton.onClick.RemoveAllListeners();
+        if (confirmDeleteButton != null) confirmDeleteButton.onClick.RemoveAllListeners();
     }
 
+    // --- top-level actions ---
     void ClearAllSaves()
     {
         SaveSystem.ClearAllSaves();
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
         PopulateSaveList();
     }
 
-    // Called by your "Load" UI button
     public void OpenSaveWindow()
     {
+        // Quick-save behavior: if there's an active file, overwrite it; otherwise create a quick save.
         QuickSaveCurrentScene();
         PopulateSaveList();
         if (saveWindowPanel) saveWindowPanel.SetActive(true);
     }
 
-    // 1) Quick save current scene so the user can return to it
     private void QuickSaveCurrentScene()
     {
         var sd = BuildSaveDataFromRoot();
-        string name = $"Saved_File";
-        SaveSystem.SaveSceneAs(sd, name);
-        currentIndex = SaveSystem.LoadIndex();
+
+        if (!string.IsNullOrEmpty(activeFilename))
+        {
+            // try to keep the same displayName while replacing file on disk (SaveSystem creates a new filename).
+            var meta = currentIndex?.Find(m => m.filename == activeFilename);
+            string displayName = meta != null ? meta.displayName : "Saved_File";
+
+            // delete the old file / index entry, then create a new save with same displayName
+            try
+            {
+                SaveSystem.DeleteSave(activeFilename);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[SaveLoadUI] Delete during quick-save failed: " + ex.Message);
+            }
+
+            string created = SaveSystem.SaveSceneAs(sd, displayName);
+            activeFilename = created; // update active to the newly created filename
+        }
+        else
+        {
+            // create a quick save (no active file)
+            string created = SaveSystem.SaveSceneAs(sd, "Saved_File");
+            activeFilename = created;
+        }
+
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
     }
 
     // Build SaveData from savableRoot by scanning for BezierSpline components
@@ -83,7 +141,7 @@ public class SaveLoadUI : MonoBehaviour
                 }
             }
 
-            //ids for lerping
+            // ids for lerping
             s.id = bs.Guid;
             if (bs.lerpSpline != null)
                 s.lerpSplineId = bs.lerpSpline.Guid;
@@ -101,12 +159,10 @@ public class SaveLoadUI : MonoBehaviour
             data.splines.Add(s);
         }
 
-        var tmp = new SaveData();
-
         return data;
     }
 
-    // Populate the UI list with available saves
+    // --- UI population ---
     private void PopulateSaveList()
     {
         if (saveListContent == null || saveSlotButtonPrefab == null) return;
@@ -114,18 +170,19 @@ public class SaveLoadUI : MonoBehaviour
         // clear existing UI entries
         foreach (Transform t in saveListContent) Destroy(t.gameObject);
 
-        currentIndex = SaveSystem.LoadIndex();
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
 
         var contentRect = saveListContent.GetComponent<RectTransform>();
-        contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, 1.5f * currentIndex.Count * saveSlotButtonPrefab.GetComponent<RectTransform>().sizeDelta.y);
+        float slotHeight = saveSlotButtonPrefab.GetComponent<RectTransform>().sizeDelta.y;
+        contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, 1.5f * currentIndex.Count * Mathf.Max(1f, slotHeight));
 
         foreach (var meta in currentIndex)
         {
             var go = Instantiate(saveSlotButtonPrefab, saveListContent);
-            var btn = go.GetComponent<Button>();
+            Button rootBtn = FindChildButtonByName(go, "LoadButton", "load"); ;
 
             // TEXTMESH PRO: look for TMP_Text (TextMeshProUGUI)
-            var tmpText = go.GetComponentInChildren<TMP_Text>();
+            var tmpText = rootBtn.GetComponentInChildren<TMP_Text>();
             if (tmpText != null)
             {
                 var dt = new DateTime(meta.timestamp, DateTimeKind.Utc).ToLocalTime();
@@ -136,26 +193,70 @@ public class SaveLoadUI : MonoBehaviour
                 Debug.LogWarning("Save slot prefab does not contain a TMP_Text child. Please add one.");
             }
 
-            if (btn != null)
+            // capture loop variable
+            string filenameForListeners = meta.filename;
+            string displayForListeners = meta.displayName;
+
+            // Root click selects / loads the save and sets it as active
+            if (rootBtn != null)
             {
-                string filenameCapture = meta.filename;
-                btn.onClick.AddListener(() => OnSaveSelected(filenameCapture));
+                rootBtn.onClick.RemoveAllListeners();
+                rootBtn.onClick.AddListener(() => OnSaveSelected(filenameForListeners));
             }
-            else
+
+            // Per-slot buttons: try to find children named "RenameButton", "CopyButton", "DeleteButton".
+            // Fall back to scanning child buttons and matching name contains.
+            Button renameBtn = FindChildButtonByName(go, "RenameButton", "rename");
+            Button copyBtn = FindChildButtonByName(go, "CopyButton", "copy");
+            Button deleteBtn = FindChildButtonByName(go, "DeleteButton", "delete");
+
+            if (renameBtn != null)
             {
-                Debug.LogWarning("Save slot prefab does not have a Button component on its root.");
+                renameBtn.onClick.RemoveAllListeners();
+                renameBtn.onClick.AddListener(() => OpenRenameFor(filenameForListeners));
+            }
+
+            if (copyBtn != null)
+            {
+                copyBtn.onClick.RemoveAllListeners();
+                copyBtn.onClick.AddListener(() => CopySaveFile(filenameForListeners));
+            }
+
+            if (deleteBtn != null)
+            {
+                deleteBtn.onClick.RemoveAllListeners();
+                deleteBtn.onClick.AddListener(() => OpenDeleteConfirm(filenameForListeners, displayForListeners));
             }
         }
     }
 
-    // Called when user clicks a save entry
+    // Helper: find a child button by exact name or by substring fallback
+    private Button FindChildButtonByName(GameObject root, string exactName, string containsLower)
+    {
+        var t = root.transform.Find(exactName);
+        if (t != null)
+        {
+            var b = t.GetComponent<Button>();
+            if (b != null) return b;
+        }
+
+        var allButtons = root.GetComponentsInChildren<Button>();
+        foreach (var b in allButtons)
+        {
+            if (b.gameObject.name.ToLower().Contains(containsLower)) return b;
+        }
+
+        return null;
+    }
+
+    // --- selection / loading ---
     private void OnSaveSelected(string filename)
     {
+        activeFilename = filename;
         LoadSaveGroup(filename);
         if (saveWindowPanel) saveWindowPanel.SetActive(false);
     }
 
-    // 4) Clear the savedObjectsRoot and instantiate the splines from the chosen save
     private void LoadSaveGroup(string filename)
     {
         if (savableRoot == null)
@@ -183,11 +284,8 @@ public class SaveLoadUI : MonoBehaviour
 
         foreach (var sd in data.splines)
         {
-            // Instantiate the single spline prefab for every saved spline
             var go = Instantiate(splinePrefab, savableRoot);
             go.name = sd.name;
-
-            // set world position
             go.transform.position = new Vector3(sd.posX, sd.posY, sd.posZ);
 
             var bs = go.GetComponent<BezierSpline>();
@@ -211,7 +309,6 @@ public class SaveLoadUI : MonoBehaviour
                     Debug.LogWarning($"Spline '{sd.name}' has invalid points list (count {sd.points?.Count ?? 0}). Using prefab defaults.");
                 }
 
-                
                 bs.s_life = sd.s_life;
                 bs.splineSymmetry = sd.splineSymmetry;
                 bs.frequency = sd.frequency;
@@ -222,6 +319,7 @@ public class SaveLoadUI : MonoBehaviour
                 bs.lerpColor2 = sd.lerpColor2;
                 bs.isActive = sd.isActive;
 
+                // set private guid via reflection (your existing approach)
                 typeof(BezierSpline).GetField("guid", BindingFlags.NonPublic | BindingFlags.Instance)
                         .SetValue(bs, sd.id);
 
@@ -244,6 +342,7 @@ public class SaveLoadUI : MonoBehaviour
             }
         }
 
+        EventHub.Publish(new ReloadLerpUI(true));
         EventHub.Publish(new ReloadParticles(true));
     }
 
@@ -254,7 +353,184 @@ public class SaveLoadUI : MonoBehaviour
         foreach (Transform t in savableRoot) children.Add(t.gameObject);
         foreach (var c in children)
         {
-            EventHub.Publish(new DeleteSpline(c.GetComponent<BezierSpline>()));
+            var bs = c.GetComponent<BezierSpline>();
+            EventHub.Publish(new DeleteSpline(bs));
         }
     }
+
+    // --- rename flow ---
+    private void OpenRenameFor(string filename)
+    {
+        var meta = currentIndex?.Find(m => m.filename == filename);
+        if (meta == null)
+        {
+            Debug.LogError("Rename target meta not found: " + filename);
+            return;
+        }
+
+        pendingRenameTarget = filename;
+        if (renameInputField != null) renameInputField.text = meta.displayName;
+
+        if (renameConfirmButton != null)
+        {
+            renameConfirmButton.onClick.RemoveAllListeners();
+            renameConfirmButton.onClick.AddListener(ConfirmRename);
+        }
+
+        if (renamePanel != null) renamePanel.SetActive(true);
+    }
+
+    private void ConfirmRename()
+    {
+        if (string.IsNullOrEmpty(pendingRenameTarget))
+        {
+            Debug.LogWarning("No pending rename target.");
+            if (renamePanel != null) renamePanel.SetActive(false);
+            return;
+        }
+
+        var meta = currentIndex?.Find(m => m.filename == pendingRenameTarget);
+        if (meta == null)
+        {
+            Debug.LogError("Rename target meta not found during confirm: " + pendingRenameTarget);
+            if (renamePanel != null) renamePanel.SetActive(false);
+            return;
+        }
+
+        string newName = renameInputField != null ? renameInputField.text : meta.displayName;
+        meta.displayName = newName;
+
+        SaveSystem.SaveIndex(currentIndex);
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
+        PopulateSaveList();
+
+        pendingRenameTarget = null;
+        if (renamePanel != null) renamePanel.SetActive(false);
+    }
+
+    private void CancelRename()
+    {
+        pendingRenameTarget = null;
+        if (renamePanel != null) renamePanel.SetActive(false);
+    }
+
+    // --- delete flow ---
+    private void OpenDeleteConfirm(string filename, string displayName)
+    {
+        pendingDeleteTarget = filename;
+        if (confirmDeleteText != null) confirmDeleteText.text = $"Delete \"{displayName}\"? This cannot be undone.";
+
+        if (confirmDeleteButton != null)
+        {
+            confirmDeleteButton.onClick.RemoveAllListeners();
+            confirmDeleteButton.onClick.AddListener(ConfirmDelete);
+        }
+
+        if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(true);
+    }
+
+    private void ConfirmDelete()
+    {
+        if (string.IsNullOrEmpty(pendingDeleteTarget))
+        {
+            Debug.LogWarning("No pending delete target.");
+            if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(false);
+            return;
+        }
+
+        SaveSystem.DeleteSave(pendingDeleteTarget);
+        // if deleting the active file, clear active
+        if (pendingDeleteTarget == activeFilename) activeFilename = null;
+
+        pendingDeleteTarget = null;
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
+        PopulateSaveList();
+
+        if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(false);
+    }
+
+    private void CancelDelete()
+    {
+        pendingDeleteTarget = null;
+        if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(false);
+    }
+
+    // --- copy ---
+    private void CopySaveFile(string filename)
+    {
+        var meta = currentIndex?.Find(m => m.filename == filename);
+        if (meta == null)
+        {
+            Debug.LogError("Copy target meta not found: " + filename);
+            return;
+        }
+
+        var data = SaveSystem.LoadSaveFile(filename);
+        if (data == null)
+        {
+            Debug.LogError("Copy source save data missing: " + filename);
+            return;
+        }
+
+        string newDisplayName = meta.displayName + " (copy)";
+        string created = SaveSystem.SaveSceneAs(data, newDisplayName);
+
+        // Optional: set copied file as active? Not required — we leave activeFilename unchanged.
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
+        PopulateSaveList();
+    }
+
+    private void OnNewBlankFileClicked()
+{
+    // If there's an active file, persist current scene by overwriting the active entry (delete old file then save snapshot)
+    if (!string.IsNullOrEmpty(activeFilename))
+    {
+        var meta = currentIndex?.Find(m => m.filename == activeFilename);
+        string displayName = meta != null ? meta.displayName : "Saved_File";
+
+        var snapshot = BuildSaveDataFromRoot();
+
+        try
+        {
+            // remove old file/index entry so SaveSceneAs doesn't just add another file
+            SaveSystem.DeleteSave(activeFilename);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SaveLoadUI] Failed to delete active file before overwrite: " + ex.Message);
+        }
+
+        // recreate the active save entry using the same displayName
+        // we don't keep this filename as active because we're about to create the new blank and set that active
+        try
+        {
+            SaveSystem.SaveSceneAs(snapshot, displayName);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[SaveLoadUI] Failed to save snapshot of current scene: " + ex.Message);
+        }
+    }
+
+    // Clear the scene
+    ClearSavedObjects();
+
+    // Create exactly one new empty save and set it active
+    var empty = new SaveData();
+    string created = null;
+    try
+    {
+        created = SaveSystem.SaveSceneAs(empty, "New File");
+        activeFilename = created;
+    }
+    catch (Exception ex)
+    {
+        Debug.LogError("[SaveLoadUI] Failed to create new blank save: " + ex.Message);
+    }
+
+    // refresh index & UI
+    currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
+    PopulateSaveList();
+}
+
 }

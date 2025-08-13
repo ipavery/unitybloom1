@@ -19,13 +19,38 @@ public class TimelineSpawner : MonoBehaviour
     {
         EventHub.Subscribe<NewSplineCreated>(OnSplineCreated);
         EventHub.Subscribe<DeleteSpline>(OnSplineDeleted);
-
+        EventHub.Subscribe<ReloadLerpUI>(OnReloadLerpUI);
     }
 
     void OnDisable()
     {
         EventHub.Unsubscribe<NewSplineCreated>(OnSplineCreated);
         EventHub.Unsubscribe<DeleteSpline>(OnSplineDeleted);
+        EventHub.Unsubscribe<ReloadLerpUI>(OnReloadLerpUI);
+    }
+
+    void OnReloadLerpUI(ReloadLerpUI e)
+    {
+        foreach (var splineParticle in particleManager.splineParticleGroup)
+        {
+            if (splineParticle.spline.lerpSpline != null && splineParticle.spline.lerpSpline != splineParticle.spline)
+            {
+                foreach (var clip in spawnedClips)
+                {
+                    if (clip.attachedSpline == splineParticle.spline)
+                    {
+                        EventHub.Publish(new ClipLerpClick { clipObj = clip.gameObject, reset = false });
+                    }
+                }
+                foreach (var clip in spawnedClips)
+                {
+                    if (clip.attachedSpline == splineParticle.spline.lerpSpline)
+                    {
+                        EventHub.Publish(new ClipLerpClick { clipObj = clip.gameObject });
+                    }
+                }
+            }
+        }
     }
 
     void OnSplineCreated(NewSplineCreated e)

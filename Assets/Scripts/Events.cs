@@ -89,8 +89,19 @@ public struct DeleteSpline
 public struct ClipLerpClick
 {
     public GameObject clipObj;
-    public ClipLerpClick(GameObject clipObj)
+    public bool reset;
+    public ClipLerpClick(GameObject clipObj, bool reset = true)
     {
         this.clipObj = clipObj;
+        this.reset = reset;
+    }
+}
+
+public struct ReloadLerpUI
+{
+    public bool reload;
+    public ReloadLerpUI(bool reload)
+    {
+        this.reload = reload;
     }
 }

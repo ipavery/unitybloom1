@@ -36,12 +36,26 @@ public class ClipLerper : MonoBehaviour
     {
         EventHub.Subscribe<ClipLerpClick>(OnClipLerpClick);
         EventHub.Subscribe<DeleteSpline>(OnSplineChange);
+        EventHub.Subscribe<ReloadLerpUI>(OnReloadLerpUI);
     }
 
     void OnDisable()
     {
         EventHub.Unsubscribe<ClipLerpClick>(OnClipLerpClick);
         EventHub.Unsubscribe<DeleteSpline>(OnSplineChange);
+        EventHub.Unsubscribe<ReloadLerpUI>(OnReloadLerpUI);
+    }
+
+    void OnReloadLerpUI(ReloadLerpUI e)
+    {
+        // foreach (var splineParticle in particleManager.splineParticleGroup)
+        // {
+        //     if (splineParticle.spline.lerpSpline != null && splineParticle.spline.lerpSpline != splineParticle.spline)
+        //     {
+        //         lerpLines.Add(new LerpLines({firstClip = splineParticle.spline}))
+        //     }
+        // }
+        Debug.Log("maybe change this later");
     }
 
     void OnSplineChange(DeleteSpline e)
@@ -112,7 +126,10 @@ public class ClipLerper : MonoBehaviour
             selectingLerp = false;
             cancelButtonObject.SetActive(false);
         }
-        UpdateLerpSplines();
+        if (e.reset == true)
+        {
+            UpdateLerpSplines();
+        }
     }
 
     void OnCancel()
