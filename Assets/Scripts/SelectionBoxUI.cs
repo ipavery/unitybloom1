@@ -14,7 +14,6 @@ public class SelectionBoxUI : MonoBehaviour
     {
         //ScreenToLocal(screenStart, out startPos);
         startPos = screenStart / canvas.GetComponent<RectTransform>().localScale;
-        Debug.Log($"startpos:{startPos}");
         isSelecting = true;
         selectionBox.gameObject.SetActive(true);
     }

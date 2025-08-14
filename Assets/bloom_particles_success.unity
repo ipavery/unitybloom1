@@ -5766,8 +5766,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 479538059}
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
-  m_Value: 0.00000006310173
-  m_Size: 0.32241678
+  m_Value: 0.000000063101744
+  m_Size: 0.32241684
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -6055,6 +6055,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 171336849}
   m_CullTransparentMesh: 1
+--- !u!1 &196582667
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 196582669}
+  - component: {fileID: 196582668}
+  m_Layer: 0
+  m_Name: LineDrawer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &196582668
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 196582667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2888cc015496234da432a836997564e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxPoolSize: 100
+  defaultMaterial: {fileID: 2100000, guid: 4dabd2e1c280f5543943c9a8d6a50aea, type: 2}
+  defaultLayer: Default
+--- !u!4 &196582669
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 196582667}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &250024003
 GameObject:
   m_ObjectHideFlags: 0
@@ -7393,7 +7440,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ps: {fileID: 4449763}
   symmetry: 4
-  spawnMode: 0
+  spawnMode: 1
   splineParticleGroup:
   - spline: {fileID: 653941720}
   - spline: {fileID: 1308700670}
@@ -7401,8 +7448,11 @@ MonoBehaviour:
   ParticleCubeTransform: {fileID: 334887504}
   symmetryPosition: {fileID: 2124562818}
   catchParticlesBufferTimeRatio: 0.4
-  musicModeWait: 5
+  musicModeWait: 2
   audioDebugPos: {x: 0, y: 0, z: 1}
+  audioAnalyzer: {fileID: 1207117299}
+  conditionManager: {fileID: 1163827316}
+  runtimeLineDrawer: {fileID: 0}
 --- !u!4 &527990701
 Transform:
   m_ObjectHideFlags: 0
@@ -14802,6 +14852,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1138428525}
   m_CullTransparentMesh: 1
+--- !u!1 &1163827315
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1163827317}
+  - component: {fileID: 1163827316}
+  m_Layer: 0
+  m_Name: CoroutineObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1163827316
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1163827315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61812b09b68ade44298049c2f838cb4b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entries: []
+--- !u!4 &1163827317
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1163827315}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1189794200
 GameObject:
   m_ObjectHideFlags: 0
@@ -15094,13 +15189,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6e370297ce0b214a8b3a366b0458a90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useMicrophone: 1
-  microphoneDevice: 
-  targetAudioSource: {fileID: 0}
-  spectrumSize: 1024
-  fftWindow: 5
-  bassMax: 250
-  midMax: 4000
+  sampleSize: 1024
+  numBands: 8
+  bands: []
 --- !u!82 &1207117300
 AudioSource:
   m_ObjectHideFlags: 0
@@ -15619,6 +15710,7 @@ MonoBehaviour:
   sampleInterval: 0.3
   velocityFactor: 10
   drawSplineContainer: {fileID: 2120734413}
+  canvasrt: {fileID: 0}
 --- !u!1 &1493133085
 GameObject:
   m_ObjectHideFlags: 0
@@ -16831,8 +16923,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1841466638}
   m_HandleRect: {fileID: 1841466637}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.99999994
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -24561,3 +24653,5 @@ SceneRoots:
   - {fileID: 963194228}
   - {fileID: 135513554}
   - {fileID: 1310097049}
+  - {fileID: 1163827317}
+  - {fileID: 196582669}

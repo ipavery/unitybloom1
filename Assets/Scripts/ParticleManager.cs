@@ -28,8 +28,6 @@ public class ParticleManager : MonoBehaviour
     ParticleSystem.Particle[] particleArray;
     ParticleSystem.Particle[] combinedParticleArray; // used for setparticles
     Vector3[] posArray;
-    Vector3 worldPosition;
-    Vector3 mouseWorldTemp;
 
     public float catchParticlesBufferTimeRatio = 0.2f;
     public float musicModeWait;
@@ -37,8 +35,9 @@ public class ParticleManager : MonoBehaviour
     private bool started = false;
     [Header("audio debug")]
     public Vector3 audioDebugPos;
-    bool midRunning = false;
     public RealtimeAudioAnalyzer audioAnalyzer;
+    public ConditionManager conditionManager;
+    public RuntimeLineDrawer runtimeLineDrawer;
 
     void PrintArray(Vector3[] arr)
     {
@@ -113,19 +112,6 @@ public class ParticleManager : MonoBehaviour
     //     StopCoroutine(InvokeMid());
     // }
 
-
-
-
-    IEnumerator InvokeMid()
-    {
-        while (true)
-        {
-            Debug.Log("heres the mid");
-            SimulateSpline(splineParticleGroup[1].spline);
-            yield return new WaitForSeconds(musicModeWait);
-        }
-
-    }
     void InvokeBass()
     {
         SimulateSpline(splineParticleGroup[0].spline);
@@ -182,6 +168,7 @@ public class ParticleManager : MonoBehaviour
     void Start()
     {
         Invoke(nameof(StartDelayed), 0.5f);
+        conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () =>SimulateSpline(splineParticleGroup[1].spline), musicModeWait, true, .08f);
     }
 
     void StartDelayed()
@@ -474,31 +461,12 @@ public class ParticleManager : MonoBehaviour
         }
         if (spawnMode == ParticleSpawnMode.Music)
         {
-            if (Input.GetMouseButton(0))
-            {
-                if (!midRunning)
-                {
-                    midRunning = true;
-                    StartCoroutine(InvokeMid());
-                }
-
-            }
-            else
-            {
-                if (midRunning)
-                {
-                    Debug.Log("coroutine stopped");
-                    midRunning = false;
-                    StopCoroutine(InvokeMid());
-                }
-            }
             for (int i = 0; i < audioAnalyzer.bands.Length; i++)
             {
-                Debug.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 10 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .1f);
+                RuntimeLineDrawer.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 5 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .2f);
+                //Debug.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 10 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .1f);
 
             }
-
-
         }
     }
 }

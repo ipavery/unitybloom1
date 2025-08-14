@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using Mono.Cecil.Cil;
 
 public class TimelineSpawner : MonoBehaviour
 {
@@ -94,7 +93,7 @@ public class TimelineSpawner : MonoBehaviour
         rt.anchorMax = new Vector2(0, .9f);
         // (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond
         float timePosition = e.spline.startTimeOffset * timelineSettings.pixelsPerSecond;
-        rt.anchoredPosition = new Vector2(draggablePrefab.GetComponent<RectTransform>().rect.width / 2 + timePosition, -spawnedClips.Count * (rt.sizeDelta.y + 20));
+        rt.anchoredPosition = new Vector2(draggablePrefab.GetComponent<RectTransform>().rect.width / 2 + timePosition, -spawnedClips.Count * (rt.sizeDelta.y + 5));
 
         // Offset vertically so they don't overlap (just for visibility)
 

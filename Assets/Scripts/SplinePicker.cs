@@ -222,7 +222,6 @@ public class SplinePicker : MonoBehaviour
     {
         if (isInputBlocked) return;
         selectionStart = mousePosition.ReadValue<Vector2>();
-        Debug.Log(selectionStart);
         isSelecting = true;
 
         Ray ray = Camera.main.ScreenPointToRay(selectionStart);

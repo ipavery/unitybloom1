@@ -37,6 +37,7 @@ public class DrawSpline : MonoBehaviour
     public float velocityFactor = 2;
     private float distanceFactor;
     public GameObject drawSplineContainer;
+    public RectTransform canvasrt;
 
     void Awake()
     {
@@ -103,7 +104,7 @@ public class DrawSpline : MonoBehaviour
     void DoSamplePoints()
     {
 
-        Vector2 mousePosition2D = Mouse.current.position.ReadValue();
+        Vector2 mousePosition2D = Mouse.current.position.ReadValue() / canvasrt.localScale;
         if ((mousePosition2D - previousMousePos).magnitude < 5)
             return;
         previousMousePos = mousePosition2D;
