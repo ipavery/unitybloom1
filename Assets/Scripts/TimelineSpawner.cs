@@ -131,7 +131,7 @@ public class TimelineSpawner : MonoBehaviour
             rt.anchorMax = new Vector2(0, .9f);
             // (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond
             float timePosition = items[i].spline.startTimeOffset * timelineSettings.pixelsPerSecond;
-            rt.anchoredPosition = new Vector2(draggablePrefab.GetComponent<RectTransform>().rect.width / 2 + timePosition, -i * (rt.sizeDelta.y + 20));
+            rt.anchoredPosition = new Vector2(draggablePrefab.GetComponent<RectTransform>().rect.width / 2 + timePosition, -i * (rt.sizeDelta.y + 5));
 
             // Offset vertically so they don't overlap (just for visibility)
 

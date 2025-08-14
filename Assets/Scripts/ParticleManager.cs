@@ -147,9 +147,26 @@ public class ParticleManager : MonoBehaviour
     private void RestartParticleSystem()
     {
         //simple restart of the particle system
-        started = false;
-        ps.Clear();
-        StartDelayed();
+        if (spawnMode == ParticleSpawnMode.Instant)
+        {
+            started = false;
+            ps.Clear();
+            StartDelayed();
+        }
+        if (spawnMode == ParticleSpawnMode.Music)
+        {
+            conditionManager.StopAndClearAllEntries();
+            for (int i = 0; i < splineParticleGroup.Count; i++)
+            {
+                var group = splineParticleGroup[i];        // capture the group
+                var curSpline = group.spline;              // capture the spline object
+                int musicChannel = curSpline.musicChannel; // capture primitive values too, if you use them
+                float threshold = curSpline.activationThreshhold;
+                Debug.Log($"{curSpline.name} coroutine started");
+                conditionManager.CreateEntry($"spline_{i}", () => audioAnalyzer.bands[musicChannel] > threshold, () => SimulateSpline(curSpline), musicModeWait, true, .08f);
+            }
+        }
+
     }
 
     private void OnClipDragEnded(ClipDragEnded e)
@@ -167,8 +184,34 @@ public class ParticleManager : MonoBehaviour
 
     void Start()
     {
-        Invoke(nameof(StartDelayed), 0.5f);
-        conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () =>SimulateSpline(splineParticleGroup[1].spline), musicModeWait, true, .08f);
+        if (spawnMode == ParticleSpawnMode.Instant)
+        {
+            Invoke(nameof(StartDelayed), 0.5f);
+        }
+        if (spawnMode == ParticleSpawnMode.Music) //this will need to change if you want to change modes in the middle
+        {
+            Invoke(nameof(WaitForAudio), 2.5f);
+        }
+        conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () => SimulateSpline(splineParticleGroup[0].spline), musicModeWait, true, .08f);
+    }
+
+    void WaitForAudio()
+    {
+        for (int i = 0; i < splineParticleGroup.Count; i++)
+        {
+            var group = splineParticleGroup[i];        // capture the group
+            var curSpline = group.spline;              // capture the spline object
+            int musicChannel = curSpline.musicChannel; // capture primitive values too, if you use them
+            float threshold = curSpline.activationThreshhold;
+            conditionManager.CreateEntry($"spline_{i}", () => audioAnalyzer.bands[musicChannel] > threshold, () => SimulateSpline(curSpline), musicModeWait, true, .08f);
+        }
+        // int i = 0;
+        // var curSpline = splineParticleGroup[i].spline;
+        // conditionManager.CreateEntry($"spline_{i}", () => audioAnalyzer.bands[curSpline.musicChannel] > curSpline.activationThreshhold, () => SimulateSpline(splineParticleGroup[i].spline), musicModeWait, true, .08f);
+        // i = 1;
+        // curSpline = splineParticleGroup[i].spline;
+        // conditionManager.CreateEntry($"spline_{i}", () => audioAnalyzer.bands[curSpline.musicChannel] > curSpline.activationThreshhold, () => SimulateSpline(splineParticleGroup[i].spline), musicModeWait, true, .08f);
+
     }
 
     void StartDelayed()
@@ -461,9 +504,11 @@ public class ParticleManager : MonoBehaviour
         }
         if (spawnMode == ParticleSpawnMode.Music)
         {
+            //RuntimeLineDrawer.DrawLine(audioDebugPos + 1 * Vector3.right, audioDebugPos + 1 * Vector3.right + 2 * Vector3.up, Color.green, 20f);
             for (int i = 0; i < audioAnalyzer.bands.Length; i++)
             {
-                RuntimeLineDrawer.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 5 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .2f);
+
+                RuntimeLineDrawer.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 1 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .2f);
                 //Debug.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 10 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .1f);
 
             }

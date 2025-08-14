@@ -14,6 +14,8 @@ public class BezierSpline : MonoBehaviour
     public Color lerpColor1;
     public Color lerpColor2;
     public float startTimeOffset;
+    public float activationThreshhold;
+    public int musicChannel = 0;
 
     //id so saving lerping works correctly
     [SerializeField, HideInInspector]

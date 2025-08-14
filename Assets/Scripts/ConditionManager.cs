@@ -147,4 +147,27 @@ public class ConditionManager : MonoBehaviour
         entries.Add(e);
         return e;
     }
+
+    public void StopAndClearAllEntries()
+    {
+        // Stop coroutines cleanly and reset state
+        for (int i = 0; i < entries.Count; i++)
+        {
+            var e = entries[i];
+            if (e.coroutine != null)
+            {
+                try
+                {
+                    StopCoroutine(e.coroutine);
+                }
+                catch (System.Exception)
+                {
+                    // ignore if it's already stopped
+                }
+                e.coroutine = null;
+            }
+        }
+
+        entries.Clear();
+    }
 }

@@ -5620,6 +5620,8 @@ MonoBehaviour:
   lerpColor1: {r: 0, g: 0, b: 0, a: 0}
   lerpColor2: {r: 0, g: 0, b: 0, a: 0}
   startTimeOffset: 0
+  activationThreshhold: 0
+  musicChannel: 0
   guid: 
   splinePrefab: {fileID: 0}
   lerpSpline: {fileID: 0}
@@ -5766,8 +5768,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 479538059}
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
-  m_Value: 0.000000063101744
-  m_Size: 0.32241684
+  m_Value: 0.00000006310173
+  m_Size: 0.32241678
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7448,7 +7450,7 @@ MonoBehaviour:
   ParticleCubeTransform: {fileID: 334887504}
   symmetryPosition: {fileID: 2124562818}
   catchParticlesBufferTimeRatio: 0.4
-  musicModeWait: 2
+  musicModeWait: 0.2
   audioDebugPos: {x: 0, y: 0, z: 1}
   audioAnalyzer: {fileID: 1207117299}
   conditionManager: {fileID: 1163827316}
@@ -13028,6 +13030,8 @@ MonoBehaviour:
   lerpColor1: {r: 0.16171394, g: 0.7509433, b: 0.13460296, a: 1}
   lerpColor2: {r: 0.79622644, g: 0.35905308, b: 0.7750162, a: 1}
   startTimeOffset: 0
+  activationThreshhold: 1
+  musicChannel: 2
   guid: 
   splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
   lerpSpline: {fileID: 0}
@@ -13392,7 +13396,7 @@ Transform:
   m_GameObject: {fileID: 653941718}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.568, y: 0.775, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13425,6 +13429,8 @@ MonoBehaviour:
   lerpColor1: {r: 0.4455892, g: 0.28180128, b: 0.89433956, a: 1}
   lerpColor2: {r: 0, g: 0.27450982, b: 0.60784316, a: 1}
   startTimeOffset: 0
+  activationThreshhold: 4
+  musicChannel: 0
   guid: 
   splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
   lerpSpline: {fileID: 0}
@@ -13656,6 +13662,8 @@ MonoBehaviour:
   lerpColor1: {r: 0, g: 0, b: 0, a: 0}
   lerpColor2: {r: 0, g: 0, b: 0, a: 0}
   startTimeOffset: 0
+  activationThreshhold: 0
+  musicChannel: 0
   guid: 
   splinePrefab: {fileID: 0}
   lerpSpline: {fileID: 0}
@@ -15474,6 +15482,8 @@ MonoBehaviour:
   lerpColor1: {r: 1, g: 0, b: 0, a: 1}
   lerpColor2: {r: 0, g: 0.27450982, b: 0.60784316, a: 1}
   startTimeOffset: 0
+  activationThreshhold: 2
+  musicChannel: 1
   guid: 
   splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
   lerpSpline: {fileID: 0}
@@ -16587,7 +16597,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 379.9, y: 422.2}
+  m_SizeDelta: {x: 379.9, y: 526.94}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &1729293120
 MonoBehaviour:
@@ -16721,6 +16731,8 @@ MonoBehaviour:
   lerpColor1: {r: 0, g: 0, b: 0, a: 0}
   lerpColor2: {r: 0, g: 0, b: 0, a: 0}
   startTimeOffset: 0
+  activationThreshhold: 0
+  musicChannel: 0
   guid: 
   splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
   lerpSpline: {fileID: 0}
@@ -16923,7 +16935,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1841466638}
   m_HandleRect: {fileID: 1841466637}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

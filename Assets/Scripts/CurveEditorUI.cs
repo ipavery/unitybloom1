@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using TMPro;
+using System.Runtime.InteropServices;
 
 [Serializable]
 public class InspectorField
@@ -120,7 +121,7 @@ public class CurveEditorUI : MonoBehaviour
         {
             var go = Instantiate(fieldPrefab, fieldContainer);
             go.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
+            go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
             var slider = go.GetComponentInChildren<Slider>();
             var input = go.GetComponentInChildren<TMP_InputField>();
             var label = go.GetComponentInChildren<TextMeshProUGUI>();
@@ -164,7 +165,8 @@ go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
             previousColorMarker.anchoredPosition = uv * colorPaletteImage.rectTransform.sizeDelta;
 
             // Example fields: position X/Y/Z
-            InitializeFields(new List<InspectorField>
+
+            var fields = new List<InspectorField>
         {
             new InspectorField
             {
@@ -211,8 +213,26 @@ go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
                 minMax = new(0,.5f),
                 wholeNumbers = false
             }
-        });
-
+        };
+            if (particleManager.spawnMode == ParticleSpawnMode.Music)
+            {
+                fields.Add(new InspectorField
+                {
+                    fieldName = "Music Activation Intensity",
+                    getter = () => selectedObject.activationThreshhold,
+                    setter = v => { var p = selectedObject.activationThreshhold; p = v; selectedObject.activationThreshhold = p; },
+                    minMax = new(0, 5),
+                    wholeNumbers = false
+                });
+                fields.Add(new InspectorField
+                {
+                    fieldName = "Music Channel",
+                    getter = () => selectedObject.musicChannel,
+                    setter = v => { var p = selectedObject.musicChannel; p = (int)v; selectedObject.musicChannel = p; },
+                    minMax = new(0, 7),
+                });
+            }
+            InitializeFields(fields);
             inspectorPanel.SetActive(true);
         }
         else if (e.isSelected == false)
@@ -257,7 +277,7 @@ go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
     void OnSelectClicked() => EventHub.Publish(new SelectSpline(selectedObject));
     void OnDeleteClicked()
     {
-        
+
         EventHub.Publish(new DeleteSpline(selectedObject));
 
     }
