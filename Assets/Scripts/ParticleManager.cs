@@ -38,6 +38,7 @@ public class ParticleManager : MonoBehaviour
     [Header("audio debug")]
     public Vector3 audioDebugPos;
     bool midRunning = false;
+    public RealtimeAudioAnalyzer audioAnalyzer;
 
     void PrintArray(Vector3[] arr)
     {
@@ -66,8 +67,7 @@ public class ParticleManager : MonoBehaviour
         EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
 
-        if (RealtimeAudioAnalyzer.Instance != null)
-            RealtimeAudioAnalyzer.Instance.OnBandsUpdated += HandleAudioBands;
+
     }
 
     void OnDisable()
@@ -78,54 +78,53 @@ public class ParticleManager : MonoBehaviour
         EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
 
-        if (RealtimeAudioAnalyzer.Instance != null)
-            RealtimeAudioAnalyzer.Instance.OnBandsUpdated -= HandleAudioBands;
-    }
-
-    void HandleAudioBands(RealtimeAudioAnalyzer.AudioBands bands)
-    {
-
-        Debug.DrawLine(audioDebugPos, audioDebugPos + 10 * bands.bass * Vector3.up, Color.green, .1f);
-        Debug.DrawLine(audioDebugPos + 1 * Vector3.left, audioDebugPos + 1 * Vector3.left + 10 * bands.mid * Vector3.up, Color.red, .1f);
-        Debug.DrawLine(audioDebugPos + 2 * Vector3.left, audioDebugPos + 2 * Vector3.left + 10 * bands.treble * Vector3.up, Color.blue, .1f);
-        Debug.DrawLine(audioDebugPos + 3 * Vector3.left, audioDebugPos + 3 * Vector3.left + 10 * bands.rms * Vector3.up, Color.yellow, .1f);
-        // example: call a function when bass is strong
-        bool runChannel = bands.bass > 0.05f;
-        // if (runChannel && !IsInvoking(nameof(InvokeBass)))
-        //     InvokeRepeating(nameof(InvokeBass), 0f, musicModeWait);
-        // else if (!runChannel && IsInvoking(nameof(InvokeBass)))
-        //     CancelInvoke(nameof(InvokeBass));
-            
-        // runChannel = bands.treble > .01f;
-        // if (runChannel && !IsInvoking(nameof(InvokeTreble)))
-        //     InvokeRepeating(nameof(InvokeTreble), 0f, musicModeWait);
-        // else if (!runChannel && IsInvoking(nameof(InvokeTreble)))
-        //     CancelInvoke(nameof(InvokeTreble));
-        
-        // runChannel = bands.mid > .05f;
-        // if (runChannel && !midRunning)
-        // {
-        //     midRunning = true;
-        //     StartCoroutine(InvokeMid());
-        // }
-        // else if (!runChannel && midRunning)
-        // {
-        //     midRunning = false;
-        //     StopCoroutine(InvokeMid());
-        // }
-            
 
     }
+
+    // void HandleAudioBands(RealtimeAudioAnalyzer bands)
+    // {
+
+    //     Debug.DrawLine(audioDebugPos, audioDebugPos + 10 * bands.bass * Vector3.up, Color.green, .1f);
+    //     Debug.DrawLine(audioDebugPos + 1 * Vector3.left, audioDebugPos + 1 * Vector3.left + 10 * bands.mid * Vector3.up, Color.red, .1f);
+    //     Debug.DrawLine(audioDebugPos + 2 * Vector3.left, audioDebugPos + 2 * Vector3.left + 10 * bands.treble * Vector3.up, Color.blue, .1f);
+    //     Debug.DrawLine(audioDebugPos + 3 * Vector3.left, audioDebugPos + 3 * Vector3.left + 10 * bands.rms * Vector3.up, Color.yellow, .1f);
+    //     // example: call a function when bass is strong
+    //     bool runChannel = bands.bass > 0.05f;
+    // if (runChannel && !IsInvoking(nameof(InvokeBass)))
+    //     InvokeRepeating(nameof(InvokeBass), 0f, musicModeWait);
+    // else if (!runChannel && IsInvoking(nameof(InvokeBass)))
+    //     CancelInvoke(nameof(InvokeBass));
+
+    // runChannel = bands.treble > .01f;
+    // if (runChannel && !IsInvoking(nameof(InvokeTreble)))
+    //     InvokeRepeating(nameof(InvokeTreble), 0f, musicModeWait);
+    // else if (!runChannel && IsInvoking(nameof(InvokeTreble)))
+    //     CancelInvoke(nameof(InvokeTreble));
+
+    // runChannel = bands.mid > .05f;
+    // if (runChannel && !midRunning)
+    // {
+    //     midRunning = true;
+    //     StartCoroutine(InvokeMid());
+    // }
+    // else if (!runChannel && midRunning)
+    // {
+    //     midRunning = false;
+    //     StopCoroutine(InvokeMid());
+    // }
+
+
+
 
     IEnumerator InvokeMid()
     {
         while (true)
         {
             Debug.Log("heres the mid");
-        SimulateSpline(splineParticleGroup[1].spline);
-        yield return new WaitForSeconds(musicModeWait);
+            SimulateSpline(splineParticleGroup[1].spline);
+            yield return new WaitForSeconds(musicModeWait);
         }
-        
+
     }
     void InvokeBass()
     {
@@ -477,8 +476,29 @@ public class ParticleManager : MonoBehaviour
         {
             if (Input.GetMouseButton(0))
             {
-                StartDelayed();
+                if (!midRunning)
+                {
+                    midRunning = true;
+                    StartCoroutine(InvokeMid());
+                }
+
             }
+            else
+            {
+                if (midRunning)
+                {
+                    Debug.Log("coroutine stopped");
+                    midRunning = false;
+                    StopCoroutine(InvokeMid());
+                }
+            }
+            for (int i = 0; i < audioAnalyzer.bands.Length; i++)
+            {
+                Debug.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 10 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .1f);
+
+            }
+
+
         }
     }
 }

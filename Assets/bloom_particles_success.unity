@@ -6822,7 +6822,7 @@ Transform:
   m_GameObject: {fileID: 433620539}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.37}
+  m_LocalPosition: {x: 0, y: 0, z: -6.31}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -7393,7 +7393,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ps: {fileID: 4449763}
   symmetry: 4
-  spawnMode: 1
+  spawnMode: 0
   splineParticleGroup:
   - spline: {fileID: 653941720}
   - spline: {fileID: 1308700670}
@@ -7401,7 +7401,7 @@ MonoBehaviour:
   ParticleCubeTransform: {fileID: 334887504}
   symmetryPosition: {fileID: 2124562818}
   catchParticlesBufferTimeRatio: 0.4
-  musicModeWait: 0.2
+  musicModeWait: 5
   audioDebugPos: {x: 0, y: 0, z: 1}
 --- !u!4 &527990701
 Transform:
@@ -12968,10 +12968,10 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 7.437122, y: -3.805264, z: 0}
   - {x: 6.9333563, y: 3.2050009, z: 0}
-  - {x: 12.432177, y: 1.36415, z: 0}
+  - {x: 18.16282, y: 5.3573284, z: 0}
   s_life: 0.8
   splineSymmetry: 6
-  frequency: 5
+  frequency: 36
   lifetimeOffset: 0.05
   lerpLifetimeOffset: 0.07
   lerpTimes: 1
@@ -13342,7 +13342,7 @@ Transform:
   m_GameObject: {fileID: 653941718}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.69, z: 0}
+  m_LocalPosition: {x: 0.568, y: 0.775, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13368,7 +13368,7 @@ MonoBehaviour:
   - {x: 0.36852264, y: 1.0579052, z: 0}
   s_life: 0.8
   splineSymmetry: 4
-  frequency: 5
+  frequency: 29
   lifetimeOffset: 0.05
   lerpLifetimeOffset: 0.07
   lerpTimes: 1
@@ -15376,7 +15376,7 @@ MonoBehaviour:
   - {x: 11.963236, y: 2.845393, z: 0}
   s_life: 0.8
   splineSymmetry: 6
-  frequency: 5
+  frequency: 13
   lifetimeOffset: 0.05
   lerpLifetimeOffset: 0.07
   lerpTimes: 1
