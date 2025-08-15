@@ -30,7 +30,7 @@ public class DrawSpline : MonoBehaviour
     private bool drawingSpline;
     public float sampleInterval = .3f;
     private float _timer;
-    public Plane drawPlane = new Plane(Vector3.forward, new Vector3(0, 0, 10));
+    public Plane drawPlane = new Plane(Vector3.forward, new Vector3(0, 0, 0));
     private Vector2 previousMousePos = new Vector2(0, 0);
     private bool isSplineCreated;
     private BezierSpline newSpline;
@@ -104,7 +104,8 @@ public class DrawSpline : MonoBehaviour
     void DoSamplePoints()
     {
 
-        Vector2 mousePosition2D = Mouse.current.position.ReadValue() / canvasrt.localScale;
+        Vector2 mousePosition2D = Mouse.current.position.ReadValue(); /// canvasrt.localScale;
+
         if ((mousePosition2D - previousMousePos).magnitude < 5)
             return;
         previousMousePos = mousePosition2D;

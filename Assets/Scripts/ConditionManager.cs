@@ -31,22 +31,22 @@ public class ConditionManager : MonoBehaviour
         // Replace / extend these with your own predicates and actions.
 
         // 1) Left mouse button
-        var mouse = new ConditionEntry { name = "LeftMouse", repeatInterval = 0.15f, immediateOnStart = true, gracePeriod = 0.08f };
-        mouse.condition = () => Input.GetMouseButton(0);
-        mouse.action = () => Debug.Log("Mouse action at " + Time.time);
-        entries.Add(mouse);
+        // var mouse = new ConditionEntry { name = "LeftMouse", repeatInterval = 0.15f, immediateOnStart = true, gracePeriod = 0.08f };
+        // mouse.condition = () => Input.GetMouseButton(0);
+        // mouse.action = () => Debug.Log("Mouse action at " + Time.time);
+        // entries.Add(mouse);
 
-        // 2) Right mouse button
-        var rightMouse = new ConditionEntry { name = "RightMouse", repeatInterval = 0.25f, immediateOnStart = true };
-        rightMouse.condition = () => Input.GetMouseButton(1);
-        rightMouse.action = () => Debug.Log("Right mouse action at " + Time.time);
-        entries.Add(rightMouse);
+        // // 2) Right mouse button
+        // var rightMouse = new ConditionEntry { name = "RightMouse", repeatInterval = 0.25f, immediateOnStart = true };
+        // rightMouse.condition = () => Input.GetMouseButton(1);
+        // rightMouse.action = () => Debug.Log("Right mouse action at " + Time.time);
+        // entries.Add(rightMouse);
 
-        // 3) Example keyboard key
-        var keyA = new ConditionEntry { name = "KeyA", repeatInterval = 0.2f, immediateOnStart = false };
-        keyA.condition = () => Input.GetKey(KeyCode.A);
-        keyA.action = () => Debug.Log("A held action");
-        entries.Add(keyA);
+        // // 3) Example keyboard key
+        // var keyA = new ConditionEntry { name = "KeyA", repeatInterval = 0.2f, immediateOnStart = false };
+        // keyA.condition = () => Input.GetKey(KeyCode.A);
+        // keyA.action = () => Debug.Log("A held action");
+        // entries.Add(keyA);
 
         // 4..n) Add up to ~8 conditions by creating new ConditionEntry objects
         // You can also build entries from serialized config and assign condition/action from other scripts.
