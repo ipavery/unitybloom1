@@ -43,8 +43,12 @@ public class SaveLoadUI : MonoBehaviour
     private string pendingRenameTarget;    // filename being renamed
     private string pendingDeleteTarget;    // filename pending deletion
 
+    //loadbuttoncolors
+
+
     void Start()
     {
+        ImportPrepopulatedSaves_FromResources();
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
         if (saveWindowPanel) saveWindowPanel.SetActive(false);
         if (renamePanel) renamePanel.SetActive(false);
@@ -61,6 +65,8 @@ public class SaveLoadUI : MonoBehaviour
         // confirm buttons wired when used to avoid stale listeners, but it's safe to clear here
         if (renameConfirmButton != null) renameConfirmButton.onClick.RemoveAllListeners();
         if (confirmDeleteButton != null) confirmDeleteButton.onClick.RemoveAllListeners();
+
+        //normalLoadColors = FindChildButtonByName(saveSlotButtonPrefab, "LoadButton", "load").colors;
     }
 
     // --- top-level actions ---
@@ -77,6 +83,58 @@ public class SaveLoadUI : MonoBehaviour
         QuickSaveCurrentScene();
         PopulateSaveList();
         if (saveWindowPanel) saveWindowPanel.SetActive(true);
+    }
+
+    private void ImportPrepopulatedSaves_FromResources()
+    {
+        // Path inside Resources: "PrepopulatedHistory" -> Assets/Resources/PrepopulatedHistory/*.json
+        TextAsset[] items = Resources.LoadAll<TextAsset>("PrepopulatedHistory");
+        if (items == null || items.Length == 0)
+        {
+            Debug.Log("[SaveLoadUI] No prepopulated saves found in Resources/PrepopulatedHistory.");
+            return;
+        }
+
+        Debug.Log($"[SaveLoadUI] Found {items.Length} prepopulated save(s). Importing...");
+
+        foreach (var ta in items)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(ta.text))
+                {
+                    Debug.LogWarning($"[SaveLoadUI] Resource {ta.name} is empty, skipping.");
+                    continue;
+                }
+
+                // Attempt to deserialize to your SaveData type (must match the JSON layout)
+                var sd = JsonUtility.FromJson<SaveData>(ta.text);
+                if (sd == null)
+                {
+                    Debug.LogWarning($"[SaveLoadUI] Failed to deserialize {ta.name} into SaveData. Skipping.");
+                    continue;
+                }
+
+                // Use the resource filename as the display name
+                string displayName = ta.name;
+
+                // Save it into persistent saves via your existing SaveSystem API
+                // This should create a new file + index entry.
+                try
+                {
+                    string createdFilename = SaveSystem.SaveSceneAs(sd, displayName);
+                    Debug.Log($"[SaveLoadUI] Imported '{displayName}' as {createdFilename}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[SaveLoadUI] SaveSystem.SaveSceneAs failed for {displayName}: {e.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[SaveLoadUI] Exception while importing resource {ta.name}: {ex.Message}");
+            }
+        }
     }
 
     private void QuickSaveCurrentScene()
@@ -154,6 +212,8 @@ public class SaveLoadUI : MonoBehaviour
             s.lerpTimes = bs.lerpTimes;
             s.lerpColor1 = bs.lerpColor1;
             s.lerpColor2 = bs.lerpColor2;
+            s.musicChannel = bs.musicChannel;
+            s.activationThreshhold = bs.activationThreshhold;
             s.isActive = bs.isActive;
 
             data.splines.Add(s);
@@ -179,7 +239,8 @@ public class SaveLoadUI : MonoBehaviour
         foreach (var meta in currentIndex)
         {
             var go = Instantiate(saveSlotButtonPrefab, saveListContent);
-            Button rootBtn = FindChildButtonByName(go, "LoadButton", "load"); ;
+            Button rootBtn = FindChildButtonByName(go, "LoadButton", "load");
+
 
             // TEXTMESH PRO: look for TMP_Text (TextMeshProUGUI)
             var tmpText = rootBtn.GetComponentInChildren<TMP_Text>();
@@ -196,6 +257,19 @@ public class SaveLoadUI : MonoBehaviour
             // capture loop variable
             string filenameForListeners = meta.filename;
             string displayForListeners = meta.displayName;
+
+            //cant changeloadcolors without all of them changing color???!?!
+            // if (!string.IsNullOrEmpty(activeFilename) && activeFilename == meta.filename)
+            // {
+            //     var colors = loadButton.colors;
+            //     colors.normalColor = new Color(246, 185, 59);
+            //     loadButton.colors = colors;
+            // }
+            // else
+            // {
+            //     loadButton.colors = normalLoadColors;
+            // }
+
 
             // Root click selects / loads the save and sets it as active
             if (rootBtn != null)
@@ -250,7 +324,7 @@ public class SaveLoadUI : MonoBehaviour
     }
 
     // --- selection / loading ---
-    private void OnSaveSelected(string filename)
+    public void OnSaveSelected(string filename)
     {
         activeFilename = filename;
         LoadSaveGroup(filename);
@@ -317,6 +391,8 @@ public class SaveLoadUI : MonoBehaviour
                 bs.lerpTimes = sd.lerpTimes;
                 bs.lerpColor1 = sd.lerpColor1;
                 bs.lerpColor2 = sd.lerpColor2;
+                bs.musicChannel = sd.musicChannel;
+                bs.activationThreshhold = sd.activationThreshhold;
                 bs.isActive = sd.isActive;
 
                 // set private guid via reflection (your existing approach)
@@ -481,56 +557,56 @@ public class SaveLoadUI : MonoBehaviour
     }
 
     private void OnNewBlankFileClicked()
-{
-    // If there's an active file, persist current scene by overwriting the active entry (delete old file then save snapshot)
-    if (!string.IsNullOrEmpty(activeFilename))
     {
-        var meta = currentIndex?.Find(m => m.filename == activeFilename);
-        string displayName = meta != null ? meta.displayName : "Saved_File";
+        // If there's an active file, persist current scene by overwriting the active entry (delete old file then save snapshot)
+        if (!string.IsNullOrEmpty(activeFilename))
+        {
+            var meta = currentIndex?.Find(m => m.filename == activeFilename);
+            string displayName = meta != null ? meta.displayName : "Saved_File";
 
-        var snapshot = BuildSaveDataFromRoot();
+            var snapshot = BuildSaveDataFromRoot();
 
+            try
+            {
+                // remove old file/index entry so SaveSceneAs doesn't just add another file
+                SaveSystem.DeleteSave(activeFilename);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[SaveLoadUI] Failed to delete active file before overwrite: " + ex.Message);
+            }
+
+            // recreate the active save entry using the same displayName
+            // we don't keep this filename as active because we're about to create the new blank and set that active
+            try
+            {
+                SaveSystem.SaveSceneAs(snapshot, displayName);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[SaveLoadUI] Failed to save snapshot of current scene: " + ex.Message);
+            }
+        }
+
+        // Clear the scene
+        ClearSavedObjects();
+
+        // Create exactly one new empty save and set it active
+        var empty = new SaveData();
+        string created = null;
         try
         {
-            // remove old file/index entry so SaveSceneAs doesn't just add another file
-            SaveSystem.DeleteSave(activeFilename);
+            created = SaveSystem.SaveSceneAs(empty, "New File");
+            activeFilename = created;
         }
         catch (Exception ex)
         {
-            Debug.LogWarning("[SaveLoadUI] Failed to delete active file before overwrite: " + ex.Message);
+            Debug.LogError("[SaveLoadUI] Failed to create new blank save: " + ex.Message);
         }
 
-        // recreate the active save entry using the same displayName
-        // we don't keep this filename as active because we're about to create the new blank and set that active
-        try
-        {
-            SaveSystem.SaveSceneAs(snapshot, displayName);
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning("[SaveLoadUI] Failed to save snapshot of current scene: " + ex.Message);
-        }
+        // refresh index & UI
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
+        PopulateSaveList();
     }
-
-    // Clear the scene
-    ClearSavedObjects();
-
-    // Create exactly one new empty save and set it active
-    var empty = new SaveData();
-    string created = null;
-    try
-    {
-        created = SaveSystem.SaveSceneAs(empty, "New File");
-        activeFilename = created;
-    }
-    catch (Exception ex)
-    {
-        Debug.LogError("[SaveLoadUI] Failed to create new blank save: " + ex.Message);
-    }
-
-    // refresh index & UI
-    currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
-    PopulateSaveList();
-}
 
 }

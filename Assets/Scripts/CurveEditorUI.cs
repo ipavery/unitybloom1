@@ -221,7 +221,7 @@ public class CurveEditorUI : MonoBehaviour
                     fieldName = "Music Activation Intensity",
                     getter = () => selectedObject.activationThreshhold,
                     setter = v => { var p = selectedObject.activationThreshhold; p = v; selectedObject.activationThreshhold = p; },
-                    minMax = new(0, 10),
+                    minMax = new(0, 50),
                     wholeNumbers = false
                 });
                 fields.Add(new InspectorField
@@ -229,7 +229,7 @@ public class CurveEditorUI : MonoBehaviour
                     fieldName = "Music Channel",
                     getter = () => selectedObject.musicChannel,
                     setter = v => { var p = selectedObject.musicChannel; p = (int)v; selectedObject.musicChannel = p; },
-                    minMax = new(0, 7),
+                    minMax = new(0, 24),
                 });
             }
             InitializeFields(fields);

@@ -18,6 +18,8 @@ public class SplineData
     public bool isActive;
     public string id; // <-- persistent spline GUID
     public string lerpSplineId; // <-- GUID of linked lerp spline
+    public int musicChannel;
+    public float activationThreshhold;
 }
 
 [System.Serializable]

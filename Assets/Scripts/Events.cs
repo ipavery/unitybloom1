@@ -105,3 +105,12 @@ public struct ReloadLerpUI
         this.reload = reload;
     }
 }
+
+public struct HideShow3DUI
+{
+    public bool hide;
+    public HideShow3DUI(bool hide)
+    {
+        this.hide = hide;
+    }
+}

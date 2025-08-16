@@ -191,8 +191,9 @@ public class ParticleManager : MonoBehaviour
         if (spawnMode == ParticleSpawnMode.Music) //this will need to change if you want to change modes in the middle
         {
             Invoke(nameof(WaitForAudio), 2.5f);
+            conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () => SimulateSpline(splineParticleGroup[0].spline), musicModeWait, true, .08f);
         }
-        conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () => SimulateSpline(splineParticleGroup[0].spline), musicModeWait, true, .08f);
+        
     }
 
     void WaitForAudio()

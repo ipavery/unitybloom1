@@ -73,7 +73,7 @@ public class SplinePicker : MonoBehaviour
         EventHub.Subscribe<SelectSpline>(OnSelectSpline);
         EventHub.Subscribe<SplineSelectionChange>(OnSplineSelectionChanged);
         EventHub.Subscribe<DeleteSpline>(OnDeleteSpline);
-
+        EventHub.Subscribe<HideShow3DUI>(OnHideShow3DUI);
     }
 
     void OnDisable()
@@ -85,6 +85,34 @@ public class SplinePicker : MonoBehaviour
         EventHub.Unsubscribe<SelectSpline>(OnSelectSpline);
         EventHub.Unsubscribe<SplineSelectionChange>(OnSplineSelectionChanged);
         EventHub.Unsubscribe<DeleteSpline>(OnDeleteSpline);
+        EventHub.Unsubscribe<HideShow3DUI>(OnHideShow3DUI);
+    }
+
+    void OnHideShow3DUI(HideShow3DUI e)
+    {
+        if (e.hide == true)
+        {
+            foreach (var sphereGroup in controlSphereGroup)
+            {
+                sphereGroup.sphereObject.GetComponent<Renderer>().enabled = false;
+            }
+            foreach (var spline in splineList)
+            {
+                spline.GetComponentInChildren<LineRenderer>().enabled = false;
+            }
+        }
+        else
+        {
+            foreach (var sphereGroup in controlSphereGroup)
+            {
+                sphereGroup.sphereObject.GetComponent<Renderer>().enabled = true;
+            }
+            foreach (var spline in splineList)
+            {
+                spline.GetComponentInChildren<LineRenderer>().enabled = true;
+            }
+        }
+
     }
 
     void OnDeleteSpline(DeleteSpline e)
