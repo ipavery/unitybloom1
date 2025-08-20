@@ -29,9 +29,6 @@ public class CurveEditorUI : MonoBehaviour
     [Header("Color Picker")]
     public Button colorPickerButton;
     public Button colorPickerButton2;
-    public GameObject colorPickerPanel;
-    public RawImage colorPaletteImage;
-    public RectTransform previousColorMarker;
     private int pickingColor = 0;
 
     [Header("Actions")]
@@ -78,13 +75,9 @@ public class CurveEditorUI : MonoBehaviour
     void Start()
     {
         inspectorPanel.SetActive(false);
-        colorPickerPanel.SetActive(false);
 
-        // Setup color picker
-        paletteTexture = colorPaletteImage.texture as Texture2D;
         colorPickerButton.onClick.AddListener(ColorButton1);
         colorPickerButton2.onClick.AddListener(ColorButton2);
-        colorPaletteImage.GetComponent<Button>().onClick.AddListener(OnPaletteClicked);
 
         // Action buttons
         selectButton.onClick.AddListener(OnSelectClicked);
@@ -174,7 +167,6 @@ public class CurveEditorUI : MonoBehaviour
         {
             selectedObject = e.spline;
             Vector2 uv = new Vector2(originalColor.r, originalColor.g); // simplistic example
-            previousColorMarker.anchoredPosition = uv * colorPaletteImage.rectTransform.sizeDelta;
 
             // Example fields: position X/Y/Z
 
@@ -257,33 +249,6 @@ public class CurveEditorUI : MonoBehaviour
     {
         selectedObject = null;
         inspectorPanel.SetActive(false);
-        colorPickerPanel.SetActive(false);
-    }
-
-    void OnPaletteClicked()
-    {
-        Vector2 localPos;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            colorPaletteImage.rectTransform,
-            Input.mousePosition,
-            uiCanvas.worldCamera,
-            out localPos);
-
-        // Convert to UV
-        Rect rect = colorPaletteImage.rectTransform.rect;
-        float u = (localPos.x - rect.x) / rect.width;
-        float v = (localPos.y - rect.y) / rect.height;
-        Color c = paletteTexture.GetPixelBilinear(u, v);
-
-        // Apply color
-        if (pickingColor == 1)
-            selectedObject.lerpColor1 = c;
-        if (pickingColor == 2)
-            selectedObject.lerpColor2 = c;
-        pickingColor = 0;
-        ReloadParticles();
-
-        colorPickerPanel.SetActive(false);
     }
 
     void OnSelectClicked() => EventHub.Publish(new SelectSpline(selectedObject));

@@ -835,10 +835,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb1f748a4c08b37498186eec0f8ae0cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  confirmButton: {fileID: 0}
-  cancelButton: {fileID: 0}
-  valueSlider: {fileID: 0}
-  wheelRect: {fileID: 0}
+  confirmButton: {fileID: 4661640687888466656}
+  cancelButton: {fileID: 8958106256580927842}
+  valueSlider: {fileID: 1692779371682109323}
+  wheelRect: {fileID: 5549461112894456777}
 --- !u!1 &6628141319304448490
 GameObject:
   m_ObjectHideFlags: 0
