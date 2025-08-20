@@ -94,13 +94,25 @@ public class CurveEditorUI : MonoBehaviour
 
     void ColorButton1()
     {
-        colorPickerPanel.SetActive(true);
+        ColorPickerManager.Instance.Show(originalColor, OnColorPicked, gameObject);
         pickingColor = 1;
     }
     void ColorButton2()
     {
-        colorPickerPanel.SetActive(true);
+        
         pickingColor = 2;
+    }
+
+    void OnColorPicked(Color pickedColor)
+    {
+        if (pickingColor == 1)
+        {
+            selectedObject.lerpColor1 = pickedColor;
+        }
+        else if (pickingColor == 2)
+        {
+            selectedObject.lerpColor2 = pickedColor;
+        }
     }
 
     void ActivateButton()
