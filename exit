@@ -1,0 +1,55 @@
+[33mb2b0c29[m[33m ([m[1;36mHEAD -> [m[1;32mbasic-version[m[33m, [m[1;31morigin/basic-version[m[33m)[m broken save system
+[33mdd40544[m hide ui button
+[33m5dcfdb8[m working audio? abt to port to mac
+[33meb00ddc[m trying to get audio better
+[33mcbc82b9[m some more audio and other stuff
+[33m9d83251[m connecetd audio
+[33m8723e8b[m working again after weird canvas bug
+[33m83cef39[m music mode apparently works now and its liiiiiit
+[33maf519dc[m improved save system, regenerating saved lerplines works now
+[33m53edfaf[m saving and lerp saving works
+[33m4512e2f[m starting save/load system
+[33mbb8ac21[m lerping working
+[33m3ce9c51[m working deletion and fixed late draw spline
+[33md5ae577[m started fixing delete
+[33m4e221d6[m updated copyfrom bezier
+[33mf7582eb[m lerping, on/off
+[33m8223244[m added some stuff
+[33mcf2b6ee[m started clip lerping
+[33mde28d8e[m more stuff works like draw new splines and select button
+[33m0f7cfb1[m put entire project in the clouuuuuuud baby
+[33m003ca14[m janky spline drawing
+[33mf2913f4[m added input Ui blocking layer and fixed slider inputs
+[33m02308df[m janky editor tab draft
+[33mae8878a[m dragging works better
+[33mbe86f07[m selection improvements working, fix box appearing bug
+[33m8bbdd93[m fix control point bug
+[33m6af7bae[m working dragging ctrl pts
+[33md6cff46[m ps works with color lerping now
+[33mf083f2d[m update size correctly with ratio buffer time, multiple splines and lerping working
+[33m95361b2[m lerp 1 time and to yourself works now
+[33m6ae5dd2[m particle system works much better, startlifetime can be updated
+[33m88e8607[m particlelist works now?!
+[33mb7ae76d[m one big particle list works now
+[33m597bdd3[m working so far
+[33mf10860c[m still works, changed to spline variables
+[33m61f5a0d[m stuff
+[33mdde4928[m added event system and timeline communication to ur mom
+[33mbf3e233[m timeline works correctly snapping/placement/settings object
+[33mf8c00ef[m dragging clips and starting timeline code organize
+[33m56d29af[m timelinemanager
+[33mcf7d67d[m added some buttons
+[33m927f8b9[m working gizmos, fixed control mode with tab key
+[33mc756707[m working line renderer updates
+[33m4c6e6a1[m gizmos now update spline points
+[33m666348f[m gizmo drag kinda works
+[33m0446021[m gizmos are where they should be
+[33m9a922ae[m switched splinepicker to new input system
+[33mba6bc5d[m added header
+[33mc366ee5[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m)[m maybe this time
+[33m9b1cbee[m 3rd tries the charm
+[33mb0c79ea[m update gitignoreand cleanup
+[33maf7fd5e[m Initial commit
+[33mf72ebd7[m[33m ([m[1;31mbloom/master[m[33m)[m changed to new input system
+[33m87635ea[m fixed splines
+[33mdb7f39a[m initial commit for random assets and added .gitignore

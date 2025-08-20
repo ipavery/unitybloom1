@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.UI;
 
 public class TimelineSpawner : MonoBehaviour
 {
@@ -8,9 +7,9 @@ public class TimelineSpawner : MonoBehaviour
     public RectTransform timelineContent;
     GameObject draggablePrefab;          // Prefab for draggable items
     public TimelineSettings timelineSettings;   // Reference to the settings scriptable object
-    public RectTransform timelineScrollRectContent;
     float pixelsPerSecond;            // Matches your timeline scale
     float snapInterval;             // Seconds per snap interval
+    public RectTransform timelineScrollRectContent;
 
     public ParticleManager particleManager; // Reference to the ParticleManager if needed
     List<SplineParticleGroup> items; // List of spline items to spawn clips for
@@ -21,6 +20,7 @@ public class TimelineSpawner : MonoBehaviour
         EventHub.Subscribe<NewSplineCreated>(OnSplineCreated);
         EventHub.Subscribe<DeleteSpline>(OnSplineDeleted);
         EventHub.Subscribe<ReloadLerpUI>(OnReloadLerpUI);
+
     }
 
     void OnDisable()
@@ -96,7 +96,6 @@ public class TimelineSpawner : MonoBehaviour
         // (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond
         float timePosition = e.spline.startTimeOffset * timelineSettings.pixelsPerSecond;
         rt.anchoredPosition = new Vector2(draggablePrefab.GetComponent<RectTransform>().rect.width / 2 + timePosition, -spawnedClips.Count * (rt.sizeDelta.y / 1.5f));
-
         // Offset vertically so they don't overlap (just for visibility)
 
         // Configure draggable behavior
@@ -105,7 +104,7 @@ public class TimelineSpawner : MonoBehaviour
         draggable.snapInterval = snapInterval;
 
         spawnedClips.Add(draggable);
-        timelineScrollRectContent.sizeDelta = new Vector2(timelineScrollRectContent.sizeDelta.x, spawnedClips.Count * draggablePrefab.GetComponent<RectTransform>().sizeDelta.y - 170);
+        timelineScrollRectContent.sizeDelta = new Vector2(timelineScrollRectContent.sizeDelta.x, spawnedClips.Count * draggablePrefab.GetComponent<RectTransform>().sizeDelta.y - 150);
     }
 
     public void SpawnClips()
@@ -119,7 +118,6 @@ public class TimelineSpawner : MonoBehaviour
         // spawnedClips.Clear();
 
         // Spawn new clips
-
         for (int i = 0; i < items.Count; i++)
         {
 
@@ -135,7 +133,6 @@ public class TimelineSpawner : MonoBehaviour
             // (rectTransform.localPosition.x - rectTransform.rect.width/2) / pixelsPerSecond
             float timePosition = items[i].spline.startTimeOffset * timelineSettings.pixelsPerSecond;
             rt.anchoredPosition = new Vector2(draggablePrefab.GetComponent<RectTransform>().rect.width / 2 + timePosition, -i * (rt.sizeDelta.y / 1.5f));
-
             // Offset vertically so they don't overlap (just for visibility)
 
             // Configure draggable behavior
@@ -149,6 +146,6 @@ public class TimelineSpawner : MonoBehaviour
 
 
         }
-        timelineScrollRectContent.sizeDelta = new Vector2(timelineScrollRectContent.sizeDelta.x, spawnedClips.Count * draggablePrefab.GetComponent<RectTransform>().sizeDelta.y - 170);
+        timelineScrollRectContent.sizeDelta = new Vector2(timelineScrollRectContent.sizeDelta.x, spawnedClips.Count * draggablePrefab.GetComponent<RectTransform>().sizeDelta.y - 150);
     }
 }

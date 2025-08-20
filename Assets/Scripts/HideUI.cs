@@ -29,10 +29,11 @@ public class HideUI : MonoBehaviour
             HideEverything();
             EventHub.Publish(new HideShow3DUI(true));
         }
+
         else
         {
-            ShowEverything();
             EventHub.Publish(new HideShow3DUI(false));
+            ShowEverything();
         }
 
     }
@@ -47,6 +48,7 @@ public class HideUI : MonoBehaviour
             uiRootCanvasGroup.interactable = false;
             uiRootCanvasGroup.blocksRaycasts = false;
         }
+
     }
 
     void ShowEverything()
@@ -59,6 +61,7 @@ public class HideUI : MonoBehaviour
             uiRootCanvasGroup.interactable = true;
             uiRootCanvasGroup.blocksRaycasts = true;
         }
+
     }
 
     void Update()

@@ -38,6 +38,7 @@ public class ParticleManager : MonoBehaviour
     public RealtimeAudioAnalyzer audioAnalyzer;
     public ConditionManager conditionManager;
     public RuntimeLineDrawer runtimeLineDrawer;
+    public GameObject UIButtonContainer;
 
     void PrintArray(Vector3[] arr)
     {
@@ -191,9 +192,8 @@ public class ParticleManager : MonoBehaviour
         if (spawnMode == ParticleSpawnMode.Music) //this will need to change if you want to change modes in the middle
         {
             Invoke(nameof(WaitForAudio), 2.5f);
-            conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () => SimulateSpline(splineParticleGroup[0].spline), musicModeWait, true, .08f);
         }
-        
+        conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () => SimulateSpline(splineParticleGroup[0].spline), musicModeWait, true, .08f);
     }
 
     void WaitForAudio()
@@ -508,8 +508,11 @@ public class ParticleManager : MonoBehaviour
             //RuntimeLineDrawer.DrawLine(audioDebugPos + 1 * Vector3.right, audioDebugPos + 1 * Vector3.right + 2 * Vector3.up, Color.green, 20f);
             for (int i = 0; i < audioAnalyzer.bands.Length; i++)
             {
+                if (UIButtonContainer.activeInHierarchy)
+                {
+                    RuntimeLineDrawer.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 1 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .2f);
 
-                RuntimeLineDrawer.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 1 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .2f);
+                }
                 //Debug.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 10 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .1f);
 
             }

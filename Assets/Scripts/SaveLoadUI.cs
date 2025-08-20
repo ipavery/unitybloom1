@@ -43,12 +43,8 @@ public class SaveLoadUI : MonoBehaviour
     private string pendingRenameTarget;    // filename being renamed
     private string pendingDeleteTarget;    // filename pending deletion
 
-    //loadbuttoncolors
-
-
     void Start()
     {
-        ImportPrepopulatedSaves_FromResources();
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
         if (saveWindowPanel) saveWindowPanel.SetActive(false);
         if (renamePanel) renamePanel.SetActive(false);
@@ -66,9 +62,158 @@ public class SaveLoadUI : MonoBehaviour
         if (renameConfirmButton != null) renameConfirmButton.onClick.RemoveAllListeners();
         if (confirmDeleteButton != null) confirmDeleteButton.onClick.RemoveAllListeners();
 
-        //normalLoadColors = FindChildButtonByName(saveSlotButtonPrefab, "LoadButton", "load").colors;
+        ImportPrepopulatedSaves_FromResources();
     }
 
+    private void ImportPrepopulatedSaves_FromResources()
+    {
+
+
+        // Path inside Resources: "PrepopulatedHistory" -> Assets/Resources/PrepopulatedHistory/*.json
+
+
+        TextAsset[] items = Resources.LoadAll<TextAsset>("PrepopulatedHistory");
+
+
+        if (items == null || items.Length == 0)
+
+
+        {
+
+
+            Debug.Log("[SaveLoadUI] No prepopulated saves found in Resources/PrepopulatedHistory.");
+
+
+            return;
+
+
+        }
+
+
+
+
+
+        Debug.Log($"[SaveLoadUI] Found {items.Length} prepopulated save(s). Importing...");
+
+
+
+
+
+        foreach (var ta in items)
+
+
+        {
+
+
+            try
+
+
+            {
+
+
+                if (string.IsNullOrWhiteSpace(ta.text))
+
+
+                {
+
+
+                    Debug.LogWarning($"[SaveLoadUI] Resource {ta.name} is empty, skipping.");
+
+
+                    continue;
+
+
+                }
+
+
+
+
+
+                // Attempt to deserialize to your SaveData type (must match the JSON layout)
+
+
+                var sd = JsonUtility.FromJson<SaveData>(ta.text);
+
+
+                if (sd == null)
+
+
+                {
+
+
+                    Debug.LogWarning($"[SaveLoadUI] Failed to deserialize {ta.name} into SaveData. Skipping.");
+
+
+                    continue;
+
+
+                }
+
+
+
+
+
+                // Use the resource filename as the display name
+
+
+                string displayName = ta.name;
+
+
+
+
+
+                // Save it into persistent saves via your existing SaveSystem API
+
+
+                // This should create a new file + index entry.
+
+
+                try
+
+
+                {
+
+
+                    string createdFilename = SaveSystem.SaveSceneAs(sd, displayName);
+
+
+                    Debug.Log($"[SaveLoadUI] Imported '{displayName}' as {createdFilename}");
+
+
+                }
+
+
+                catch (Exception e)
+
+
+                {
+
+
+                    Debug.LogError($"[SaveLoadUI] SaveSystem.SaveSceneAs failed for {displayName}: {e.Message}");
+
+
+                }
+
+
+            }
+
+
+            catch (Exception ex)
+
+
+            {
+
+
+                Debug.LogError($"[SaveLoadUI] Exception while importing resource {ta.name}: {ex.Message}");
+
+
+            }
+
+
+        }
+
+
+    }
     // --- top-level actions ---
     void ClearAllSaves()
     {
@@ -83,58 +228,6 @@ public class SaveLoadUI : MonoBehaviour
         QuickSaveCurrentScene();
         PopulateSaveList();
         if (saveWindowPanel) saveWindowPanel.SetActive(true);
-    }
-
-    private void ImportPrepopulatedSaves_FromResources()
-    {
-        // Path inside Resources: "PrepopulatedHistory" -> Assets/Resources/PrepopulatedHistory/*.json
-        TextAsset[] items = Resources.LoadAll<TextAsset>("PrepopulatedHistory");
-        if (items == null || items.Length == 0)
-        {
-            Debug.Log("[SaveLoadUI] No prepopulated saves found in Resources/PrepopulatedHistory.");
-            return;
-        }
-
-        Debug.Log($"[SaveLoadUI] Found {items.Length} prepopulated save(s). Importing...");
-
-        foreach (var ta in items)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(ta.text))
-                {
-                    Debug.LogWarning($"[SaveLoadUI] Resource {ta.name} is empty, skipping.");
-                    continue;
-                }
-
-                // Attempt to deserialize to your SaveData type (must match the JSON layout)
-                var sd = JsonUtility.FromJson<SaveData>(ta.text);
-                if (sd == null)
-                {
-                    Debug.LogWarning($"[SaveLoadUI] Failed to deserialize {ta.name} into SaveData. Skipping.");
-                    continue;
-                }
-
-                // Use the resource filename as the display name
-                string displayName = ta.name;
-
-                // Save it into persistent saves via your existing SaveSystem API
-                // This should create a new file + index entry.
-                try
-                {
-                    string createdFilename = SaveSystem.SaveSceneAs(sd, displayName);
-                    Debug.Log($"[SaveLoadUI] Imported '{displayName}' as {createdFilename}");
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[SaveLoadUI] SaveSystem.SaveSceneAs failed for {displayName}: {e.Message}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"[SaveLoadUI] Exception while importing resource {ta.name}: {ex.Message}");
-            }
-        }
     }
 
     private void QuickSaveCurrentScene()
@@ -239,8 +332,7 @@ public class SaveLoadUI : MonoBehaviour
         foreach (var meta in currentIndex)
         {
             var go = Instantiate(saveSlotButtonPrefab, saveListContent);
-            Button rootBtn = FindChildButtonByName(go, "LoadButton", "load");
-
+            Button rootBtn = FindChildButtonByName(go, "LoadButton", "load"); ;
 
             // TEXTMESH PRO: look for TMP_Text (TextMeshProUGUI)
             var tmpText = rootBtn.GetComponentInChildren<TMP_Text>();
@@ -257,19 +349,6 @@ public class SaveLoadUI : MonoBehaviour
             // capture loop variable
             string filenameForListeners = meta.filename;
             string displayForListeners = meta.displayName;
-
-            //cant changeloadcolors without all of them changing color???!?!
-            // if (!string.IsNullOrEmpty(activeFilename) && activeFilename == meta.filename)
-            // {
-            //     var colors = loadButton.colors;
-            //     colors.normalColor = new Color(246, 185, 59);
-            //     loadButton.colors = colors;
-            // }
-            // else
-            // {
-            //     loadButton.colors = normalLoadColors;
-            // }
-
 
             // Root click selects / loads the save and sets it as active
             if (rootBtn != null)
@@ -392,6 +471,8 @@ public class SaveLoadUI : MonoBehaviour
                 bs.lerpColor1 = sd.lerpColor1;
                 bs.lerpColor2 = sd.lerpColor2;
                 bs.musicChannel = sd.musicChannel;
+
+
                 bs.activationThreshhold = sd.activationThreshhold;
                 bs.isActive = sd.isActive;
 
