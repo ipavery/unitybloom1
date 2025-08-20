@@ -87,7 +87,7 @@ public class CurveEditorUI : MonoBehaviour
 
     void ColorButton1()
     {
-        ColorPickerManager.Instance.Show(originalColor, OnColorPicked, gameObject);
+        ColorPickerManager.Instance.Show(selectedObject.lerpColor1, OnColorPicked, inspectorPanel);
         pickingColor = 1;
     }
     void ColorButton2()
@@ -98,6 +98,7 @@ public class CurveEditorUI : MonoBehaviour
 
     void OnColorPicked(Color pickedColor)
     {
+        Debug.Log(pickedColor);
         if (pickingColor == 1)
         {
             selectedObject.lerpColor1 = pickedColor;
@@ -106,6 +107,7 @@ public class CurveEditorUI : MonoBehaviour
         {
             selectedObject.lerpColor2 = pickedColor;
         }
+        ReloadParticles();
     }
 
     void ActivateButton()
@@ -158,8 +160,6 @@ public class CurveEditorUI : MonoBehaviour
             });
         }
     }
-
-    bool IsPointerOverUI() => EventSystem.current.IsPointerOverGameObject();
 
     void SelectObject(SplineSelectionChange e)
     {
@@ -248,6 +248,7 @@ public class CurveEditorUI : MonoBehaviour
     void DeselectObject()
     {
         selectedObject = null;
+        ColorPickerManager.Instance.Close();
         inspectorPanel.SetActive(false);
     }
 

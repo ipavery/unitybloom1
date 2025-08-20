@@ -24,4 +24,16 @@ public class ColorPickerManager : MonoBehaviour
         }
         currentPicker.Open(initial, onPicked);
     }
+
+    public void Close()
+    {
+        if (currentPicker != null)
+        {
+            Destroy(currentPicker.gameObject);
+        }
+        else
+        {
+            Debug.Log("there is no current picker");
+        }
+    }
 }
