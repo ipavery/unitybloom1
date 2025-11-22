@@ -8,7 +8,8 @@ using Unity.Mathematics; // Needed for SequenceEqual
 public enum ParticleSpawnMode
 {
     Instant,
-    Music
+    Music,
+    Independent
 }
 
 public class ParticleManager : MonoBehaviour
@@ -152,7 +153,7 @@ public class ParticleManager : MonoBehaviour
         {
             started = false;
             ps.Clear();
-            StartDelayed();
+            StartInstant();
         }
         if (spawnMode == ParticleSpawnMode.Music)
         {
@@ -166,6 +167,11 @@ public class ParticleManager : MonoBehaviour
                 Debug.Log($"{curSpline.name} coroutine started");
                 conditionManager.CreateEntry($"spline_{i}", () => audioAnalyzer.bands[musicChannel] > threshold, () => SimulateSpline(curSpline), musicModeWait, true, .08f);
             }
+        }
+        if (spawnMode == ParticleSpawnMode.Independent)
+        {
+            conditionManager.StopAndClearAllEntries();
+            StartIndependent();
         }
 
     }
@@ -187,13 +193,78 @@ public class ParticleManager : MonoBehaviour
     {
         if (spawnMode == ParticleSpawnMode.Instant)
         {
-            Invoke(nameof(StartDelayed), 0.5f);
+            Invoke(nameof(StartInstant), 0.5f);
         }
         if (spawnMode == ParticleSpawnMode.Music) //this will need to change if you want to change modes in the middle
         {
             Invoke(nameof(WaitForAudio), 2.5f);
         }
-        conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () => SimulateSpline(splineParticleGroup[0].spline), musicModeWait, true, .08f);
+        if (spawnMode == ParticleSpawnMode.Independent)
+        {
+            Invoke(nameof(StartIndependent), 1f);
+        }
+        //conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () => SimulateSpline(splineParticleGroup[0].spline), musicModeWait, true, .08f);
+    }
+
+    void StartIndependent() {
+        for (int i = 0; i < splineParticleGroup.Count; i++)
+        {
+            var group = splineParticleGroup[i];        // capture the group
+            var curSpline = group.spline;              // capture the spline object
+            int musicChannel = curSpline.musicChannel; // capture primitive values too, if you use them
+            float threshold = curSpline.activationThreshhold;
+            conditionManager.CreateEntry($"spline_{i}", () => true, () => SimulateSpline(curSpline), curSpline.s_life, true, 0f);
+        }
+    }
+
+    void StartIndependent2() {
+        //Option 2 for start strategy
+        //iterate thru all splines passed to ParticleManager
+        for (int j = 0; j < splineParticleGroup.Count; j++)
+        {
+            BezierSpline currentSpline = splineParticleGroup[j].spline;
+            if (currentSpline.isActive == false)
+                continue;
+
+            int splineParticleCount = currentSpline.frequency * currentSpline.lerpTimes;
+
+            int currentFrequency = currentSpline.frequency - 1; //with offset to match the true number
+            int currentLerpTimes = currentSpline.lerpTimes - 1;
+            if (currentFrequency <= 0)
+            {
+                currentFrequency = 1; // avoid division by zero
+            }
+            if (currentLerpTimes <= 0)
+            {
+                currentLerpTimes = 1; // avoid division by zero
+            }
+            float catchParticlesBufferTime = currentSpline.s_life * catchParticlesBufferTimeRatio;
+
+            float stepSize = 1f / currentFrequency;
+
+            //initial spline, place particles along it
+            //loop along spline, placing particles along the way
+            //lerploop - idk why this uses <= and -1 in the condition, but it works
+            for (float k = 0; k <= currentSpline.lerpTimes - 1; k++)
+            {
+                //here in the lerploop, it should start coroutines for each lerped spline
+                float l = k / currentLerpTimes;
+
+                if (!currentSpline.lerpSpline)
+                {
+                    currentSpline.lerpSpline = currentSpline;
+                }
+                if (currentSpline.frequency <= 0)
+                {
+                    currentSpline.frequency = 1; // avoid problems
+
+                }
+
+                StartCoroutine(SplineLoop(currentSpline, (currentSpline.startTimeOffset + currentSpline.lerpLifetimeOffset * k), currentFrequency, splineParticleCount, stepSize, l, k, currentSpline.lifetimeOffset));
+            }
+
+        }
+        
     }
 
     void WaitForAudio()
@@ -215,7 +286,7 @@ public class ParticleManager : MonoBehaviour
 
     }
 
-    void StartDelayed()
+    void StartInstant()
     {
         if (spawnMode == ParticleSpawnMode.Instant)
         {
@@ -346,56 +417,7 @@ public class ParticleManager : MonoBehaviour
 
             started = true;
         }
-        ////////muuuuuuuuuuuuusic_modeeeeeeeeeeeeeeeeeeeeeeeeee
-        if (spawnMode == ParticleSpawnMode.Music)
-        {
-
-            //iterate thru all splines passed to ParticleManager
-            for (int j = 0; j < splineParticleGroup.Count; j++)
-            {
-                BezierSpline currentSpline = splineParticleGroup[j].spline;
-                if (currentSpline.isActive == false)
-                    continue;
-
-                int splineParticleCount = currentSpline.frequency * currentSpline.lerpTimes;
-
-                int currentFrequency = currentSpline.frequency - 1; //with offset to match the true number
-                int currentLerpTimes = currentSpline.lerpTimes - 1;
-                if (currentFrequency <= 0)
-                {
-                    currentFrequency = 1; // avoid division by zero
-                }
-                if (currentLerpTimes <= 0)
-                {
-                    currentLerpTimes = 1; // avoid division by zero
-                }
-                float catchParticlesBufferTime = currentSpline.s_life * catchParticlesBufferTimeRatio;
-
-                float stepSize = 1f / currentFrequency;
-
-                //initial spline, place particles along it
-                //loop along spline, placing particles along the way
-                //lerploop - idk why this uses <= and -1 in the condition, but it works
-                for (float k = 0; k <= currentSpline.lerpTimes - 1; k++)
-                {
-                    //here in the lerploop, it should start coroutines for each lerped spline
-                    float l = k / currentLerpTimes;
-
-                    if (!currentSpline.lerpSpline)
-                    {
-                        currentSpline.lerpSpline = currentSpline;
-                    }
-                    if (currentSpline.frequency <= 0)
-                    {
-                        currentSpline.frequency = 1; // avoid problems
-
-                    }
-
-                    StartCoroutine(SplineLoop(currentSpline, (currentSpline.startTimeOffset + currentSpline.lerpLifetimeOffset * k), currentFrequency, splineParticleCount, stepSize, l, k, currentSpline.lifetimeOffset));
-                }
-
-            }
-        }
+        
     }
 
     IEnumerator SplineLoop(BezierSpline currentSpline, float startTimeOffset, int currentFrequency, int splineParticleCount, float stepSize, float l, float k, float particleTimeOffset)
@@ -516,6 +538,10 @@ public class ParticleManager : MonoBehaviour
                 //Debug.DrawLine(audioDebugPos + i * Vector3.left, audioDebugPos + i * Vector3.left + 10 * audioAnalyzer.bands[i] * Vector3.up, Color.red, .1f);
 
             }
+        }
+        if (spawnMode == ParticleSpawnMode.Independent)
+        {
+
         }
     }
 }
