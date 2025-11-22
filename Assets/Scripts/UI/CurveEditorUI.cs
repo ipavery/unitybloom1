@@ -184,7 +184,7 @@ public class CurveEditorUI : MonoBehaviour
                 fieldName = "Quantity",
                 getter = () => selectedObject.frequency,
                 setter = v => { var p = selectedObject.frequency; p = (int)v; selectedObject.frequency = p; },
-                minMax = new(2,60)
+                minMax = new(2,100)
             },
             new InspectorField
             {

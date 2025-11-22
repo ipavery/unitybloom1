@@ -7,6 +7,7 @@ public class ColorPickerUI : MonoBehaviour
 {
     private System.Action<Color> onPicked;
     private Color selectedColor;
+    private Color initialColor;
     public Button confirmButton;
     public Button cancelButton;
     public Slider valueSlider;
@@ -21,8 +22,10 @@ public class ColorPickerUI : MonoBehaviour
 
     public void Open(Color initial, System.Action<Color> onPicked)
     {
+        Debug.Log($"initial color: {initial}");
         this.onPicked = onPicked;
         this.selectedColor = initial;
+        this.initialColor = initial;
         gameObject.SetActive(true);
         // Update wheel visuals to match `initial`
         valueSlider.minValue = 0;
@@ -36,6 +39,10 @@ public class ColorPickerUI : MonoBehaviour
             wheelRenderer.value = val;
             wheelRenderer.GenerateWheelTexture();
         });
+
+        //Add listeners for confirm and cancel buttons
+        confirmButton.onClick.AddListener(OnConfirm);
+        cancelButton.onClick.AddListener(OnCancel);
     }
 
     public void OnWheelChanged(Color newColor)
@@ -52,6 +59,8 @@ public class ColorPickerUI : MonoBehaviour
 
     public void OnCancel()
     {
+        Debug.Log($"Cancelling...color was {selectedColor}, initial was {initialColor}");
+        onPicked(initialColor);
         gameObject.SetActive(false);
     }
 }
