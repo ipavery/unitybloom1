@@ -28,6 +28,7 @@ public class ColorPickerUI : MonoBehaviour
         this.initialColor = initial;
         gameObject.SetActive(true);
         // Update wheel visuals to match `initial`
+        // Here I need to add something that will calculate the position of the pointer...
         valueSlider.minValue = 0;
         valueSlider.maxValue = 1;
         valueSlider.wholeNumbers = false;
@@ -43,6 +44,10 @@ public class ColorPickerUI : MonoBehaviour
         //Add listeners for confirm and cancel buttons
         confirmButton.onClick.AddListener(OnConfirm);
         cancelButton.onClick.AddListener(OnCancel);
+
+        wheelRenderer.Initialize();
+        wheelRenderer.colorIndicator.anchoredPosition = wheelRenderer.ColorToXY(initial);
+        
     }
 
     public void OnWheelChanged(Color newColor)

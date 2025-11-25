@@ -5879,7 +5879,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0
+  m_Size: 0.2413485
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7867,7 +7867,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ps: {fileID: 4449763}
   symmetry: 4
-  spawnMode: 0
+  spawnMode: 2
   splineParticleGroup:
   - spline: {fileID: 653941720}
   - spline: {fileID: 1308700670}

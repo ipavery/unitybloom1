@@ -10,22 +10,25 @@ public class ColorWheelRenderer : MonoBehaviour, IPointerDownHandler, IDragHandl
     private RawImage rawImage;
     private Texture2D tex;
     private RectTransform wheelRect;
-    [SerializeField] RectTransform colorIndicator;
+    private float wheelRadius;
+    public RectTransform colorIndicator;
     [SerializeField] private int textureSize = 256;
     public float value;
 
-    void Start()
+    public void Initialize()
     {
         rawImage = gameObject.GetComponent<RawImage>();
         wheelRect = gameObject.GetComponent<RectTransform>();
+        wheelRadius = wheelRect.sizeDelta.x * 0.5f;
         tex = new Texture2D(textureSize, textureSize);
         rawImage.texture = tex;
         GenerateWheelTexture();
+        Debug.Log("I ran!");
     }
 
     public void GenerateWheelTexture()
     {
-        if (tex==null) tex = new Texture2D(textureSize, textureSize);
+        if (tex == null) tex = new Texture2D(textureSize, textureSize);
         for (int x = 0; x < textureSize; x++)
         {
             for (int y = 0; y < textureSize; y++)
@@ -37,10 +40,24 @@ public class ColorWheelRenderer : MonoBehaviour, IPointerDownHandler, IDragHandl
             }
         }
         tex.Apply();
+
+    }
+
+    public Vector2 ColorToXY(Color initialColor)
+    {
+        float H, S, V;
+        Color.RGBToHSV(initialColor, out H, out S, out V);
+        float angle = H * Mathf.PI * 2;
+        float x = (wheelRadius * S) * Mathf.Cos(angle);
+        float y = (wheelRadius * S) * Mathf.Sin(angle);
+        Vector2 pos = new(x, y);
+        Debug.Log($"H: {H}, S: {S}, V: {V}, pos: {pos}");
+        return pos;
     }
 
     Color32 XYToColor(Vector2 pos, float value)
     {
+
         float angle = Mathf.Atan2(pos.y, pos.x) * Mathf.Rad2Deg;
         if (angle < 0) angle += 360f;
 
@@ -58,8 +75,8 @@ public class ColorWheelRenderer : MonoBehaviour, IPointerDownHandler, IDragHandl
         {
             // Normalize: center = (0,0), radius = wheelRect.sizeDelta.x / 2
             colorIndicator.anchoredPosition = local;
-            float radius = wheelRect.sizeDelta.x * 0.5f;
-            Vector2 normalized = local / radius;
+
+            Vector2 normalized = local / wheelRadius;
             Color32 color = XYToColor(normalized, value);
             gameObject.GetComponentInParent<ColorPickerUI>().OnWheelChanged(color);
         }

@@ -92,13 +92,12 @@ public class CurveEditorUI : MonoBehaviour
     }
     void ColorButton2()
     {
-        
+        ColorPickerManager.Instance.Show(selectedObject.lerpColor2, OnColorPicked, inspectorPanel);
         pickingColor = 2;
     }
 
     void OnColorPicked(Color pickedColor)
     {
-        Debug.Log(pickedColor);
         if (pickingColor == 1)
         {
             selectedObject.lerpColor1 = pickedColor;
