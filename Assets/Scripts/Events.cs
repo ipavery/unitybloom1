@@ -11,10 +11,9 @@ public struct ClipDragEnded
         this.spline = spline;
         this.timePosition = timePosition;
     }
-
-
 }
 
+// Gizmo events
 public struct GizmoDragEnded
 {
     public Vector3 position;
@@ -23,6 +22,15 @@ public struct GizmoDragEnded
     {
         this.position = position;
         this.gizmo = gizmo;
+    }
+}
+
+public struct ShowMoveGizmosEvent
+{
+    public Vector3 position;
+    public ShowMoveGizmosEvent(Vector3 position)
+    {
+        this.position = position;
     }
 }
 
