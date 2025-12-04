@@ -5879,7 +5879,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0.000000085513356
+  m_Size: 0
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7920,7 +7920,11 @@ MonoBehaviour:
   lineWidth: 0.04
   controlPointSpherePrefab: {fileID: 5226196431980889662, guid: 844f90834966a984794ced4f7c01dee7, type: 3}
   particleManager: {fileID: 527990700}
-  SPD: {fileID: 11400000, guid: fb0ef59bfac3537419a2a4fec1993ca9, type: 2}
+  moveGizmoPrefab: {fileID: 8471987075741126960, guid: 917c8a2c60019844ba11f8730a948f7a, type: 3}
+  planarGizmoPrefab: {fileID: 5661324351575738629, guid: a2cb2c9e19bf5e843acfdfdc350a1c2d, type: 3}
+  gizmoScale: 0.1
+  highlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  gizmoEmissionIntensity: 0.6
   unselectedOriginalColor: {r: 1, g: 1, b: 1, a: 0.40784314}
   selectionBoxUI: {fileID: 1298351904}
 --- !u!1 &538849273
@@ -14731,7 +14735,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 735388307}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dbe4b2687071f294f9363d342d560f0f, type: 3}
   m_Name: 
@@ -20163,7 +20167,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -4331.9, y: 0}
+  m_AnchoredPosition: {x: -4331.8994, y: 0}
   m_SizeDelta: {x: 5710, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1927305298

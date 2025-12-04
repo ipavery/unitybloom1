@@ -53,6 +53,7 @@ public class GizmoController : MonoBehaviour
 
         // Subscribe to pertinent events in OnEnable and unsubscribe in OnDisable to prevent errors
         EventHub.Subscribe<ShowMoveGizmosEvent>(OnShowMoveGizmos);
+        EventHub.Subscribe<SelectionStartEnd>(OnSelectionStartEnd);
     }
 
     void OnDisable()
@@ -132,6 +133,11 @@ public class GizmoController : MonoBehaviour
     void OnShowMoveGizmos(ShowMoveGizmosEvent e)
     {
         ShowMoveGizmos(e.position);
+    }
+
+    void OnSelectionStartEnd(SelectionStartEnd e)
+    {
+        Debug.Log($"selection started at {e.position}");
     }
 
     void ShowMoveGizmos(Vector3 position)

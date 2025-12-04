@@ -122,3 +122,15 @@ public struct HideShow3DUI
         this.hide = hide;
     }
 }
+
+// selection events
+public struct SelectionStartEnd
+{
+    public Vector2 position;
+    public bool isStart;
+    public SelectionStartEnd(Vector2 position, bool isStart)
+    {
+        this.position = position;
+        this.isStart = isStart;
+    }
+}
