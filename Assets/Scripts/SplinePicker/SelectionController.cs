@@ -86,17 +86,9 @@ public class SelectionController : MonoBehaviour
                 var sphereGroup = SPD.controlSphereGroup[idx];
                 //UpdateSelectedSpline(sphere.sphereObject);
                 //Highlight new
-                if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rendNew))
-                {
-                    // SPD.lastHighlighted = hit.collider.gameObject;
-                    // sphere.isSelected = true; // Mark the control point as selected
-                    // rendNew.material.color = highlightColor;
-                    // rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
-                    EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position)); // Show move gizmos at the highlighted control point
-                    EventHub.Publish(new ControlPointSelected(sphereGroup));
-                }
-
-                //Debug.Log("Clicked control point: " + controlIndices[idx]);
+                EventHub.Publish(new ControlPointSelected(sphereGroup));
+                EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position)); // Show move gizmos at the highlighted control point
+                Debug.Log("Clicked control point: " + idx);
             }
 
 
