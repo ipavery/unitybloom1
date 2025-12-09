@@ -104,71 +104,30 @@ public class SplinePicker : MonoBehaviour
 
     void OnHideShow3DUI(HideShow3DUI e)
     {
-
-
         if (e.hide == true)
-
-
         {
-
-
             foreach (var sphereGroup in controlSphereGroup)
-
-
             {
-
-
                 sphereGroup.sphereObject.GetComponent<Renderer>().enabled = false;
-
-
             }
-
 
             foreach (var spline in splineList)
-
-
             {
-
-
                 spline.GetComponentInChildren<LineRenderer>().enabled = false;
-
-
             }
-
-
         }
-
-
         else
-
-
         {
-
-
             foreach (var sphereGroup in controlSphereGroup)
-
-
             {
-
 
                 sphereGroup.sphereObject.GetComponent<Renderer>().enabled = true;
 
-
             }
-
-
             foreach (var spline in splineList)
-
-
             {
-
-
                 spline.GetComponentInChildren<LineRenderer>().enabled = true;
-
-
             }
-
-
         }
     }
 
@@ -319,7 +278,7 @@ public class SplinePicker : MonoBehaviour
             {
                 // Un-highlight previous
                 //UnHighlightLast();
-
+                Debug.Log($"hitspheresplinep: {idx}");
                 var sphere = controlSphereGroup[idx];
                 UpdateSelectedSpline(sphere.sphereObject);
 
@@ -524,11 +483,6 @@ public class SplinePicker : MonoBehaviour
                 }
             }
         }
-        if (lastHighlighted != null)
-        {
-            //float distance = Vector3.Distance(Camera.main.transform.position, lastHighlighted.transform.position);
-            //lastHighlighted.transform.localScale = .6f * distance * gizmoScale * Vector3.one;
-        }
 
         if (activeGizmoAxis != -1)
         {
@@ -561,7 +515,6 @@ public class SplinePicker : MonoBehaviour
             // FindGizmoAxisHitPoint(out newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
             // Vector3 offset = newControlPos - lastHighlighted.transform.position;
 
-            // 
             FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
             Vector3 lastHighlightedPos = lastHighlighted.transform.position;
             foreach (var sphereGroup in controlSphereGroup)
@@ -601,7 +554,7 @@ public class SplinePicker : MonoBehaviour
         {
             // Update the selection box UI only if not dragging
             Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
-            selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
+            //selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
             SelectControlPointsInRect();
         }
 

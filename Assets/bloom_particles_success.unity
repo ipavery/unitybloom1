@@ -14721,6 +14721,9 @@ GameObject:
   m_Component:
   - component: {fileID: 735388309}
   - component: {fileID: 735388308}
+  - component: {fileID: 735388310}
+  - component: {fileID: 735388312}
+  - component: {fileID: 735388311}
   m_Layer: 0
   m_Name: SplinePickerObject
   m_TagString: Untagged
@@ -14735,7 +14738,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 735388307}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dbe4b2687071f294f9363d342d560f0f, type: 3}
   m_Name: 
@@ -14744,8 +14747,6 @@ MonoBehaviour:
   moveGizmoPrefab: {fileID: 8471987075741126960, guid: 917c8a2c60019844ba11f8730a948f7a, type: 3}
   planarGizmoPrefab: {fileID: 5661324351575738629, guid: a2cb2c9e19bf5e843acfdfdc350a1c2d, type: 3}
   gizmoScale: 0.1
-  highlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  gizmoEmissionIntensity: 0.6
 --- !u!4 &735388309
 Transform:
   m_ObjectHideFlags: 0
@@ -14761,6 +14762,46 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &735388310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735388307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 500651f5e593d7347977c58d3c75e177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SPD: {fileID: 11400000, guid: fb0ef59bfac3537419a2a4fec1993ca9, type: 2}
+  selectionBoxUI: {fileID: 1298351904}
+--- !u!114 &735388311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735388307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce1cd2320a3614c4dbf73d2fad466aa4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &735388312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735388307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f953a03c18e42a04cb7163805f15c030, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SPD: {fileID: 11400000, guid: fb0ef59bfac3537419a2a4fec1993ca9, type: 2}
+  controlPointSpherePrefab: {fileID: 5226196431980889662, guid: 844f90834966a984794ced4f7c01dee7, type: 3}
 --- !u!1 &738647539
 GameObject:
   m_ObjectHideFlags: 0

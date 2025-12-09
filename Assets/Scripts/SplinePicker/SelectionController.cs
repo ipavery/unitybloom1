@@ -3,7 +3,10 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// maybe just make events for selection start and end here so all scripts can use that data
+/// <summary>
+/// Manages selecting control points and sends raycast info to gizmocontroller and controlpointcontroller
+/// Controls the blue selection box UI
+/// </summary>
 
 public class SelectionController : MonoBehaviour
 {
@@ -55,7 +58,13 @@ public class SelectionController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        if (SPD.isSelecting && SPD.activeGizmoAxis == -1)
+        {
+            // Update the selection box UI only if not dragging
+            Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
+            selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
+            //SelectControlPointsInRect();
+        }
     }
 
     void OnSelectStart(InputAction.CallbackContext ctx)
@@ -74,21 +83,18 @@ public class SelectionController : MonoBehaviour
             int idx = SPD.controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
             if (idx != -1)
             {
-                // Un-highlight previous
-                //UnHighlightLast();
-
-                // var sphere = SPD.controlSphereGroup[idx];
-                // UpdateSelectedSpline(sphere.sphereObject);
-
-                // Highlight new
-                // if (sphere.sphereObject.TryGetComponent<Renderer>(out var rendNew))
-                // {
-                //     SPD.lastHighlighted = hit.collider.gameObject;
-                //     sphere.isSelected = true; // Mark the control point as selected
-                //     rendNew.material.color = highlightColor;
-                //     rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
-                //     ShowMoveGizmos(SPD.lastHighlighted.transform.position); // Show move gizmos at the highlighted control point
-                // }
+                var sphereGroup = SPD.controlSphereGroup[idx];
+                //UpdateSelectedSpline(sphere.sphereObject);
+                //Highlight new
+                if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rendNew))
+                {
+                    // SPD.lastHighlighted = hit.collider.gameObject;
+                    // sphere.isSelected = true; // Mark the control point as selected
+                    // rendNew.material.color = highlightColor;
+                    // rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
+                    EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position)); // Show move gizmos at the highlighted control point
+                    EventHub.Publish(new ControlPointSelected(sphereGroup));
+                }
 
                 //Debug.Log("Clicked control point: " + controlIndices[idx]);
             }
@@ -135,6 +141,7 @@ public class SelectionController : MonoBehaviour
         float selectDist = (selectionEnd - selectionStart).magnitude;
         if (raycastHit == false && selectDist < 5)
         {
+            EventHub.Publish(new ClearSelection());
             // UnHighlightLast();
             // DestroyGizmos(); // Clear existing gizmos
             // activeGizmoAxis = -1; // Reset the active gizmo axis
@@ -154,4 +161,6 @@ public class SelectionController : MonoBehaviour
             // }
         }
     }
+
+    
 }

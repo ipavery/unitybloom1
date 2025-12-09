@@ -9,5 +9,7 @@ public class SplinePickerData : ScriptableObject
     public GameObject lastHighlighted = null;
     public bool isSelecting = false;
     public List<ControlPointGroup> controlSphereGroup = new();
-    
+    public int activeGizmoAxis = -1; // 0=X, 1=Y, 2=Z. -1 means not currently dragging
+    public Color highlightColor = Color.yellow;
+    public float gizmoEmissionIntensity = 0.6f; // Emission intensity for gizmos
 }

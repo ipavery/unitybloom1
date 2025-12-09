@@ -15,8 +15,6 @@ public class GizmoController : MonoBehaviour
     Vector3 planarGizmoPrefabScale; // Store the original scale of the planar gizmo prefab
     private float gizmoOffsetDistance = .15f; // Offset distance for gizmos
     public float gizmoScale = .1f; // Scale for gizmos
-    public Color highlightColor = Color.yellow;
-    public float gizmoEmissionIntensity = 0.6f; // Emission intensity for gizmos
     private List<GameObject> gizmoList = new();
     private List<ControlPointGroup> controlSphereGroup = new();
 
@@ -54,6 +52,7 @@ public class GizmoController : MonoBehaviour
         // Subscribe to pertinent events in OnEnable and unsubscribe in OnDisable to prevent errors
         EventHub.Subscribe<ShowMoveGizmosEvent>(OnShowMoveGizmos);
         EventHub.Subscribe<SelectionStartEnd>(OnSelectionStartEnd);
+        EventHub.Subscribe<ClearSelection>(OnClearSelection);
     }
 
     void OnDisable()
@@ -137,7 +136,12 @@ public class GizmoController : MonoBehaviour
 
     void OnSelectionStartEnd(SelectionStartEnd e)
     {
-        Debug.Log($"selection started at {e.position}");
+        //Debug.Log($"selection started at {e.position}");
+    }
+
+    void OnClearSelection(ClearSelection e)
+    {
+        DestroyGizmos();
     }
 
     void ShowMoveGizmos(Vector3 position)
@@ -177,31 +181,31 @@ public class GizmoController : MonoBehaviour
             {
                 moveGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90); // Forward
                 rend.material.color = Color.red;
-                rend.material.SetColor("_EmissionColor", Color.red * gizmoEmissionIntensity);
+                rend.material.SetColor("_EmissionColor", Color.red * SPD.gizmoEmissionIntensity);
 
                 planarGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
                 planarRend.material.color = Color.red;
-                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
+                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * SPD.gizmoEmissionIntensity);
             }
             else if (i == 1)
             {
                 moveGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0); // Right
                 rend.material.color = Color.green;
-                rend.material.SetColor("_EmissionColor", Color.green * gizmoEmissionIntensity);
+                rend.material.SetColor("_EmissionColor", Color.green * SPD.gizmoEmissionIntensity);
 
                 planarGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
                 planarRend.material.color = Color.green;
-                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
+                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * SPD.gizmoEmissionIntensity);
             }
             else if (i == 2)
             {
                 moveGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0); // Up
                 rend.material.color = Color.blue;
-                rend.material.SetColor("_EmissionColor", Color.blue * gizmoEmissionIntensity);
+                rend.material.SetColor("_EmissionColor", Color.blue * SPD.gizmoEmissionIntensity);
 
                 planarGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
                 planarRend.material.color = Color.blue;
-                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
+                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * SPD.gizmoEmissionIntensity);
             }
 
             moveGizmo.transform.position = position + moveGizmo.transform.up * 3f; // Add control point position and offset

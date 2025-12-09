@@ -13,7 +13,11 @@ public struct ClipDragEnded
     }
 }
 
-// Gizmo events
+/// <summary>
+/// Below events are for SplinePicker folder scripts
+/// </summary>
+/// 
+// Gizmo events:
 public struct GizmoDragEnded
 {
     public Vector3 position;
@@ -31,6 +35,24 @@ public struct ShowMoveGizmosEvent
     public ShowMoveGizmosEvent(Vector3 position)
     {
         this.position = position;
+    }
+}
+
+public struct GizmoDragStarted
+{
+    public Vector3 position;
+    public GizmoDragStarted(Vector3 position)
+    {
+        this.position = position;
+    }
+}
+
+public struct ControlPointSelected
+{
+    public ControlPointGroup sphereGroup;
+    public ControlPointSelected(ControlPointGroup sphereGroup)
+    {
+        this.sphereGroup = sphereGroup;
     }
 }
 
@@ -132,5 +154,14 @@ public struct SelectionStartEnd
     {
         this.position = position;
         this.isStart = isStart;
+    }
+}
+
+public struct ClearSelection
+{
+    bool clear;
+    public ClearSelection(bool clear = true)
+    {
+        this.clear = clear;
     }
 }
