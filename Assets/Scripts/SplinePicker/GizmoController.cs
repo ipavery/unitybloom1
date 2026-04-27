@@ -3,6 +3,9 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// This script controls the move gizmos
+/// </summary>
 public class GizmoController : MonoBehaviour
 {
     //reference to splinepickerdata scriptableobject

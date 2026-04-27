@@ -97,6 +97,11 @@ public class ControlPointController : MonoBehaviour
         //splineList.Remove(e.spline);
     }
 
+    /// <summary>
+    /// Called when the user clicks somewhere empty to clear the selection and make
+    /// the highlighted sphere return to normal color
+    /// </summary>
+    /// ISSUE: if the user clicks on load or anything on the save load ui, this unselect thing gets triggered.
     void UnselectAllPoints()
     {
         SPD.lastHighlighted = null; // Clear last highlighted
@@ -111,8 +116,5 @@ public class ControlPointController : MonoBehaviour
             }
         }
     }
-    /// <summary>
-    /// Called when the user clicks somewhere empty to clear the selection and make
-    /// the highlighted sphere return to normal color
-    /// </summary>
+    
 }

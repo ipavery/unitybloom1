@@ -6,6 +6,7 @@ public static class InputBlocker
 {
     /// <summary>
     /// Checks if input is blocked by any UI, excluding elements on a specific layer.
+    /// This means if the user is hovering over any UI element that is not on the excluded layer, input will be considered blocked.
     /// </summary>
     /// <param name="excludedUILayer">Optional: the layer you want to ignore (e.g. "IgnoreUIBlock")</param>
     /// 

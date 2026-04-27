@@ -53,7 +53,6 @@ public class SplinePicker : MonoBehaviour
     private Vector2 selectionStart;
     private Vector2 selectionEnd;
     private bool isSelecting = false;
-    public GameObject selectionBoxUI; // Reference to the SelectionBoxUI component
     private bool raycastHit = false;
     private BezierSpline selectedSpline = null;
     private bool isInputBlocked = false;
@@ -269,8 +268,7 @@ public class SplinePicker : MonoBehaviour
         isSelecting = true;
 
         Ray ray = Camera.main.ScreenPointToRay(selectionStart);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, 300f))
+        if (Physics.Raycast(ray, out RaycastHit hit, 300f))
         {
             raycastHit = true;
             int idx = controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);

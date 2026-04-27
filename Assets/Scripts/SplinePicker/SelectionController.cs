@@ -13,7 +13,7 @@ public class SelectionController : MonoBehaviour
     //reference to splinepickerdata scriptableobject
     [SerializeField] private SplinePickerData SPD;
 
-
+    /// player input variables with the new input system
     [Header("Player Input Variables")]
     public PlayerInputActions playerControls;
     private InputAction mousePosition;
@@ -58,6 +58,10 @@ public class SelectionController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Update the input blocked state in the SPD object so this and other scripts can use it
+        SPD.isInputBlocked = InputBlocker.IsInputBlocked("Unblocked UI Layer");
+
+        // If currently selecting and not dragging a gizmo, update the selection box UI
         if (SPD.isSelecting && SPD.activeGizmoAxis == -1)
         {
             // Update the selection box UI only if not dragging
@@ -69,15 +73,16 @@ public class SelectionController : MonoBehaviour
 
     void OnSelectStart(InputAction.CallbackContext ctx)
     {
+        // If input is blocked, do not start selection
         if (SPD.isInputBlocked) return;
+
         selectionStart = mousePosition.ReadValue<Vector2>();
         EventHub.Publish(new SelectionStartEnd(selectionStart, true));
 
         SPD.isSelecting = true;
 
         Ray ray = Camera.main.ScreenPointToRay(selectionStart);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, 300f))
+        if (Physics.Raycast(ray, out RaycastHit hit, 300f))
         {
             raycastHit = true;
             int idx = SPD.controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
@@ -116,7 +121,9 @@ public class SelectionController : MonoBehaviour
 
     void OnSelectEnd(InputAction.CallbackContext ctx)
     {
+        // If input is blocked, do not end selection or clear highlights
         if (SPD.isInputBlocked) return;
+
         selectionEnd = mousePosition.ReadValue<Vector2>();
         EventHub.Publish(new SelectionStartEnd(selectionEnd, false));
 

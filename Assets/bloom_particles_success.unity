@@ -5879,7 +5879,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0
+  m_Size: 0.000000085513356
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7870,10 +7870,10 @@ MonoBehaviour:
   spawnMode: 2
   splineParticleGroup:
   - spline: {fileID: 653941720}
-  - spline: {fileID: 1308700670}
-  - spline: {fileID: 598567112}
-  - spline: {fileID: 2120296652}
-  - spline: {fileID: 1201973636}
+  - spline: {fileID: 0}
+  - spline: {fileID: 0}
+  - spline: {fileID: 0}
+  - spline: {fileID: 0}
   ParticleCubeTransform: {fileID: 334887504}
   symmetryPosition: {fileID: 2124562818}
   catchParticlesBufferTimeRatio: 0.4
@@ -7926,7 +7926,6 @@ MonoBehaviour:
   highlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   gizmoEmissionIntensity: 0.6
   unselectedOriginalColor: {r: 1, g: 1, b: 1, a: 0.40784314}
-  selectionBoxUI: {fileID: 1298351904}
 --- !u!1 &538849273
 GameObject:
   m_ObjectHideFlags: 0
@@ -13474,70 +13473,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 593066889}
   m_CullTransparentMesh: 1
---- !u!1 &598567110
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 598567111}
-  - component: {fileID: 598567112}
-  m_Layer: 0
-  m_Name: Spline C
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &598567111
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 598567110}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 3.47, y: 1.43, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2120734414}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &598567112
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 598567110}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c6365704403259478dea51c177e61f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isActive: 1
-  points:
-  - {x: 0, y: 0, z: 0}
-  - {x: 7.437122, y: -3.805264, z: 0}
-  - {x: 9.85731, y: 3.38733, z: 0}
-  - {x: 8.7411785, y: 5.7335825, z: 0}
-  s_life: 0.8
-  splineSymmetry: 6
-  frequency: 21
-  lifetimeOffset: 0.01
-  lerpLifetimeOffset: 0.07
-  lerpTimes: 5
-  lerpColor1: {r: 0.645283, g: 0.14488423, b: 0.2521126, a: 1}
-  lerpColor2: {r: 0.645283, g: 0.26658544, b: 0.18384477, a: 1}
-  startTimeOffset: 0
-  activationThreshhold: 58
-  musicChannel: 2
-  guid: 
-  splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
-  lerpSpline: {fileID: 598567112}
 --- !u!1 &606345640
 GameObject:
   m_ObjectHideFlags: 0
@@ -14060,7 +13995,7 @@ MonoBehaviour:
   - {x: 2.232077, y: 0.965763, z: 0}
   - {x: 4.709874, y: 5.2685995, z: 0}
   s_life: 0.6
-  splineSymmetry: 6
+  splineSymmetry: 1
   frequency: 12
   lifetimeOffset: 0.01
   lerpLifetimeOffset: 0.05
@@ -16634,70 +16569,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1193914574}
   m_CullTransparentMesh: 1
---- !u!1 &1201973634
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1201973635}
-  - component: {fileID: 1201973636}
-  m_Layer: 0
-  m_Name: Spline C (2)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1201973635
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1201973634}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.72, y: 5.66, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2120734414}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1201973636
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1201973634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c6365704403259478dea51c177e61f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isActive: 1
-  points:
-  - {x: 0, y: 0, z: 0}
-  - {x: 7.437122, y: -3.805264, z: 0}
-  - {x: 6.9333563, y: 3.2050009, z: 0}
-  - {x: 1.7464585, y: -2.52403, z: 0}
-  s_life: 0.3
-  splineSymmetry: 10
-  frequency: 36
-  lifetimeOffset: 0.05
-  lerpLifetimeOffset: 0.07
-  lerpTimes: 1
-  lerpColor1: {r: 0.7132075, g: 0.2889149, b: 0.17090063, a: 1}
-  lerpColor2: {r: 0.25362042, g: 0.2565061, b: 0.7509433, a: 1}
-  startTimeOffset: 0
-  activationThreshhold: 170
-  musicChannel: 4
-  guid: 
-  splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
-  lerpSpline: {fileID: 0}
 --- !u!1 &1203075675
 GameObject:
   m_ObjectHideFlags: 0
@@ -17006,70 +16877,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1298351904}
   m_CullTransparentMesh: 1
---- !u!1 &1308700668
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1308700669}
-  - component: {fileID: 1308700670}
-  m_Layer: 0
-  m_Name: Spline B
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1308700669
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1308700668}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.84, y: 0.49, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2120734414}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1308700670
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1308700668}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c6365704403259478dea51c177e61f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isActive: 1
-  points:
-  - {x: 0, y: 0, z: 0}
-  - {x: 2.291067, y: 1.722302, z: 0}
-  - {x: 0.9256854, y: 2.694324, z: 0}
-  - {x: -1.5782807, y: 3.8923752, z: 0}
-  s_life: 0.4
-  splineSymmetry: 9
-  frequency: 13
-  lifetimeOffset: 0.05
-  lerpLifetimeOffset: 0.07
-  lerpTimes: 1
-  lerpColor1: {r: 0.7294118, g: 0.1254902, b: 0.6425968, a: 1}
-  lerpColor2: {r: 0.41568628, g: 0.44065502, b: 0.8509804, a: 1}
-  startTimeOffset: 0
-  activationThreshhold: 28
-  musicChannel: 1
-  guid: 
-  splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
-  lerpSpline: {fileID: 1308700670}
 --- !u!1 &1310097045
 GameObject:
   m_ObjectHideFlags: 0
@@ -19471,8 +19278,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1841466638}
   m_HandleRect: {fileID: 1841466637}
   m_Direction: 2
-  m_Value: 0
-  m_Size: 1
+  m_Value: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -20208,7 +20015,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -4331.8994, y: 0}
+  m_AnchoredPosition: {x: -4331.9, y: 0}
   m_SizeDelta: {x: 5710, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1927305298
@@ -26393,70 +26200,6 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
---- !u!1 &2120296650
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2120296651}
-  - component: {fileID: 2120296652}
-  m_Layer: 0
-  m_Name: Spline C (1)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2120296651
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2120296650}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.98, y: 6.4, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2120734414}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2120296652
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2120296650}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0c6365704403259478dea51c177e61f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isActive: 1
-  points:
-  - {x: 0, y: 0, z: 0}
-  - {x: -0.057807922, y: 4.4664392, z: 0}
-  - {x: 6.9333563, y: 3.2050009, z: 0}
-  - {x: 3.4341617, y: 2.7916017, z: 0}
-  s_life: 0.3
-  splineSymmetry: 10
-  frequency: 21
-  lifetimeOffset: 0.05
-  lerpLifetimeOffset: 0.07
-  lerpTimes: 1
-  lerpColor1: {r: 0.14117646, g: 0.20138067, b: 0.5529412, a: 1}
-  lerpColor2: {r: 0.117273025, g: 0.6830188, b: 0.6720334, a: 1}
-  startTimeOffset: 0
-  activationThreshhold: 105
-  musicChannel: 3
-  guid: 
-  splinePrefab: {fileID: 8200230412672707335, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
-  lerpSpline: {fileID: 0}
 --- !u!1 &2120734413
 GameObject:
   m_ObjectHideFlags: 0
@@ -26487,10 +26230,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 653941719}
-  - {fileID: 1308700669}
-  - {fileID: 598567111}
-  - {fileID: 2120296651}
-  - {fileID: 1201973635}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2124562817
