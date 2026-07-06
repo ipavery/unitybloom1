@@ -5879,7 +5879,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0.000000085513356
+  m_Size: 0
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7870,10 +7870,6 @@ MonoBehaviour:
   spawnMode: 2
   splineParticleGroup:
   - spline: {fileID: 653941720}
-  - spline: {fileID: 0}
-  - spline: {fileID: 0}
-  - spline: {fileID: 0}
-  - spline: {fileID: 0}
   ParticleCubeTransform: {fileID: 334887504}
   symmetryPosition: {fileID: 2124562818}
   catchParticlesBufferTimeRatio: 0.4

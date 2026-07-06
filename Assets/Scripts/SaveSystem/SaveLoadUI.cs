@@ -62,7 +62,8 @@ public class SaveLoadUI : MonoBehaviour
         if (renameConfirmButton != null) renameConfirmButton.onClick.RemoveAllListeners();
         if (confirmDeleteButton != null) confirmDeleteButton.onClick.RemoveAllListeners();
 
-        ImportPrepopulatedSaves_FromResources();
+        //uncomment this if you want to import prepopulated saves from Resources/PrepopulatedHistory on start (make sure to add .json files there first, and that they match your SaveData structure)
+        //ImportPrepopulatedSaves_FromResources();
     }
 
     private void ImportPrepopulatedSaves_FromResources()
