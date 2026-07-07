@@ -58,11 +58,9 @@ public class CurveEditorUI : MonoBehaviour
 
     void OnDeleteSpline(DeleteSpline e)
     {
-        Debug.Log("Delete event triggered for " + e.spline.name);
         particleManager.splineParticleGroup.RemoveAll(splineGroup => splineGroup.spline == e.spline);
         Destroy(e.spline.gameObject);
         DeselectObject();
-        Debug.Log("reloading now");
         ReloadParticles();
     }
 
@@ -246,6 +244,7 @@ public class CurveEditorUI : MonoBehaviour
 
     void DeselectObject()
     {
+        // Deselect object and hide color picker inspector
         selectedObject = null;
         ColorPickerManager.Instance.Close();
         inspectorPanel.SetActive(false);

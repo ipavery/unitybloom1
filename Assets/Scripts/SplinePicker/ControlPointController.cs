@@ -93,19 +93,19 @@ public class ControlPointController : MonoBehaviour
     {
         if (e.spline == null) return;
 
-        var splineRoot = e.spline.transform;
+        var splineRoot = e.spline.transform; //the old spline object that will be used with IsChildOf to check if the control point spheres are children of the spline being deleted
 
-        for (int i = SPD.controlSphereGroup.Count - 1; i >= 0; i--)
+        for (int i = SPD.controlSphereGroup.Count - 1; i >= 0; i--) //apparently going backwards through the list is the only way to safely remove items from a list while iterating through it
         {
             var group = SPD.controlSphereGroup[i];
 
-            if (group == null || group.sphereObject == null)
+            if (group == null || group.sphereObject == null) //remove "bad" entries from the list
             {
                 SPD.controlSphereGroup.RemoveAt(i);
                 continue;
             }
 
-            if (group.sphereObject.transform.IsChildOf(splineRoot))
+            if (group.sphereObject.transform.IsChildOf(splineRoot)) //if the control point sphere is a child of the spline being deleted, remove it from the list
             {
                 SPD.controlSphereGroup.RemoveAt(i);
             }
