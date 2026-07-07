@@ -62,97 +62,42 @@ public class SaveLoadUI : MonoBehaviour
         if (renameConfirmButton != null) renameConfirmButton.onClick.RemoveAllListeners();
         if (confirmDeleteButton != null) confirmDeleteButton.onClick.RemoveAllListeners();
 
+        // Auto-load the most recent save on startup
+        AutoLoadMostRecentSave();
+
         //uncomment this if you want to import prepopulated saves from Resources/PrepopulatedHistory on start (make sure to add .json files there first, and that they match your SaveData structure)
         //ImportPrepopulatedSaves_FromResources();
     }
 
     private void ImportPrepopulatedSaves_FromResources()
     {
-
-
         // Path inside Resources: "PrepopulatedHistory" -> Assets/Resources/PrepopulatedHistory/*.json
-
-
         TextAsset[] items = Resources.LoadAll<TextAsset>("PrepopulatedHistory");
 
-
         if (items == null || items.Length == 0)
-
-
         {
-
-
             Debug.Log("[SaveLoadUI] No prepopulated saves found in Resources/PrepopulatedHistory.");
-
-
             return;
-
-
         }
-
-
-
-
 
         Debug.Log($"[SaveLoadUI] Found {items.Length} prepopulated save(s). Importing...");
 
-
-
-
-
         foreach (var ta in items)
-
-
         {
-
-
             try
-
-
             {
-
-
                 if (string.IsNullOrWhiteSpace(ta.text))
-
-
                 {
-
-
                     Debug.LogWarning($"[SaveLoadUI] Resource {ta.name} is empty, skipping.");
-
-
                     continue;
-
-
                 }
-
-
-
-
-
                 // Attempt to deserialize to your SaveData type (must match the JSON layout)
-
-
                 var sd = JsonUtility.FromJson<SaveData>(ta.text);
-
-
                 if (sd == null)
-
-
                 {
-
-
                     Debug.LogWarning($"[SaveLoadUI] Failed to deserialize {ta.name} into SaveData. Skipping.");
-
-
                     continue;
-
-
                 }
-
-
-
-
 
                 // Use the resource filename as the display name
 
@@ -215,6 +160,50 @@ public class SaveLoadUI : MonoBehaviour
 
 
     }
+
+    /// <summary>
+    /// Automatically loads the most recent save on startup.
+    /// If no saves exist, creates and loads a blank save.
+    /// </summary>
+    private void AutoLoadMostRecentSave()
+    {
+        currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
+        
+        if (currentIndex.Count == 0)
+        {
+            Debug.Log("[SaveLoadUI] No saves found. Creating and loading a blank save...");
+            
+            // Create a new blank save and load it
+            var empty = new SaveData();
+            try
+            {
+                string created = SaveSystem.SaveSceneAs(empty, "Auto-Created Save");
+                activeFilename = created;
+                LoadSaveGroup(created);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("[SaveLoadUI] Failed to auto-create blank save: " + ex.Message);
+            }
+            
+            return;
+        }
+
+        // Find the most recent save (highest timestamp)
+        SaveMeta mostRecent = currentIndex[0];
+        foreach (var meta in currentIndex)
+        {
+            if (meta.timestamp > mostRecent.timestamp)
+            {
+                mostRecent = meta;
+            }
+        }
+
+        Debug.Log($"[SaveLoadUI] Auto-loading most recent save: '{mostRecent.displayName}'");
+        activeFilename = mostRecent.filename;
+        LoadSaveGroup(mostRecent.filename);
+    }
+
     // --- top-level actions ---
     void ClearAllSaves()
     {
@@ -508,6 +497,7 @@ public class SaveLoadUI : MonoBehaviour
     {
         if (savableRoot == null) return;
         var children = new List<GameObject>();
+        if (children.Count == 0) return;
         foreach (Transform t in savableRoot) children.Add(t.gameObject);
         foreach (var c in children)
         {

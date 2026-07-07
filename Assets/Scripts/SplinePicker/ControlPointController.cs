@@ -30,7 +30,14 @@ public class ControlPointController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        // var splineList = particleManager.splineParticleGroup.Select(g => g.spline).ToList();
 
+        // // The idea is that this script will be the one that calls newsplinecreated at the beginning so all other
+        // // scripts that need to know about new splines can subscribe to that event and get the spline
+        // foreach (var spline in splineList)
+        // {
+        //     EventHub.Publish(new NewSplineCreated { spline = spline });
+        // }
     }
 
     // Update is called once per frame
@@ -41,6 +48,7 @@ public class ControlPointController : MonoBehaviour
 
     void OnNewSplineCreated(NewSplineCreated e)
     {
+        Debug.Log("OnNewSplineCreated called in ControlPointController");
         GameObject sphereContainer = new("SphereContainer");
         sphereContainer.transform.SetParent(e.spline.transform, false);
 

@@ -19,7 +19,7 @@ public class SplinePicker : MonoBehaviour
     public float lineWidth = 0.01f;
     public GameObject controlPointSpherePrefab;
     public ParticleManager particleManager;
-    private List<BezierSpline> splineList;
+    private List<BezierSpline> splineList = new();
 
     [Header("Gizmo Settings")]
     public GameObject moveGizmoPrefab; // Assign a gizmo prefab in the inspector
@@ -393,6 +393,7 @@ public class SplinePicker : MonoBehaviour
 
     void InitializeSpline(BezierSpline spline)
     {
+        Debug.Log("InitializeSpline called in SplinePicker");
         GameObject lineObj = new GameObject("SplineLine");
         lineObj.transform.SetParent(spline.transform, false);
 
@@ -408,47 +409,47 @@ public class SplinePicker : MonoBehaviour
             lr.SetPosition(i, spline.GetPoint(t));
         }
 
-        for (int i = 0; i < spline.points.Length; i++)
-        {
-            Vector3 point = spline.points[i];
-            GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
-            sphere.transform.SetParent(lineObj.transform, false);
+        // for (int i = 0; i < spline.points.Length; i++)
+        // {
+        //     Vector3 point = spline.points[i];
+        //     GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
+        //     sphere.transform.SetParent(lineObj.transform, false);
 
-            // Set the sphere to the "PP Layer"
-            sphere.layer = LayerMask.NameToLayer("PP Layer");
-            controlSphereGroup.Add(new ControlPointGroup
-            {
-                sphereObject = sphere,
-                isSelected = false,
-                index = i
-            });
+        //     // Set the sphere to the "PP Layer"
+        //     sphere.layer = LayerMask.NameToLayer("PP Layer");
+        //     controlSphereGroup.Add(new ControlPointGroup
+        //     {
+        //         sphereObject = sphere,
+        //         isSelected = false,
+        //         index = i
+        //     });
 
-            // Set and store original color as white
-            var rend = sphere.GetComponent<Renderer>();
-            if (rend != null)
-            {
-                rend.material.color = Color.white;
-                rend.material.EnableKeyword("_EMISSION");
-                rend.material.SetColor("_EmissionColor", Color.white * gizmoEmissionIntensity);
-                originalColors.Add(Color.white);
-            }
-            else
-            {
-                originalColors.Add(Color.white);
-            }
-        }
+        //     // Set and store original color as white
+        //     var rend = sphere.GetComponent<Renderer>();
+        //     if (rend != null)
+        //     {
+        //         rend.material.color = Color.white;
+        //         rend.material.EnableKeyword("_EMISSION");
+        //         rend.material.SetColor("_EmissionColor", Color.white * gizmoEmissionIntensity);
+        //         originalColors.Add(Color.white);
+        //     }
+        //     else
+        //     {
+        //         originalColors.Add(Color.white);
+        //     }
+        // }
     }
 
     void Start()
     {
-        splineList = particleManager.splineParticleGroup.Select(g => g.spline).ToList();
-        gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
-        planarGizmoPrefabScale = planarGizmoPrefab.transform.localScale;
+        // splineList = particleManager.splineParticleGroup.Select(g => g.spline).ToList();
+        // gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
+        // planarGizmoPrefabScale = planarGizmoPrefab.transform.localScale;
 
-        foreach (var spline in splineList)
-        {
-            InitializeSpline(spline);
-        }
+        // foreach (var spline in splineList)
+        // {
+        //     InitializeSpline(spline);
+        // }
     }
 
     void Update()
