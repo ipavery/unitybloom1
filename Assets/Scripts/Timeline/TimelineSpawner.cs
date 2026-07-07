@@ -72,11 +72,22 @@ public class TimelineSpawner : MonoBehaviour
 
     }
 
+    void Awake()
+    {
+        if (timelineSettings != null)
+        {
+            pixelsPerSecond = timelineSettings.pixelsPerSecond;
+            snapInterval = timelineSettings.snapInterval;
+            draggablePrefab = timelineSettings.draggablePrefab;
+        }
+        else
+        {
+            Debug.LogError("TimelineSettings is missing on TimelineSpawner!", this);
+        }
+    }
+
     void Start()
     {
-        pixelsPerSecond = timelineSettings.pixelsPerSecond;
-        snapInterval = timelineSettings.snapInterval;
-        draggablePrefab = timelineSettings.draggablePrefab;
         items = particleManager.splineParticleGroup; //for number of clips and clip names
         SpawnClips();
     }

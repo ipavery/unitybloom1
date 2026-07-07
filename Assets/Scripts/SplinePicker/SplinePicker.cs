@@ -132,11 +132,11 @@ public class SplinePicker : MonoBehaviour
 
     void OnDeleteSpline(DeleteSpline e)
     {
-        for (int i = 0; i < e.spline.transform.GetChild(0).childCount; i++)
-        {
-            var child = e.spline.transform.GetChild(0).GetChild(i).gameObject;
-            controlSphereGroup.RemoveAll(sphereGroup => sphereGroup.sphereObject == child);
-        }
+        // for (int i = 0; i < e.spline.transform.GetChild(0).childCount; i++)
+        // {
+        //     var child = e.spline.transform.GetChild(0).GetChild(i).gameObject;
+        //     controlSphereGroup.RemoveAll(sphereGroup => sphereGroup.sphereObject == child);
+        // }
         splineList.Remove(e.spline);
     }
 
@@ -393,7 +393,6 @@ public class SplinePicker : MonoBehaviour
 
     void InitializeSpline(BezierSpline spline)
     {
-        Debug.Log("InitializeSpline called in SplinePicker");
         GameObject lineObj = new GameObject("SplineLine");
         lineObj.transform.SetParent(spline.transform, false);
 
@@ -409,6 +408,7 @@ public class SplinePicker : MonoBehaviour
             lr.SetPosition(i, spline.GetPoint(t));
         }
 
+        // this used to make control points, but now controlled by controlpointcontroller
         // for (int i = 0; i < spline.points.Length; i++)
         // {
         //     Vector3 point = spline.points[i];

@@ -170,6 +170,7 @@ public class ParticleManager : MonoBehaviour
         }
         if (spawnMode == ParticleSpawnMode.Independent)
         {
+            StopAllCoroutines();
             conditionManager.StopAndClearAllEntries();
             StartIndependent();
         }

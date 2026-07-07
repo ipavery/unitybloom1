@@ -31,13 +31,8 @@ public class ControlPointController : MonoBehaviour
     void Start()
     {
         // var splineList = particleManager.splineParticleGroup.Select(g => g.spline).ToList();
-
-        // // The idea is that this script will be the one that calls newsplinecreated at the beginning so all other
-        // // scripts that need to know about new splines can subscribe to that event and get the spline
-        // foreach (var spline in splineList)
-        // {
-        //     EventHub.Publish(new NewSplineCreated { spline = spline });
-        // }
+        // Save System scripts call the create spline event, so don't need to create control points here.
+        SPD.controlSphereGroup.Clear(); // Clear the control sphere group list at the start
     }
 
     // Update is called once per frame
@@ -97,6 +92,8 @@ public class ControlPointController : MonoBehaviour
     void OnDeleteSpline(DeleteSpline e)
     {
         //FIX THIS
+        Debug.Log("OnDeleteSpline called in ControlPointController");
+        Debug.Log(e.spline.transform.GetChild(0).childCount);
         for (int i = 0; i < e.spline.transform.GetChild(0).childCount; i++)
         {
             var child = e.spline.transform.GetChild(0).GetChild(i).gameObject;
@@ -116,6 +113,8 @@ public class ControlPointController : MonoBehaviour
         
         foreach (var sphereGroup in SPD.controlSphereGroup)
         {
+            if (sphereGroup == null || sphereGroup.sphereObject == null)
+                continue;
             sphereGroup.isSelected = false; // Unselect current control point
             if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rend))
             {

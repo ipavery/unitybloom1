@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 8819168624959426855}
   - component: {fileID: 1455251703454409081}
   - component: {fileID: 3382733130378161676}
-  - component: {fileID: -2294714490967337710}
   m_Layer: 0
   m_Name: ControlPointPrefab
   m_TagString: Untagged
@@ -109,16 +108,3 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-2294714490967337710
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5226196431980889662}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4fec72250b7ca8a4188e0e1f768fc816, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isSelected: 0

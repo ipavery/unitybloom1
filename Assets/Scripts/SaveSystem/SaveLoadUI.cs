@@ -496,13 +496,20 @@ public class SaveLoadUI : MonoBehaviour
     private void ClearSavedObjects()
     {
         if (savableRoot == null) return;
-        var children = new List<GameObject>();
-        if (children.Count == 0) return;
-        foreach (Transform t in savableRoot) children.Add(t.gameObject);
+
+        var children = new List<GameObject>(); //Creates a temporary list that will store the spline objects that need to be removed.
+        foreach (Transform t in savableRoot)
+        {
+            if (t.TryGetComponent<BezierSpline>(out var bs))
+            {
+                EventHub.Publish(new DeleteSpline(bs));
+                children.Add(t.gameObject); //Adds the actual child GameObject to the temporary list so it can be destroyed later.
+            }
+        }
+
         foreach (var c in children)
         {
-            var bs = c.GetComponent<BezierSpline>();
-            EventHub.Publish(new DeleteSpline(bs));
+            Destroy(c);
         }
     }
 
