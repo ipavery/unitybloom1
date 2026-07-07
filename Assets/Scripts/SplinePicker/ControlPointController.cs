@@ -91,15 +91,25 @@ public class ControlPointController : MonoBehaviour
 
     void OnDeleteSpline(DeleteSpline e)
     {
-        //FIX THIS
-        Debug.Log("OnDeleteSpline called in ControlPointController");
-        Debug.Log(e.spline.transform.GetChild(0).childCount);
-        for (int i = 0; i < e.spline.transform.GetChild(0).childCount; i++)
+        if (e.spline == null) return;
+
+        var splineRoot = e.spline.transform;
+
+        for (int i = SPD.controlSphereGroup.Count - 1; i >= 0; i--)
         {
-            var child = e.spline.transform.GetChild(0).GetChild(i).gameObject;
-            SPD.controlSphereGroup.RemoveAll(sphereGroup => sphereGroup.sphereObject == child);
+            var group = SPD.controlSphereGroup[i];
+
+            if (group == null || group.sphereObject == null)
+            {
+                SPD.controlSphereGroup.RemoveAt(i);
+                continue;
+            }
+
+            if (group.sphereObject.transform.IsChildOf(splineRoot))
+            {
+                SPD.controlSphereGroup.RemoveAt(i);
+            }
         }
-        //splineList.Remove(e.spline);
     }
 
     /// <summary>
@@ -109,16 +119,23 @@ public class ControlPointController : MonoBehaviour
     /// ISSUE: if the user clicks on load or anything on the save load ui, this unselect thing gets triggered.
     void UnselectAllPoints()
     {
-        SPD.lastHighlighted = null; // Clear last highlighted
-        
-        foreach (var sphereGroup in SPD.controlSphereGroup)
+        SPD.lastHighlighted = null;
+
+        for (int i = SPD.controlSphereGroup.Count - 1; i >= 0; i--)
         {
+            var sphereGroup = SPD.controlSphereGroup[i];
+
             if (sphereGroup == null || sphereGroup.sphereObject == null)
+            {
+                SPD.controlSphereGroup.RemoveAt(i);
                 continue;
-            sphereGroup.isSelected = false; // Unselect current control point
+            }
+
+            sphereGroup.isSelected = false;
+
             if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rend))
             {
-                rend.material.color = SPD.unselectedOriginalColor; // Reset to original color
+                rend.material.color = SPD.unselectedOriginalColor;
                 rend.material.SetColor("_EmissionColor", SPD.unselectedOriginalColor * SPD.gizmoEmissionIntensity);
             }
         }
