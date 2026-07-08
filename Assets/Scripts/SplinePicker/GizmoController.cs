@@ -1,79 +1,50 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// This script controls the move gizmos
+/// Controls the move gizmos and updates selected control points while dragging.
 /// </summary>
 public class GizmoController : MonoBehaviour
 {
-    //reference to splinepickerdata scriptableobject
     [SerializeField] private SplinePickerData SPD;
 
     [Header("Gizmo Settings")]
-    public GameObject moveGizmoPrefab; // Assign a gizmo prefab in the inspector
-    public GameObject planarGizmoPrefab; // Assign a planar gizmo prefab in the inspector
-    Vector3 gizmoPrefabScale; // Store the original scale of the gizmo prefab
-    Vector3 planarGizmoPrefabScale; // Store the original scale of the planar gizmo prefab
-    private float gizmoOffsetDistance = .15f; // Offset distance for gizmos
-    public float gizmoScale = .1f; // Scale for gizmos
+    public GameObject moveGizmoPrefab;
+    public GameObject planarGizmoPrefab;
+    private Vector3 gizmoPrefabScale;
+    private Vector3 planarGizmoPrefabScale;
+    private float gizmoOffsetDistance = .15f;
+    public float gizmoScale = .1f;
     private List<GameObject> gizmoList = new();
 
-    [Header("Player Input Variables")]
-    public PlayerInputActions playerControls;
-    private InputAction mousePosition;
-    private InputAction select;
-
-    // Selection variables
-    private Vector2 selectionStart;
-    private Vector2 selectionEnd;
-    private bool raycastHit = false;
-
-    // Dragging gizmos variables
-    private int activeGizmoAxis = -1; // 0=X, 1=Y, 2=Z
-    private Vector3 dragStartPoint;
-    Plane dragPlane;
+    private int activeGizmoAxis = -1;
+    private Plane dragPlane;
     private float distance;
-    private Vector3 initialOffset; // Store the initial offset when dragging starts
-
-    void Awake()
-    {
-        playerControls = new PlayerInputActions();
-        mousePosition = playerControls.Player.MousePosition;
-        select = playerControls.Player.Select;
-        select.started += OnSelectStart;
-        select.canceled += OnSelectEnd;
-    }
+    private Vector3 initialOffset;
 
     void OnEnable()
     {
-        playerControls.Enable();
-        mousePosition.Enable();
-        select.Enable();
-
-        // Subscribe to pertinent events in OnEnable and unsubscribe in OnDisable to prevent errors
         EventHub.Subscribe<ShowMoveGizmosEvent>(OnShowMoveGizmos);
-        EventHub.Subscribe<SelectionStartEnd>(OnSelectionStartEnd);
+        EventHub.Subscribe<GizmoDragStarted>(OnGizmoDragStarted);
+        EventHub.Subscribe<GizmoDragEnded>(OnGizmoDragEnded);
         EventHub.Subscribe<ClearSelection>(OnClearSelection);
     }
 
     void OnDisable()
     {
-        playerControls.Disable();
-        mousePosition.Disable();
-        select.Disable();
         EventHub.Unsubscribe<ShowMoveGizmosEvent>(OnShowMoveGizmos);
+        EventHub.Unsubscribe<GizmoDragStarted>(OnGizmoDragStarted);
+        EventHub.Unsubscribe<GizmoDragEnded>(OnGizmoDragEnded);
+        EventHub.Unsubscribe<ClearSelection>(OnClearSelection);
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
         planarGizmoPrefabScale = planarGizmoPrefab.transform.localScale;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (SPD.lastHighlighted != null)
@@ -83,25 +54,22 @@ public class GizmoController : MonoBehaviour
 
         foreach (var gizmo in gizmoList)
         {
-
             if (gizmo != null && SPD.lastHighlighted != null)
             {
-                // Update the gizmo position and scale based on the camera distance
-                // This assumes the gizmo is a child of the SplinePicker object
-                // and that it has been instantiated with the correct position
                 if (gizmo.name.Contains("MoveGizmoPrefab"))
                 {
                     gizmo.transform.localScale = distance * gizmoScale * gizmoPrefabScale;
-                    gizmo.transform.position = SPD.lastHighlighted.transform.position + gizmo.transform.up * gizmoOffsetDistance * distance; // Offset the gizmo position
+                    gizmo.transform.position = SPD.lastHighlighted.transform.position + gizmo.transform.up * gizmoOffsetDistance * distance;
                 }
                 else if (gizmo.name.Contains("PlanarGizmoPrefab"))
                 {
                     gizmo.transform.localScale = distance * gizmoScale * planarGizmoPrefabScale;
-                    gizmo.transform.position = SPD.lastHighlighted.transform.position + (gizmo.transform.up + gizmo.transform.right * .5f) * gizmoOffsetDistance * distance; // Offset the gizmo position
+                    gizmo.transform.position = SPD.lastHighlighted.transform.position + (gizmo.transform.up + gizmo.transform.right * .5f) * gizmoOffsetDistance * distance;
                 }
             }
         }
-        if (activeGizmoAxis != -1)
+
+        if (activeGizmoAxis != -1 && SPD.lastHighlighted != null)
         {
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
             SetDragPlane();
@@ -112,17 +80,16 @@ public class GizmoController : MonoBehaviour
             {
                 if (!sphereGroup.isSelected)
                 {
-                    continue; // Skip spheres that are not selected
+                    continue;
                 }
+
                 var sphere = sphereGroup.sphereObject;
                 Vector3 diff = sphere.transform.position - lastHighlightedPos;
-                Vector3 offset = newControlPos - lastHighlightedPos - initialOffset; // Calculate the offset based on the new position and the difference from the last highlighted position
-                sphere.transform.position = lastHighlightedPos + diff + offset; // Move all selected spheres to the new position
+                Vector3 offset = newControlPos - lastHighlightedPos - initialOffset;
+                sphere.transform.position = lastHighlightedPos + diff + offset;
+
                 var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                spline.points[sphereGroup.index] += offset; // Update the spline point position
-
-                //update spline data below
-
+                spline.points[sphereGroup.index] += offset;
             }
         }
     }
@@ -132,32 +99,45 @@ public class GizmoController : MonoBehaviour
         ShowMoveGizmos(e.position);
     }
 
-    void OnSelectionStartEnd(SelectionStartEnd e)
+    void OnGizmoDragStarted(GizmoDragStarted e)
     {
-        //Debug.Log($"selection started at {e.position}");
+        if (SPD.lastHighlighted == null)
+        {
+            return;
+        }
+
+        activeGizmoAxis = SPD.activeGizmoAxis;
+        initialOffset = e.position - SPD.lastHighlighted.transform.position;
+    }
+
+    void OnGizmoDragEnded(GizmoDragEnded e)
+    {
+        activeGizmoAxis = -1;
+        SPD.activeGizmoAxis = -1;
+        initialOffset = Vector3.zero;
     }
 
     void OnClearSelection(ClearSelection e)
     {
         DestroyGizmos();
+        activeGizmoAxis = -1;
+        SPD.activeGizmoAxis = -1;
+        initialOffset = Vector3.zero;
     }
 
     void ShowMoveGizmos(Vector3 position)
     {
-        DestroyGizmos(); // Clear existing gizmos
+        DestroyGizmos();
 
-        // Create a new move gizmo at the specified position
         for (int i = 0; i < 3; i++)
         {
             GameObject moveGizmo = Instantiate(moveGizmoPrefab, position, Quaternion.identity);
             gizmoList.Add(moveGizmo);
-            moveGizmo.transform.localScale *= gizmoScale; // Adjust scale as needed
-            moveGizmo.transform.SetParent(transform, false); // Set parent to the SplinePicker object
-            // Set the sphere to the "PP Layer"
+            moveGizmo.transform.localScale *= gizmoScale;
+            moveGizmo.transform.SetParent(transform, false);
             moveGizmo.layer = LayerMask.NameToLayer("PP Layer");
             Renderer rend = moveGizmo.GetComponent<Renderer>();
 
-            // Fourth gizmo: 2D plane mover (e.g., XZ plane)
             GameObject planarGizmo = Instantiate(planarGizmoPrefab, position, Quaternion.identity);
             planarGizmo.transform.SetParent(transform, false);
             planarGizmo.layer = LayerMask.NameToLayer("PP Layer");
@@ -174,10 +154,9 @@ public class GizmoController : MonoBehaviour
                 rend.material.EnableKeyword("_EMISSION");
             }
 
-            // Set rotation and position based on index
             if (i == 0)
             {
-                moveGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90); // Forward
+                moveGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
                 rend.material.color = Color.red;
                 rend.material.SetColor("_EmissionColor", Color.red * SPD.gizmoEmissionIntensity);
 
@@ -187,7 +166,7 @@ public class GizmoController : MonoBehaviour
             }
             else if (i == 1)
             {
-                moveGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0); // Right
+                moveGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
                 rend.material.color = Color.green;
                 rend.material.SetColor("_EmissionColor", Color.green * SPD.gizmoEmissionIntensity);
 
@@ -197,7 +176,7 @@ public class GizmoController : MonoBehaviour
             }
             else if (i == 2)
             {
-                moveGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0); // Up
+                moveGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
                 rend.material.color = Color.blue;
                 rend.material.SetColor("_EmissionColor", Color.blue * SPD.gizmoEmissionIntensity);
 
@@ -206,11 +185,10 @@ public class GizmoController : MonoBehaviour
                 planarRend.material.SetColor("_EmissionColor", planarRend.material.color * SPD.gizmoEmissionIntensity);
             }
 
-            moveGizmo.transform.position = position + moveGizmo.transform.up * 3f; // Add control point position and offset
-            planarGizmo.transform.position = position + planarGizmo.transform.up * 2f + planarGizmo.transform.right * 2f; // Slight offset to avoid z-fighting
-
+            moveGizmo.transform.position = position + moveGizmo.transform.up * 3f;
+            planarGizmo.transform.position = position + planarGizmo.transform.up * 2f + planarGizmo.transform.right * 2f;
         }
-        // re-order gizmo list
+
         gizmoList = new List<GameObject>
         {
             gizmoList[0], // X-axis
@@ -218,18 +196,16 @@ public class GizmoController : MonoBehaviour
             gizmoList[4], // Z-axis
             gizmoList[5],
             gizmoList[3],
-            gizmoList[1]  // Planar mover
+            gizmoList[1]
         };
-
     }
 
     void FindGizmoAxisHitPoint(out Vector3 intersection, Ray ray, Plane dragPlane, int gizmoAxisDir, Vector3 controlPointPosition)
     {
-        intersection = Vector3.zero; // Initialize intersection
+        intersection = Vector3.zero;
         if (dragPlane.Raycast(ray, out float enter))
         {
             intersection = ray.GetPoint(enter);
-
         }
 
         if (gizmoAxisDir == 0)
@@ -247,59 +223,61 @@ public class GizmoController : MonoBehaviour
             intersection.x = controlPointPosition.x;
             intersection.y = controlPointPosition.y;
         }
-        else if (gizmoAxisDir == 3) // Planar mover XZ plane
+        else if (gizmoAxisDir == 3)
         {
             intersection.y = controlPointPosition.y;
-            //Debug.Log("red good");
         }
-        else if (gizmoAxisDir == 4) // Planar mover YZ plane
+        else if (gizmoAxisDir == 4)
         {
             intersection.x = controlPointPosition.x;
-            //Debug.Log("green good");
         }
-        else if (gizmoAxisDir == 5) // Planar mover XY plane
+        else if (gizmoAxisDir == 5)
         {
             intersection.z = controlPointPosition.z;
-            //Debug.Log("blue good");
         }
-
-    }
-
-    void FindInitialOffset()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-        SetDragPlane();
-        FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, SPD.lastHighlighted.transform.position);
-        Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position;
-        initialOffset = newControlPos - lastHighlightedPos; // Calculate the initial offset based on the new position and the difference from the last highlighted position
     }
 
     void SetDragPlane()
     {
-        if (activeGizmoAxis == 0) //Axis movers
+        if (activeGizmoAxis == 0)
+        {
+            dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
+        }
+        else if (activeGizmoAxis == 1)
+        {
+            dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
+        }
+        else if (activeGizmoAxis == 2)
+        {
+            dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
+        }
+        else if (activeGizmoAxis == 3)
+        {
+            dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
+        }
+        else if (activeGizmoAxis == 4)
+        {
+            dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
+        }
+        else if (activeGizmoAxis == 5)
+        {
+            dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
+        }
+    }
+
+    public bool TryGetGizmoAxisIndex(GameObject candidate, out int axisIndex)
+    {
+        for (int i = 0; i < gizmoList.Count; i++)
+        {
+            if (gizmoList[i] == candidate)
             {
-                dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
+                axisIndex = i;
+                return true;
             }
-            else if (activeGizmoAxis == 1)
-            {
-                dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 2)
-            {
-                dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 3) //Planar movers
-            {
-                dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 4)
-            {
-                dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 5)
-            {
-                dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
-            }
+        }
+
+        axisIndex = -1;
+        return false;
     }
 
     void DestroyGizmos()
@@ -309,54 +287,5 @@ public class GizmoController : MonoBehaviour
             Destroy(gizmo);
         }
         gizmoList.Clear();
-    }
-
-    void OnSelectStart(InputAction.CallbackContext ctx)
-    {
-        //maybe make the code below in splinepickerdata bc it's repetitive
-        if (SPD.isInputBlocked) return;
-        selectionStart = mousePosition.ReadValue<Vector2>();
-
-        Ray ray = Camera.main.ScreenPointToRay(selectionStart);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, 300f))
-        {
-            raycastHit = true;
-            // Check if the clicked point is one of the gizmos
-            for (int i = 0; i < gizmoList.Count; i++)
-            {
-                if (hit.collider != null && hit.collider.gameObject == gizmoList[i])
-                {
-                    activeGizmoAxis = i; // Set the active gizmo axis based on the clicked gizmo
-                    dragStartPoint = hit.point;
-                    FindInitialOffset(); // Calculate the initial offset when dragging starts and set it to the local variable initialOffset
-                }
-            }
-        }
-        else
-        {
-            raycastHit = false;
-        }
-    }
-
-    void OnSelectEnd(InputAction.CallbackContext ctx)
-    {
-        if (SPD.isInputBlocked) return;
-        selectionEnd = mousePosition.ReadValue<Vector2>();
-
-        activeGizmoAxis = -1; // Reset the active gizmo axis
-        if (SPD.lastHighlighted != null)
-        {
-            //this might not be necessary in independent mode
-            EventHub.Publish(new GizmoDragEnded(SPD.lastHighlighted, SPD.lastHighlighted.transform.position));
-        }
-
-        // If no control point or gizmo was clicked and the mouse was not dragged too much, destroy gizmos
-        float selectDist = (selectionEnd - selectionStart).magnitude;
-        if (raycastHit == false && selectDist < 5)
-        {
-            DestroyGizmos(); // Clear existing gizmos
-            activeGizmoAxis = -1; // Reset the active gizmo axis
-        }
     }
 }

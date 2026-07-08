@@ -1,30 +1,26 @@
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Manages selecting control points and sends raycast info to gizmocontroller and controlpointcontroller
-/// Controls the blue selection box UI
+/// Handles input selection and owns the selection box UI.
+/// It raycasts first and decides whether the interaction is a control point selection,
+/// a gizmo drag, or a drag-select box.
 /// </summary>
-
+[RequireComponent(typeof(GizmoController))]
 public class SelectionController : MonoBehaviour
 {
-    //reference to splinepickerdata scriptableobject
     [SerializeField] private SplinePickerData SPD;
 
-    /// player input variables with the new input system
     [Header("Player Input Variables")]
     public PlayerInputActions playerControls;
     private InputAction mousePosition;
     private InputAction select;
 
-    // Selection variables
-    public GameObject selectionBoxUI; // Reference to the SelectionBoxUI component
+    public GameObject selectionBoxUI;
     private Vector2 selectionStart;
     private Vector2 selectionEnd;
     private bool raycastHit = false;
-
+    private GizmoController gizmoController;
 
     void Awake()
     {
@@ -33,6 +29,12 @@ public class SelectionController : MonoBehaviour
         select = playerControls.Player.Select;
         select.started += OnSelectStart;
         select.canceled += OnSelectEnd;
+
+        gizmoController = GetComponent<GizmoController>();
+        if (gizmoController == null)
+        {
+            gizmoController = FindFirstObjectByType<GizmoController>();
+        }
     }
 
     void OnEnable()
@@ -49,117 +51,104 @@ public class SelectionController : MonoBehaviour
         select.Disable();
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
     void Update()
     {
-        // Update the input blocked state in the SPD object so this and other scripts can use it
         SPD.isInputBlocked = InputBlocker.IsInputBlocked("Unblocked UI Layer");
 
-        // If currently selecting and not dragging a gizmo, update the selection box UI
         if (SPD.isSelecting && SPD.activeGizmoAxis == -1)
         {
-            // Update the selection box UI only if not dragging
             Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
             selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
-            //SelectControlPointsInRect();
         }
     }
 
     void OnSelectStart(InputAction.CallbackContext ctx)
     {
-        // If input is blocked, do not start selection
         if (SPD.isInputBlocked) return;
 
         selectionStart = mousePosition.ReadValue<Vector2>();
-        EventHub.Publish(new SelectionStartEnd(selectionStart, true));
-
-        SPD.isSelecting = true;
+        raycastHit = false;
+        SPD.isSelecting = false;
+        //EventHub.Publish(new SelectionStartEnd(selectionStart, true)); //No listeners for this yet but might need it in future
 
         Ray ray = Camera.main.ScreenPointToRay(selectionStart);
         if (Physics.Raycast(ray, out RaycastHit hit, 300f))
         {
             raycastHit = true;
+
             int idx = SPD.controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
             if (idx != -1)
             {
                 var sphereGroup = SPD.controlSphereGroup[idx];
-                //UpdateSelectedSpline(sphere.sphereObject);
-                //Highlight new
                 EventHub.Publish(new ControlPointSelected(sphereGroup));
-                EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position)); // Show move gizmos at the highlighted control point
-                Debug.Log("Clicked control point: " + idx);
+                if (SPD.lastHighlighted != null)
+                {
+                    EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position));
+                }
+                return;
             }
 
+            if (gizmoController != null && gizmoController.TryGetGizmoAxisIndex(hit.collider.gameObject, out int gizmoAxisIndex))
+            {
+                SPD.activeGizmoAxis = gizmoAxisIndex;
+                EventHub.Publish(new GizmoDragStarted(GetDragPlanePoint(selectionStart, gizmoAxisIndex)));
+                return;
+            }
+        }
 
-            // Check if the clicked point is one of the gizmos
-            // for (int i = 0; i < gizmoList.Count; i++)
-            // {
-            //     if (hit.collider != null && hit.collider.gameObject == gizmoList[i])
-            //     {
-            //         activeGizmoAxis = i; // Set the active gizmo axis based on the clicked gizmo
-            //         dragStartPoint = hit.point;
-            //         SPD.isSelecting = false;
-            //     }
-            // }
-        }
-        else
-        {
-            raycastHit = false;
-
-        }
-        if (SPD.isSelecting)
-        {
-            selectionBoxUI.GetComponent<SelectionBoxUI>().BeginSelection(selectionStart);
-        }
+        SPD.isSelecting = true;
+        selectionBoxUI.GetComponent<SelectionBoxUI>().BeginSelection(selectionStart);
     }
 
     void OnSelectEnd(InputAction.CallbackContext ctx)
     {
-        // If input is blocked, do not end selection or clear highlights
         if (SPD.isInputBlocked) return;
 
         selectionEnd = mousePosition.ReadValue<Vector2>();
-        EventHub.Publish(new SelectionStartEnd(selectionEnd, false));
+        // EventHub.Publish(new SelectionStartEnd(selectionEnd, false)); //no listeners for this yet but might need it in future
 
-        SPD.isSelecting = false;
-        selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
-        // //SelectControlPointsInRect();
-        // activeGizmoAxis = -1; // Reset the active gizmo axis
+        if (SPD.isSelecting)
+        {
+            SPD.isSelecting = false;
+            selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
+        }
+
         if (SPD.lastHighlighted != null)
         {
             EventHub.Publish(new GizmoDragEnded(SPD.lastHighlighted, SPD.lastHighlighted.transform.position));
         }
 
-        // If no control point or gizmo was clicked and the mouse was not dragged too much, unselect all control points
         float selectDist = (selectionEnd - selectionStart).magnitude;
-        if (raycastHit == false && selectDist < 5)
+        if (!raycastHit && selectDist < 5f)
         {
             EventHub.Publish(new ClearSelection());
-            // UnHighlightLast();
-            // DestroyGizmos(); // Clear existing gizmos
-            // activeGizmoAxis = -1; // Reset the active gizmo axis
-            // foreach (var sphereGroup in SPD.controlSphereGroup)
-            // {
-            //     sphereGroup.isSelected = false; // Unselect current control point
-            //     if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rend))
-            //     {
-            //         rend.material.color = unselectedOriginalColor; // Reset to original color
-            //         rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
-            //     }
-            // }
-
-            // if (selectedSpline != null)
-            // {
-            //     EventHub.Publish(new SplineSelectionChange(selectedSpline, false));
-            // }
         }
     }
 
-    
+    private Vector3 GetDragPlanePoint(Vector2 screenPosition, int gizmoAxisDir)
+    {
+        if (SPD.lastHighlighted == null)
+        {
+            return Vector3.zero;
+        }
+
+        Ray ray = Camera.main.ScreenPointToRay(screenPosition);
+        Plane plane = gizmoAxisDir switch
+        {
+            0 => new Plane(Vector3.up, SPD.lastHighlighted.transform.position),
+            1 => new Plane(Vector3.right, SPD.lastHighlighted.transform.position),
+            2 => new Plane(Vector3.forward, SPD.lastHighlighted.transform.position),
+            3 => new Plane(Vector3.up, SPD.lastHighlighted.transform.position),
+            4 => new Plane(Vector3.right, SPD.lastHighlighted.transform.position),
+            5 => new Plane(Vector3.forward, SPD.lastHighlighted.transform.position),
+            _ => new Plane(Vector3.up, SPD.lastHighlighted.transform.position)
+        };
+
+        if (plane.Raycast(ray, out float enter))
+        {
+            return ray.GetPoint(enter);
+        }
+
+        return SPD.lastHighlighted.transform.position;
+    }
 }
