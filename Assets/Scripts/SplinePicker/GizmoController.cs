@@ -19,7 +19,6 @@ public class GizmoController : MonoBehaviour
     private float gizmoOffsetDistance = .15f; // Offset distance for gizmos
     public float gizmoScale = .1f; // Scale for gizmos
     private List<GameObject> gizmoList = new();
-    private List<ControlPointGroup> controlSphereGroup = new();
 
     [Header("Player Input Variables")]
     public PlayerInputActions playerControls;
@@ -36,6 +35,7 @@ public class GizmoController : MonoBehaviour
     private Vector3 dragStartPoint;
     Plane dragPlane;
     private float distance;
+    private Vector3 initialOffset; // Store the initial offset when dragging starts
 
     void Awake()
     {
@@ -76,6 +76,11 @@ public class GizmoController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (SPD.lastHighlighted != null)
+        {
+            distance = Vector3.Distance(Camera.main.transform.position, SPD.lastHighlighted.transform.position);
+        }
+
         foreach (var gizmo in gizmoList)
         {
 
@@ -99,36 +104,26 @@ public class GizmoController : MonoBehaviour
         if (activeGizmoAxis != -1)
         {
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            if (activeGizmoAxis == 0) //Axis movers
-            {
-                dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 1)
-            {
-                dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 2)
-            {
-                dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 3) //Planar movers
-            {
-                dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 4)
-            {
-                dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
-            }
-            else if (activeGizmoAxis == 5)
-            {
-                dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
-            }
-            // Vector3 newControlPos;
-            // FindGizmoAxisHitPoint(out newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
-            // Vector3 offset = newControlPos - lastHighlighted.transform.position;
-
-            // 
+            SetDragPlane();
             FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, SPD.lastHighlighted.transform.position);
+
+            Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position;
+            foreach (var sphereGroup in SPD.controlSphereGroup)
+            {
+                if (!sphereGroup.isSelected)
+                {
+                    continue; // Skip spheres that are not selected
+                }
+                var sphere = sphereGroup.sphereObject;
+                Vector3 diff = sphere.transform.position - lastHighlightedPos;
+                Vector3 offset = newControlPos - lastHighlightedPos - initialOffset; // Calculate the offset based on the new position and the difference from the last highlighted position
+                sphere.transform.position = lastHighlightedPos + diff + offset; // Move all selected spheres to the new position
+                var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
+                spline.points[sphereGroup.index] += offset; // Update the spline point position
+
+                //update spline data below
+
+            }
         }
     }
 
@@ -270,6 +265,43 @@ public class GizmoController : MonoBehaviour
 
     }
 
+    void FindInitialOffset()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        SetDragPlane();
+        FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, SPD.lastHighlighted.transform.position);
+        Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position;
+        initialOffset = newControlPos - lastHighlightedPos; // Calculate the initial offset based on the new position and the difference from the last highlighted position
+    }
+
+    void SetDragPlane()
+    {
+        if (activeGizmoAxis == 0) //Axis movers
+            {
+                dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
+            }
+            else if (activeGizmoAxis == 1)
+            {
+                dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
+            }
+            else if (activeGizmoAxis == 2)
+            {
+                dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
+            }
+            else if (activeGizmoAxis == 3) //Planar movers
+            {
+                dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
+            }
+            else if (activeGizmoAxis == 4)
+            {
+                dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
+            }
+            else if (activeGizmoAxis == 5)
+            {
+                dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
+            }
+    }
+
     void DestroyGizmos()
     {
         foreach (var gizmo in gizmoList)
@@ -297,6 +329,7 @@ public class GizmoController : MonoBehaviour
                 {
                     activeGizmoAxis = i; // Set the active gizmo axis based on the clicked gizmo
                     dragStartPoint = hit.point;
+                    FindInitialOffset(); // Calculate the initial offset when dragging starts and set it to the local variable initialOffset
                 }
             }
         }

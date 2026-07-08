@@ -31,7 +31,7 @@ public class ControlPointController : MonoBehaviour
     void Start()
     {
         // var splineList = particleManager.splineParticleGroup.Select(g => g.spline).ToList();
-        // Save System scripts call the create spline event, so don't need to create control points here.
+        // SaveSystem scripts call the create spline event, so don't need to create control points here.
         SPD.controlSphereGroup.Clear(); // Clear the control sphere group list at the start
     }
 

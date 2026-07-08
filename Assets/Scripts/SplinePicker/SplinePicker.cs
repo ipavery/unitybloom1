@@ -515,23 +515,7 @@ public class SplinePicker : MonoBehaviour
             // Vector3 offset = newControlPos - lastHighlighted.transform.position;
 
             FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, lastHighlighted.transform.position);
-            Vector3 lastHighlightedPos = lastHighlighted.transform.position;
-            foreach (var sphereGroup in controlSphereGroup)
-            {
-                if (!sphereGroup.isSelected)
-                {
-                    continue; // Skip spheres that are not selected
-                }
-                var sphere = sphereGroup.sphereObject;
-                Vector3 diff = sphere.transform.position - lastHighlightedPos;
-                Vector3 offset = newControlPos - lastHighlightedPos; // Calculate the offset based on the new position and the difference from the last highlighted position
-                sphere.transform.position = lastHighlightedPos + diff + offset; // Move all selected spheres to the new position
-                var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                spline.points[sphereGroup.index] += offset; // Update the spline point position
-
-                //update spline data
-
-            }
+            
 
             foreach (var spline in splineList)
             {
