@@ -59,6 +59,7 @@ public class SelectionController : MonoBehaviour
         {
             Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
             selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
+            SelectControlPointsInRect();
         }
     }
 
@@ -150,5 +151,42 @@ public class SelectionController : MonoBehaviour
         }
 
         return SPD.lastHighlighted.transform.position;
+    }
+
+    void SelectControlPointsInRect()
+    {
+        Vector2 min = Vector2.Min(selectionStart, mousePosition.ReadValue<Vector2>());
+        Vector2 max = Vector2.Max(selectionStart, mousePosition.ReadValue<Vector2>());
+
+        foreach (var sphereGroup in SPD.controlSphereGroup)
+        {
+            if (sphereGroup.isSelected == true)
+            {
+                continue; // Skip spheres that are selected
+            }
+            GameObject sphere = sphereGroup.sphereObject;
+            Vector3 screenPos = Camera.main.WorldToScreenPoint(sphere.transform.position);
+            if (screenPos.z > 0 && screenPos.x >= min.x && screenPos.x <= max.x && screenPos.y >= min.y && screenPos.y <= max.y)
+            {
+                //UpdateSelectedSpline(sphere); //ADD this back to make inspector work
+                if (SPD.lastHighlighted == null)
+                {
+                    SPD.lastHighlighted = sphere; // Set the first highlighted sphere
+                    EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position));
+                }
+                sphereGroup.isSelected = true; // Mark the control point as selected
+                if (sphere.TryGetComponent<Renderer>(out var rend))
+                {
+                    // change color of spheres to show they are selected
+                    rend.material.color = SPD.highlightColor;
+                    rend.material.SetColor("_EmissionColor", SPD.highlightColor * SPD.gizmoEmissionIntensity);
+                }
+                else
+                {
+                    Debug.LogWarning("Renderer not found on control sphere: " + sphere.name);
+                }
+                //Debug.Log("Selected control point: " + sphere.name);
+            }
+        }
     }
 }

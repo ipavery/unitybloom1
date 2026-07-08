@@ -354,43 +354,6 @@ public class SplinePicker : MonoBehaviour
         }
     }
 
-    void SelectControlPointsInRect()
-    {
-        Vector2 min = Vector2.Min(selectionStart, mousePosition.ReadValue<Vector2>());
-        Vector2 max = Vector2.Max(selectionStart, mousePosition.ReadValue<Vector2>());
-
-        foreach (var sphereGroup in controlSphereGroup)
-        {
-            if (sphereGroup.isSelected == true)
-            {
-                continue; // Skip spheres that are selected
-            }
-            GameObject sphere = sphereGroup.sphereObject;
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(sphere.transform.position);
-            if (screenPos.z > 0 && screenPos.x >= min.x && screenPos.x <= max.x && screenPos.y >= min.y && screenPos.y <= max.y)
-            {
-                UpdateSelectedSpline(sphere);
-                if (lastHighlighted == null)
-                {
-                    lastHighlighted = sphere; // Set the first highlighted sphere
-                    ShowMoveGizmos(lastHighlighted.transform.position);
-                }
-                sphereGroup.isSelected = true; // Mark the control point as selected
-                var rend = sphere.GetComponent<Renderer>();
-                if (rend != null)
-                {
-                    rend.material.color = highlightColor;
-                    rend.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
-                }
-                else
-                {
-                    Debug.LogWarning("Renderer not found on control sphere: " + sphere.name);
-                }
-                //Debug.Log("Selected control point: " + sphere.name);
-            }
-        }
-    }
-
     void InitializeSpline(BezierSpline spline)
     {
         GameObject lineObj = new GameObject("SplineLine");
@@ -538,7 +501,6 @@ public class SplinePicker : MonoBehaviour
             // Update the selection box UI only if not dragging
             Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
             //selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
-            SelectControlPointsInRect();
         }
 
 
