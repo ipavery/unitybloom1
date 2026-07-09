@@ -41,9 +41,11 @@ public struct ShowMoveGizmosEvent
 public struct GizmoDragStarted
 {
     public Vector3 position;
-    public GizmoDragStarted(Vector3 position)
+    public BezierSpline spline;
+    public GizmoDragStarted(Vector3 position, BezierSpline spline = null)
     {
         this.position = position;
+        this.spline = spline;
     }
 }
 

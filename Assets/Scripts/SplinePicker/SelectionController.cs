@@ -92,7 +92,7 @@ public class SelectionController : MonoBehaviour
             if (gizmoController != null && gizmoController.TryGetGizmoAxisIndex(hit.collider.gameObject, out int gizmoAxisIndex))
             {
                 SPD.activeGizmoAxis = gizmoAxisIndex;
-                EventHub.Publish(new GizmoDragStarted(GetDragPlanePoint(selectionStart, gizmoAxisIndex)));
+                EventHub.Publish(new GizmoDragStarted(GetDragPlanePoint(selectionStart, gizmoAxisIndex))); // this needs to be changed somehow to have all selected splines in it if the splinerenderer should only update selected splines
                 return;
             }
         }

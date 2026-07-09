@@ -14654,6 +14654,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce1cd2320a3614c4dbf73d2fad466aa4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  SPD: {fileID: 11400000, guid: fb0ef59bfac3537419a2a4fec1993ca9, type: 2}
+  pointsPerSpline: 20
+  lineMaterial: {fileID: 2100000, guid: 4dabd2e1c280f5543943c9a8d6a50aea, type: 2}
+  lineWidth: 0.03
 --- !u!114 &735388312
 MonoBehaviour:
   m_ObjectHideFlags: 0

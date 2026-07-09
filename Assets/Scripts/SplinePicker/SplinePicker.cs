@@ -75,7 +75,6 @@ public class SplinePicker : MonoBehaviour
         mousePosition.Enable();
         select.Enable();
         EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
-        EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
         EventHub.Subscribe<SelectSpline>(OnSelectSpline);
         EventHub.Subscribe<SplineSelectionChange>(OnSplineSelectionChanged);
         EventHub.Subscribe<DeleteSpline>(OnDeleteSpline);
@@ -87,7 +86,6 @@ public class SplinePicker : MonoBehaviour
         mousePosition.Disable();
         select.Disable();
         EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
-        EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
         EventHub.Unsubscribe<SelectSpline>(OnSelectSpline);
         EventHub.Unsubscribe<SplineSelectionChange>(OnSplineSelectionChanged);
         EventHub.Unsubscribe<DeleteSpline>(OnDeleteSpline);
@@ -199,57 +197,6 @@ public class SplinePicker : MonoBehaviour
         InitializeSpline(e.spline);
     }
 
-    void OnSplineUpdated(SplineUpdated e)
-    {
-        if (particleManager.splineParticleGroup.Count > 0)
-        {
-
-            var spline = e.spline;
-            for (int i = 0; i < e.updatedIndices.Count; i++)
-            {
-                Vector3 point = spline.points[e.updatedIndices[i]];
-                GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
-                GameObject lineObj = e.spline.transform.Find("SplineLine").gameObject;
-                sphere.transform.SetParent(lineObj.transform, false);
-
-                // Set the sphere to the "PP Layer"
-                sphere.layer = LayerMask.NameToLayer("PP Layer");
-                controlSphereGroup.Add(new ControlPointGroup
-                {
-                    sphereObject = sphere,
-                    isSelected = false,
-                    index = e.updatedIndices[i]
-                });
-
-                // Set and store original color as white
-                var rend = sphere.GetComponent<Renderer>();
-                if (rend != null)
-                {
-                    rend.material.color = Color.white;
-                    rend.material.EnableKeyword("_EMISSION");
-                    rend.material.SetColor("_EmissionColor", Color.white * gizmoEmissionIntensity);
-                    originalColors.Add(Color.white);
-                }
-                else
-                {
-                    originalColors.Add(Color.white);
-                }
-            }
-
-            LineRenderer lr = spline.GetComponentInChildren<LineRenderer>();
-            if (lr != null)
-            {
-                lr.positionCount = spline.points.Length * 20;
-                for (int i = 0; i < lr.positionCount; i++)
-                {
-                    float t = i / (float)lr.positionCount;
-                    lr.SetPosition(i, spline.GetPoint(t));
-                }
-            }
-        }
-
-    }
-
 
 
     private void UpdateSelectedSpline(GameObject sphereObject)
@@ -356,51 +303,7 @@ public class SplinePicker : MonoBehaviour
 
     void InitializeSpline(BezierSpline spline)
     {
-        GameObject lineObj = new GameObject("SplineLine");
-        lineObj.transform.SetParent(spline.transform, false);
-
-        LineRenderer lr = lineObj.AddComponent<LineRenderer>();
-        lr.positionCount = pointsPerSpline + 1;
-        lr.material = lineMaterial;
-        lr.widthMultiplier = lineWidth;
-        lr.useWorldSpace = true;
-
-        for (int i = 0; i <= pointsPerSpline; i++)
-        {
-            float t = i / (float)pointsPerSpline;
-            lr.SetPosition(i, spline.GetPoint(t));
-        }
-
-        // this used to make control points, but now controlled by controlpointcontroller
-        // for (int i = 0; i < spline.points.Length; i++)
-        // {
-        //     Vector3 point = spline.points[i];
-        //     GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
-        //     sphere.transform.SetParent(lineObj.transform, false);
-
-        //     // Set the sphere to the "PP Layer"
-        //     sphere.layer = LayerMask.NameToLayer("PP Layer");
-        //     controlSphereGroup.Add(new ControlPointGroup
-        //     {
-        //         sphereObject = sphere,
-        //         isSelected = false,
-        //         index = i
-        //     });
-
-        //     // Set and store original color as white
-        //     var rend = sphere.GetComponent<Renderer>();
-        //     if (rend != null)
-        //     {
-        //         rend.material.color = Color.white;
-        //         rend.material.EnableKeyword("_EMISSION");
-        //         rend.material.SetColor("_EmissionColor", Color.white * gizmoEmissionIntensity);
-        //         originalColors.Add(Color.white);
-        //     }
-        //     else
-        //     {
-        //         originalColors.Add(Color.white);
-        //     }
-        // }
+        
     }
 
     void Start()

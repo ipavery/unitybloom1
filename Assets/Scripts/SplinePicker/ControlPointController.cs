@@ -17,6 +17,7 @@ public class ControlPointController : MonoBehaviour
         EventHub.Subscribe<ControlPointSelected>(OnControlPointSelected);
         EventHub.Subscribe<ClearSelection>(OnClearSelection);
         EventHub.Subscribe<DeleteSpline>(OnDeleteSpline);
+        EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
     }
 
     void OnDisable()
@@ -25,6 +26,7 @@ public class ControlPointController : MonoBehaviour
         EventHub.Unsubscribe<ControlPointSelected>(OnControlPointSelected);
         EventHub.Unsubscribe<ClearSelection>(OnClearSelection);
         EventHub.Unsubscribe<DeleteSpline>(OnDeleteSpline);
+        EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -43,32 +45,25 @@ public class ControlPointController : MonoBehaviour
 
     void OnNewSplineCreated(NewSplineCreated e)
     {
-        Debug.Log("OnNewSplineCreated called in ControlPointController");
         GameObject sphereContainer = new("SphereContainer");
         sphereContainer.transform.SetParent(e.spline.transform, false);
 
         for (int i = 0; i < e.spline.points.Length; i++)
         {
-            Vector3 point = e.spline.points[i];
-            GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
-            sphere.transform.SetParent(sphereContainer.transform, false);
+            CreateNewSphere(e.spline.points[i], i, sphereContainer.transform);
+        }
+    }
 
-            // Set the sphere to the "PP Layer"
-            sphere.layer = LayerMask.NameToLayer("PP Layer");
-            SPD.controlSphereGroup.Add(new ControlPointGroup
-            {
-                sphereObject = sphere,
-                isSelected = false,
-                index = i
-            });
+    void OnSplineUpdated(SplineUpdated e)
+    {
+        if (e.spline == null) return; // not sure why it would be null but it was in splinepicker so here it is
 
-            // Set and store original color as white
-            if (sphere.TryGetComponent<Renderer>(out var rend))
-            {
-                rend.material.color = Color.white;
-                rend.material.EnableKeyword("_EMISSION");
-                rend.material.SetColor("_EmissionColor", Color.white * SPD.gizmoEmissionIntensity);
-            }
+        var spline = e.spline;
+        for (int i = 0; i < e.updatedIndices.Count; i++)
+        {
+            Vector3 point = spline.points[e.updatedIndices[i]];
+            GameObject lineObj = e.spline.transform.Find("SphereContainer").gameObject;
+            CreateNewSphere(point, e.updatedIndices[i], lineObj.transform);
         }
     }
 
@@ -140,5 +135,29 @@ public class ControlPointController : MonoBehaviour
             }
         }
     }
+
+    void CreateNewSphere(Vector3 point, int i, Transform parent)
+    {
+        GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
+        sphere.transform.SetParent(parent, false);
+
+        // Set the sphere to the "PP Layer"
+        sphere.layer = LayerMask.NameToLayer("PP Layer");
+        SPD.controlSphereGroup.Add(new ControlPointGroup
+        {
+            sphereObject = sphere,
+            isSelected = false,
+            index = i
+        });
+
+        // Set and store original color as white
+        if (sphere.TryGetComponent<Renderer>(out var rend))
+        {
+            rend.material.color = Color.white;
+            rend.material.EnableKeyword("_EMISSION");
+            rend.material.SetColor("_EmissionColor", Color.white * SPD.gizmoEmissionIntensity);
+        }
+    }
+    
     
 }
