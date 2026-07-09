@@ -42,8 +42,9 @@ public class SplineRenderer : MonoBehaviour
     void Update()
     {
 
-        // --- Update the LineRenderer for this spline if a gizmo drag is occuring ---
+        // --- Update the LineRenderer for this spline ---
         // Find the LineRenderer (assumes it's on a child of the spline GameObject)
+        // this could be made more efficient by only updating the spline that is being updated, but for now it will update all splines every frame
         foreach (var group in particleManager.splineParticleGroup)
         {
             var spline = group.spline;

@@ -22,6 +22,9 @@ public class SelectionController : MonoBehaviour
     private bool raycastHit = false;
     private GizmoController gizmoController;
 
+    private BezierSpline selectedSpline = null; // Reference to the spline that is currently selected
+
+
     void Awake()
     {
         playerControls = new PlayerInputActions();
@@ -42,6 +45,7 @@ public class SelectionController : MonoBehaviour
         playerControls.Enable();
         mousePosition.Enable();
         select.Enable();
+        EventHub.Subscribe<SplineSelectionChange>(OnSplineSelectionChanged);
     }
 
     void OnDisable()
@@ -49,6 +53,20 @@ public class SelectionController : MonoBehaviour
         playerControls.Disable();
         mousePosition.Disable();
         select.Disable();
+        EventHub.Unsubscribe<SplineSelectionChange>(OnSplineSelectionChanged);
+    }
+
+    void OnSplineSelectionChanged(SplineSelectionChange e)
+    {
+        if (e.isSelected == true)
+        {
+            selectedSpline = e.spline;
+        }
+        else if (e.isSelected == false)
+        {
+            selectedSpline = null;
+        }
+
     }
 
     void Update()
@@ -82,6 +100,7 @@ public class SelectionController : MonoBehaviour
             {
                 var sphereGroup = SPD.controlSphereGroup[idx];
                 EventHub.Publish(new ControlPointSelected(sphereGroup));
+                UpdateSelectedSpline(sphereGroup.sphereObject);
                 if (SPD.lastHighlighted != null)
                 {
                     EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position));
@@ -123,6 +142,10 @@ public class SelectionController : MonoBehaviour
         if (!raycastHit && selectDist < 5f)
         {
             EventHub.Publish(new ClearSelection());
+            if (selectedSpline != null)
+            {
+                EventHub.Publish(new SplineSelectionChange(selectedSpline, false));
+            }
         }
     }
 
@@ -151,6 +174,15 @@ public class SelectionController : MonoBehaviour
         }
 
         return SPD.lastHighlighted.transform.position;
+    }
+
+    private void UpdateSelectedSpline(GameObject sphereObject)
+    {
+        if (selectedSpline == null)
+        {
+            selectedSpline = sphereObject.GetComponentInParent<BezierSpline>();
+            EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
+        }
     }
 
     void SelectControlPointsInRect()

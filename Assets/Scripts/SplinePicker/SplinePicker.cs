@@ -154,7 +154,7 @@ public class SplinePicker : MonoBehaviour
     }
 
 
-    void OnSelectSpline(SelectSpline e)
+    void OnSelectSpline(SelectSpline e) //SelectSpline is for the inspector button "Select Spline"
     {
         //unselect all control points and then select just the control points that are on this spline
         UnHighlightLast();
@@ -210,95 +210,95 @@ public class SplinePicker : MonoBehaviour
 
     void OnSelectStart(InputAction.CallbackContext ctx)
     {
-        if (isInputBlocked) return;
-        selectionStart = mousePosition.ReadValue<Vector2>();
-        isSelecting = true;
+        // if (isInputBlocked) return;
+        // selectionStart = mousePosition.ReadValue<Vector2>();
+        // isSelecting = true;
 
-        Ray ray = Camera.main.ScreenPointToRay(selectionStart);
-        if (Physics.Raycast(ray, out RaycastHit hit, 300f))
-        {
-            raycastHit = true;
-            int idx = controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
-            if (idx != -1)
-            {
-                // Un-highlight previous
-                //UnHighlightLast();
-                Debug.Log($"hitspheresplinep: {idx}");
-                var sphere = controlSphereGroup[idx];
-                UpdateSelectedSpline(sphere.sphereObject);
+        // Ray ray = Camera.main.ScreenPointToRay(selectionStart);
+        // if (Physics.Raycast(ray, out RaycastHit hit, 300f))
+        // {
+        //     raycastHit = true;
+        //     int idx = controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
+        //     if (idx != -1)
+        //     {
+        //         // Un-highlight previous
+        //         //UnHighlightLast();
+        //         Debug.Log($"hitspheresplinep: {idx}");
+        //         var sphere = controlSphereGroup[idx];
+        //         UpdateSelectedSpline(sphere.sphereObject);
 
-                // Highlight new
-                if (sphere.sphereObject.TryGetComponent<Renderer>(out var rendNew))
-                {
-                    lastHighlighted = hit.collider.gameObject;
-                    sphere.isSelected = true; // Mark the control point as selected
-                    rendNew.material.color = highlightColor;
-                    rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
-                    ShowMoveGizmos(lastHighlighted.transform.position); // Show move gizmos at the highlighted control point
-                }
+        //         // Highlight new
+        //         if (sphere.sphereObject.TryGetComponent<Renderer>(out var rendNew))
+        //         {
+        //             lastHighlighted = hit.collider.gameObject;
+        //             sphere.isSelected = true; // Mark the control point as selected
+        //             rendNew.material.color = highlightColor;
+        //             rendNew.material.SetColor("_EmissionColor", highlightColor * gizmoEmissionIntensity);
+        //             ShowMoveGizmos(lastHighlighted.transform.position); // Show move gizmos at the highlighted control point
+        //         }
 
-                //Debug.Log("Clicked control point: " + controlIndices[idx]);
-            }
+        //         //Debug.Log("Clicked control point: " + controlIndices[idx]);
+        //     }
 
-            // Check if the clicked point is one of the gizmos
-            for (int i = 0; i < gizmoList.Count; i++)
-            {
-                if (hit.collider != null && hit.collider.gameObject == gizmoList[i])
-                {
-                    activeGizmoAxis = i; // Set the active gizmo axis based on the clicked gizmo
-                    dragStartPoint = hit.point;
-                    isSelecting = false;
-                }
-            }
-        }
-        else
-        {
-            raycastHit = false;
+        //     // Check if the clicked point is one of the gizmos
+        //     for (int i = 0; i < gizmoList.Count; i++)
+        //     {
+        //         if (hit.collider != null && hit.collider.gameObject == gizmoList[i])
+        //         {
+        //             activeGizmoAxis = i; // Set the active gizmo axis based on the clicked gizmo
+        //             dragStartPoint = hit.point;
+        //             isSelecting = false;
+        //         }
+        //     }
+        // }
+        // else
+        // {
+        //     raycastHit = false;
 
-        }
-        if (isSelecting)
-        {
-            //selectionBoxUI.GetComponent<SelectionBoxUI>().BeginSelection(selectionStart);
+        // }
+        // if (isSelecting)
+        // {
+        //     //selectionBoxUI.GetComponent<SelectionBoxUI>().BeginSelection(selectionStart);
 
-        }
+        // }
     }
 
     void OnSelectEnd(InputAction.CallbackContext ctx)
     {
-        if (isInputBlocked) return;
-        selectionEnd = mousePosition.ReadValue<Vector2>();
+        // if (isInputBlocked) return;
+        // selectionEnd = mousePosition.ReadValue<Vector2>();
 
-        isSelecting = false;
-        //selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
-        //SelectControlPointsInRect();
-        activeGizmoAxis = -1; // Reset the active gizmo axis
-        if (lastHighlighted != null)
-        {
-            EventHub.Publish(new GizmoDragEnded(lastHighlighted, lastHighlighted.transform.position));
-        }
+        // isSelecting = false;
+        // //selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
+        // //SelectControlPointsInRect();
+        // activeGizmoAxis = -1; // Reset the active gizmo axis
+        // if (lastHighlighted != null)
+        // {
+        //     EventHub.Publish(new GizmoDragEnded(lastHighlighted, lastHighlighted.transform.position));
+        // }
 
-        // If no control point or gizmo was clicked and the mouse was not dragged too much, unselect all control points
-        float selectDist = (selectionEnd - selectionStart).magnitude;
-        if (raycastHit == false && selectDist < 5)
-        {
-            UnHighlightLast();
-            DestroyGizmos(); // Clear existing gizmos
-            activeGizmoAxis = -1; // Reset the active gizmo axis
-            foreach (var sphereGroup in controlSphereGroup)
-            {
-                sphereGroup.isSelected = false; // Unselect current control point
-                if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rend))
-                {
-                    rend.material.color = unselectedOriginalColor; // Reset to original color
-                    rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
-                }
-            }
+        // // If no control point or gizmo was clicked and the mouse was not dragged too much, unselect all control points
+        // float selectDist = (selectionEnd - selectionStart).magnitude;
+        // if (raycastHit == false && selectDist < 5)
+        // {
+        //     UnHighlightLast();
+        //     DestroyGizmos(); // Clear existing gizmos
+        //     activeGizmoAxis = -1; // Reset the active gizmo axis
+        //     foreach (var sphereGroup in controlSphereGroup)
+        //     {
+        //         sphereGroup.isSelected = false; // Unselect current control point
+        //         if (sphereGroup.sphereObject.TryGetComponent<Renderer>(out var rend))
+        //         {
+        //             rend.material.color = unselectedOriginalColor; // Reset to original color
+        //             rend.material.SetColor("_EmissionColor", unselectedOriginalColor * gizmoEmissionIntensity);
+        //         }
+        //     }
 
-            if (selectedSpline != null)
-            {
-                EventHub.Publish(new SplineSelectionChange(selectedSpline, false));
-            }
-        }
+        //     if (selectedSpline != null)
+        //     {
+        //         EventHub.Publish(new SplineSelectionChange(selectedSpline, false));
+        //     }
+        // }
     }
 
     void InitializeSpline(BezierSpline spline)
