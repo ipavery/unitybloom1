@@ -111,6 +111,7 @@ public class SelectionController : MonoBehaviour
             if (gizmoController != null && gizmoController.TryGetGizmoAxisIndex(hit.collider.gameObject, out int gizmoAxisIndex))
             {
                 SPD.activeGizmoAxis = gizmoAxisIndex;
+                Debug.Log("The user clicked on: " + ((SplinePickerData.GizmoType)gizmoAxisIndex).ToString());
                 EventHub.Publish(new GizmoDragStarted(GetDragPlanePoint(selectionStart, gizmoAxisIndex))); // this needs to be changed somehow to have all selected splines in it if the splinerenderer should only update selected splines
                 return;
             }
@@ -157,15 +158,29 @@ public class SelectionController : MonoBehaviour
         }
 
         Ray ray = Camera.main.ScreenPointToRay(screenPosition);
-        Plane plane = gizmoAxisDir switch
+        Vector3 pivot = SPD.lastHighlighted.transform.position;
+        
+        // Cast the integer to your Enum right away
+        SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)gizmoAxisDir;
+
+        // Use the Enum in the switch expression with the corrected normals
+        Plane plane = axis switch
         {
-            0 => new Plane(Vector3.up, SPD.lastHighlighted.transform.position),
-            1 => new Plane(Vector3.right, SPD.lastHighlighted.transform.position),
-            2 => new Plane(Vector3.forward, SPD.lastHighlighted.transform.position),
-            3 => new Plane(Vector3.up, SPD.lastHighlighted.transform.position),
-            4 => new Plane(Vector3.right, SPD.lastHighlighted.transform.position),
-            5 => new Plane(Vector3.forward, SPD.lastHighlighted.transform.position),
-            _ => new Plane(Vector3.up, SPD.lastHighlighted.transform.position)
+            // Move Axes
+            SplinePickerData.GizmoType.MoveX => new Plane(Vector3.up, pivot),
+            SplinePickerData.GizmoType.MoveY => new Plane(Vector3.right, pivot),
+            SplinePickerData.GizmoType.MoveZ => new Plane(Vector3.up, pivot),
+
+            // Red Planar/Rotate (_XY Visual)
+            SplinePickerData.GizmoType.PlanarX or SplinePickerData.GizmoType.RotateX => new Plane(Vector3.forward, pivot),
+            
+            // Green Planar/Rotate (_YZ Visual)
+            SplinePickerData.GizmoType.PlanarY or SplinePickerData.GizmoType.RotateY => new Plane(Vector3.right, pivot),
+            
+            // Blue Planar/Rotate (_ZX Visual)
+            SplinePickerData.GizmoType.PlanarZ or SplinePickerData.GizmoType.RotateZ => new Plane(Vector3.up, pivot),
+
+            _ => new Plane(Vector3.up, pivot)
         };
 
         if (plane.Raycast(ray, out float enter))
@@ -173,7 +188,7 @@ public class SelectionController : MonoBehaviour
             return ray.GetPoint(enter);
         }
 
-        return SPD.lastHighlighted.transform.position;
+        return pivot;
     }
 
     private void UpdateSelectedSpline(GameObject sphereObject)

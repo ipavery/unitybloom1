@@ -53,7 +53,6 @@ public class SplinePicker : MonoBehaviour
     private Vector2 selectionStart;
     private Vector2 selectionEnd;
     private bool isSelecting = false;
-    private bool raycastHit = false;
     private BezierSpline selectedSpline = null;
     private bool isInputBlocked = false;
 
@@ -411,82 +410,82 @@ public class SplinePicker : MonoBehaviour
 
     void ShowMoveGizmos(Vector3 position)
     {
-        DestroyGizmos(); // Clear existing gizmos
+        // DestroyGizmos(); // Clear existing gizmos
 
-        // Create a new move gizmo at the specified position
-        for (int i = 0; i < 3; i++)
-        {
-            GameObject moveGizmo = Instantiate(moveGizmoPrefab, position, Quaternion.identity);
-            gizmoList.Add(moveGizmo);
-            moveGizmo.transform.localScale *= gizmoScale; // Adjust scale as needed
-            moveGizmo.transform.SetParent(transform, false); // Set parent to the SplinePicker object
-            // Set the sphere to the "PP Layer"
-            moveGizmo.layer = LayerMask.NameToLayer("PP Layer");
-            Renderer rend = moveGizmo.GetComponent<Renderer>();
+        // // Create a new move gizmo at the specified position
+        // for (int i = 0; i < 3; i++)
+        // {
+        //     GameObject moveGizmo = Instantiate(moveGizmoPrefab, position, Quaternion.identity);
+        //     gizmoList.Add(moveGizmo);
+        //     moveGizmo.transform.localScale *= gizmoScale; // Adjust scale as needed
+        //     moveGizmo.transform.SetParent(transform, false); // Set parent to the SplinePicker object
+        //     // Set the sphere to the "PP Layer"
+        //     moveGizmo.layer = LayerMask.NameToLayer("PP Layer");
+        //     Renderer rend = moveGizmo.GetComponent<Renderer>();
 
-            // Fourth gizmo: 2D plane mover (e.g., XZ plane)
-            GameObject planarGizmo = Instantiate(planarGizmoPrefab, position, Quaternion.identity);
-            planarGizmo.transform.SetParent(transform, false);
-            planarGizmo.layer = LayerMask.NameToLayer("PP Layer");
+        //     // Fourth gizmo: 2D plane mover (e.g., XZ plane)
+        //     GameObject planarGizmo = Instantiate(planarGizmoPrefab, position, Quaternion.identity);
+        //     planarGizmo.transform.SetParent(transform, false);
+        //     planarGizmo.layer = LayerMask.NameToLayer("PP Layer");
 
-            if (planarGizmo.TryGetComponent<Renderer>(out var planarRend))
-            {
-                planarRend.material.EnableKeyword("_EMISSION");
-            }
+        //     if (planarGizmo.TryGetComponent<Renderer>(out var planarRend))
+        //     {
+        //         planarRend.material.EnableKeyword("_EMISSION");
+        //     }
 
-            gizmoList.Add(planarGizmo);
+        //     gizmoList.Add(planarGizmo);
 
-            if (rend != null)
-            {
-                rend.material.EnableKeyword("_EMISSION");
-            }
+        //     if (rend != null)
+        //     {
+        //         rend.material.EnableKeyword("_EMISSION");
+        //     }
 
-            // Set rotation and position based on index
-            if (i == 0)
-            {
-                moveGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90); // Forward
-                rend.material.color = Color.red;
-                rend.material.SetColor("_EmissionColor", Color.red * gizmoEmissionIntensity);
+        //     // Set rotation and position based on index
+        //     if (i == 0)
+        //     {
+        //         moveGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90); // Forward
+        //         rend.material.color = Color.red;
+        //         rend.material.SetColor("_EmissionColor", Color.red * gizmoEmissionIntensity);
 
-                planarGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
-                planarRend.material.color = Color.red;
-                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
-            }
-            else if (i == 1)
-            {
-                moveGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0); // Right
-                rend.material.color = Color.green;
-                rend.material.SetColor("_EmissionColor", Color.green * gizmoEmissionIntensity);
+        //         planarGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
+        //         planarRend.material.color = Color.red;
+        //         planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
+        //     }
+        //     else if (i == 1)
+        //     {
+        //         moveGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0); // Right
+        //         rend.material.color = Color.green;
+        //         rend.material.SetColor("_EmissionColor", Color.green * gizmoEmissionIntensity);
 
-                planarGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
-                planarRend.material.color = Color.green;
-                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
-            }
-            else if (i == 2)
-            {
-                moveGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0); // Up
-                rend.material.color = Color.blue;
-                rend.material.SetColor("_EmissionColor", Color.blue * gizmoEmissionIntensity);
+        //         planarGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
+        //         planarRend.material.color = Color.green;
+        //         planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
+        //     }
+        //     else if (i == 2)
+        //     {
+        //         moveGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0); // Up
+        //         rend.material.color = Color.blue;
+        //         rend.material.SetColor("_EmissionColor", Color.blue * gizmoEmissionIntensity);
 
-                planarGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
-                planarRend.material.color = Color.blue;
-                planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
-            }
+        //         planarGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
+        //         planarRend.material.color = Color.blue;
+        //         planarRend.material.SetColor("_EmissionColor", planarRend.material.color * gizmoEmissionIntensity);
+        //     }
 
-            moveGizmo.transform.position = position + moveGizmo.transform.up * 3f; // Add control point position and offset
-            planarGizmo.transform.position = position + planarGizmo.transform.up * 2f + planarGizmo.transform.right * 2f; // Slight offset to avoid z-fighting
+        //     moveGizmo.transform.position = position + moveGizmo.transform.up * 3f; // Add control point position and offset
+        //     planarGizmo.transform.position = position + planarGizmo.transform.up * 2f + planarGizmo.transform.right * 2f; // Slight offset to avoid z-fighting
 
-        }
-        // re-order gizmo list
-        gizmoList = new List<GameObject>
-        {
-            gizmoList[0], // X-axis
-            gizmoList[2], // Y-axis
-            gizmoList[4], // Z-axis
-            gizmoList[5],
-            gizmoList[3],
-            gizmoList[1]  // Planar mover
-        };
+        // }
+        // // re-order gizmo list
+        // gizmoList = new List<GameObject>
+        // {
+        //     gizmoList[0], // X-axis
+        //     gizmoList[2], // Y-axis
+        //     gizmoList[4], // Z-axis
+        //     gizmoList[5],
+        //     gizmoList[3],
+        //     gizmoList[1]  // Planar mover
+        // };
 
     }
 

@@ -12,11 +12,14 @@ public class GizmoController : MonoBehaviour
     [Header("Gizmo Settings")]
     public GameObject moveGizmoPrefab;
     public GameObject planarGizmoPrefab;
+    public GameObject rotateGizmoPrefab;
     private Vector3 gizmoPrefabScale;
     private Vector3 planarGizmoPrefabScale;
+    private Vector3 rotateGizmoPrefabScale;
+    private float rotateGizmoOffsetDistance = .6f;
     private float gizmoOffsetDistance = .15f;
     public float gizmoScale = .1f;
-    private List<GameObject> gizmoList = new();
+    private GameObject[] gizmoList; //array of all gizmos
 
     private int activeGizmoAxis = -1;
     private Plane dragPlane;
@@ -43,6 +46,9 @@ public class GizmoController : MonoBehaviour
     {
         gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
         planarGizmoPrefabScale = planarGizmoPrefab.transform.localScale;
+        rotateGizmoPrefabScale = rotateGizmoPrefab.transform.localScale;
+
+        gizmoList = new GameObject[9]; // Exactly 9 slots
     }
 
     void Update()
@@ -51,20 +57,27 @@ public class GizmoController : MonoBehaviour
         {
             distance = Vector3.Distance(Camera.main.transform.position, SPD.lastHighlighted.transform.position);
         }
-
-        foreach (var gizmo in gizmoList)
+        if (gizmoList != null)
         {
-            if (gizmo != null && SPD.lastHighlighted != null)
+            foreach (var gizmo in gizmoList)
             {
-                if (gizmo.name.Contains("MoveGizmoPrefab"))
+                if (gizmo != null && SPD.lastHighlighted != null)
                 {
-                    gizmo.transform.localScale = distance * gizmoScale * gizmoPrefabScale;
-                    gizmo.transform.position = SPD.lastHighlighted.transform.position + gizmo.transform.up * gizmoOffsetDistance * distance;
-                }
-                else if (gizmo.name.Contains("PlanarGizmoPrefab"))
-                {
-                    gizmo.transform.localScale = distance * gizmoScale * planarGizmoPrefabScale;
-                    gizmo.transform.position = SPD.lastHighlighted.transform.position + (gizmo.transform.up + gizmo.transform.right * .5f) * gizmoOffsetDistance * distance;
+                    if (gizmo.name.Contains("MoveGizmoPrefab"))
+                    {
+                        gizmo.transform.localScale = distance * gizmoScale * gizmoPrefabScale;
+                        gizmo.transform.position = SPD.lastHighlighted.transform.position + distance * gizmoOffsetDistance * gizmo.transform.up;
+                    }
+                    else if (gizmo.name.Contains("PlanarGizmoPrefab"))
+                    {
+                        gizmo.transform.localScale = distance * gizmoScale * planarGizmoPrefabScale;
+                        gizmo.transform.position = SPD.lastHighlighted.transform.position + distance * gizmoOffsetDistance * (gizmo.transform.up + gizmo.transform.right * .5f);
+                    }
+                    else if (gizmo.name.Contains("RotateGizmoPrefab"))
+                    {
+                        gizmo.transform.localScale = distance * gizmoScale * rotateGizmoPrefabScale;
+                        gizmo.transform.position = SPD.lastHighlighted.transform.position + distance * rotateGizmoOffsetDistance * (gizmo.transform.up * .5f);
+                    }
                 }
             }
         }
@@ -86,10 +99,10 @@ public class GizmoController : MonoBehaviour
                 var sphere = sphereGroup.sphereObject;
                 Vector3 diff = sphere.transform.position - lastHighlightedPos;
                 Vector3 offset = newControlPos - lastHighlightedPos - initialOffset;
-                sphere.transform.position = lastHighlightedPos + diff + offset;
+                sphere.transform.position = lastHighlightedPos + diff + offset; // Update sphere position
 
                 var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                spline.points[sphereGroup.index] += offset;
+                spline.points[sphereGroup.index] += offset; // Update spline point position
             }
         }
     }
@@ -128,31 +141,34 @@ public class GizmoController : MonoBehaviour
     void ShowMoveGizmos(Vector3 position)
     {
         DestroyGizmos();
+        gizmoList = new GameObject[9]; // Exactly 9 slots
 
         for (int i = 0; i < 3; i++)
         {
             GameObject moveGizmo = Instantiate(moveGizmoPrefab, position, Quaternion.identity);
-            gizmoList.Add(moveGizmo);
-            moveGizmo.transform.localScale *= gizmoScale;
             moveGizmo.transform.SetParent(transform, false);
             moveGizmo.layer = LayerMask.NameToLayer("PP Layer");
-            Renderer rend = moveGizmo.GetComponent<Renderer>();
+            if (moveGizmo.TryGetComponent<Renderer>(out var rend))
+            {
+                rend.material.EnableKeyword("_EMISSION");
+            }
 
             GameObject planarGizmo = Instantiate(planarGizmoPrefab, position, Quaternion.identity);
             planarGizmo.transform.SetParent(transform, false);
             planarGizmo.layer = LayerMask.NameToLayer("PP Layer");
-
             if (planarGizmo.TryGetComponent<Renderer>(out var planarRend))
             {
                 planarRend.material.EnableKeyword("_EMISSION");
             }
 
-            gizmoList.Add(planarGizmo);
-
-            if (rend != null)
+            GameObject rotateGizmo = Instantiate(rotateGizmoPrefab, position, Quaternion.identity);
+            rotateGizmo.transform.SetParent(transform, false);
+            rotateGizmo.layer = LayerMask.NameToLayer("PP Layer");
+            if (rotateGizmo.TryGetComponent<Renderer>(out var rotateRend))
             {
-                rend.material.EnableKeyword("_EMISSION");
+                rotateRend.material.EnableKeyword("_EMISSION");
             }
+
 
             if (i == 0)
             {
@@ -163,6 +179,18 @@ public class GizmoController : MonoBehaviour
                 planarGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
                 planarRend.material.color = Color.red;
                 planarRend.material.SetColor("_EmissionColor", planarRend.material.color * SPD.gizmoEmissionIntensity);
+
+                rotateGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
+                rotateRend.material.color = Color.red;
+                rotateRend.material.SetColor("_EmissionColor", rotateRend.material.color * SPD.gizmoEmissionIntensity);
+
+                moveGizmo.name = "MoveGizmoPrefab_X";
+                planarGizmo.name = "PlanarGizmoPrefab_XY";
+                rotateGizmo.name = "RotateGizmoPrefab_XY";
+
+                gizmoList[(int)SplinePickerData.GizmoType.MoveX] = moveGizmo;
+                gizmoList[(int)SplinePickerData.GizmoType.PlanarX] = planarGizmo;
+                gizmoList[(int)SplinePickerData.GizmoType.RotateX] = rotateGizmo;
             }
             else if (i == 1)
             {
@@ -173,6 +201,18 @@ public class GizmoController : MonoBehaviour
                 planarGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
                 planarRend.material.color = Color.green;
                 planarRend.material.SetColor("_EmissionColor", planarRend.material.color * SPD.gizmoEmissionIntensity);
+
+                rotateGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
+                rotateRend.material.color = Color.green;
+                rotateRend.material.SetColor("_EmissionColor", rotateRend.material.color * SPD.gizmoEmissionIntensity);
+
+                moveGizmo.name = "MoveGizmoPrefab_Y";
+                planarGizmo.name = "PlanarGizmoPrefab_YZ";
+                rotateGizmo.name = "RotateGizmoPrefab_YZ";
+
+                gizmoList[(int)SplinePickerData.GizmoType.MoveY] = moveGizmo;
+                gizmoList[(int)SplinePickerData.GizmoType.PlanarY] = planarGizmo;
+                gizmoList[(int)SplinePickerData.GizmoType.RotateY] = rotateGizmo;
             }
             else if (i == 2)
             {
@@ -183,91 +223,94 @@ public class GizmoController : MonoBehaviour
                 planarGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
                 planarRend.material.color = Color.blue;
                 planarRend.material.SetColor("_EmissionColor", planarRend.material.color * SPD.gizmoEmissionIntensity);
+
+                rotateGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
+                rotateRend.material.color = Color.blue;
+                rotateRend.material.SetColor("_EmissionColor", rotateRend.material.color * SPD.gizmoEmissionIntensity);
+
+                moveGizmo.name = "MoveGizmoPrefab_Z";
+                planarGizmo.name = "PlanarGizmoPrefab_ZX";
+                rotateGizmo.name = "RotateGizmoPrefab_ZX";
+
+                gizmoList[(int)SplinePickerData.GizmoType.MoveZ] = moveGizmo;
+                gizmoList[(int)SplinePickerData.GizmoType.PlanarZ] = planarGizmo;
+                gizmoList[(int)SplinePickerData.GizmoType.RotateZ] = rotateGizmo;
             }
-
-            moveGizmo.transform.position = position + moveGizmo.transform.up * 3f;
-            planarGizmo.transform.position = position + planarGizmo.transform.up * 2f + planarGizmo.transform.right * 2f;
         }
-
-        gizmoList = new List<GameObject>
-        {
-            gizmoList[0], // X-axis
-            gizmoList[2], // Y-axis
-            gizmoList[4], // Z-axis
-            gizmoList[5],
-            gizmoList[3],
-            gizmoList[1]
-        };
     }
-
+//z-planar mover is currently x-planar mover??
     void FindGizmoAxisHitPoint(out Vector3 intersection, Ray ray, Plane dragPlane, int gizmoAxisDir, Vector3 controlPointPosition)
+{
+    intersection = Vector3.zero;
+    if (dragPlane.Raycast(ray, out float enter))
     {
-        intersection = Vector3.zero;
-        if (dragPlane.Raycast(ray, out float enter))
-        {
-            intersection = ray.GetPoint(enter);
-        }
-
-        if (gizmoAxisDir == 0)
-        {
-            intersection.y = controlPointPosition.y;
-            intersection.z = controlPointPosition.z;
-        }
-        else if (gizmoAxisDir == 1)
-        {
-            intersection.x = controlPointPosition.x;
-            intersection.z = controlPointPosition.z;
-        }
-        else if (gizmoAxisDir == 2)
-        {
-            intersection.x = controlPointPosition.x;
-            intersection.y = controlPointPosition.y;
-        }
-        else if (gizmoAxisDir == 3)
-        {
-            intersection.y = controlPointPosition.y;
-        }
-        else if (gizmoAxisDir == 4)
-        {
-            intersection.x = controlPointPosition.x;
-        }
-        else if (gizmoAxisDir == 5)
-        {
-            intersection.z = controlPointPosition.z;
-        }
+        intersection = ray.GetPoint(enter);
     }
+
+    SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)gizmoAxisDir;
+
+    // --- LINEAR MOVES ---
+    if (axis == SplinePickerData.GizmoType.MoveX) { intersection.y = controlPointPosition.y; intersection.z = controlPointPosition.z; }
+    else if (axis == SplinePickerData.GizmoType.MoveY) { intersection.x = controlPointPosition.x; intersection.z = controlPointPosition.z; }
+    else if (axis == SplinePickerData.GizmoType.MoveZ) { intersection.x = controlPointPosition.x; intersection.y = controlPointPosition.y; }
+    
+    // --- PLANAR MOVES ---
+    // Red Planar (Visually XY Plane) -> Lock Z
+    else if (axis == SplinePickerData.GizmoType.PlanarX) 
+    {
+        intersection.z = controlPointPosition.z;
+    }
+    // Green Planar (Visually YZ Plane) -> Lock X
+    else if (axis == SplinePickerData.GizmoType.PlanarY) 
+    {
+        intersection.x = controlPointPosition.x;
+    }
+    // Blue Planar (Visually ZX Plane) -> Lock Y
+    else if (axis == SplinePickerData.GizmoType.PlanarZ) 
+    {
+        intersection.y = controlPointPosition.y;
+    }
+}
 
     void SetDragPlane()
+{
+    Vector3 pivot = SPD.lastHighlighted.transform.position;
+    SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis;
+
+    switch (axis)
     {
-        if (activeGizmoAxis == 0)
-        {
-            dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
-        }
-        else if (activeGizmoAxis == 1)
-        {
-            dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
-        }
-        else if (activeGizmoAxis == 2)
-        {
-            dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
-        }
-        else if (activeGizmoAxis == 3)
-        {
-            dragPlane = new Plane(Vector3.up, SPD.lastHighlighted.transform.position);
-        }
-        else if (activeGizmoAxis == 4)
-        {
-            dragPlane = new Plane(Vector3.right, SPD.lastHighlighted.transform.position);
-        }
-        else if (activeGizmoAxis == 5)
-        {
-            dragPlane = new Plane(Vector3.forward, SPD.lastHighlighted.transform.position);
-        }
+        // --- X Axes (Red) ---
+        case SplinePickerData.GizmoType.MoveX:
+            dragPlane = new Plane(Vector3.up, pivot); // XZ plane to catch X moves
+            break;
+        case SplinePickerData.GizmoType.PlanarX:
+        case SplinePickerData.GizmoType.RotateX:
+            dragPlane = new Plane(Vector3.forward, pivot); // Matches your _XY visual
+            break;
+
+        // --- Y Axes (Green) ---
+        case SplinePickerData.GizmoType.MoveY:
+            dragPlane = new Plane(Vector3.right, pivot); // YZ plane to catch Y moves
+            break;
+        case SplinePickerData.GizmoType.PlanarY:
+        case SplinePickerData.GizmoType.RotateY:
+            dragPlane = new Plane(Vector3.right, pivot); // Matches your _YZ visual
+            break;
+
+        // --- Z Axes (Blue) ---
+        case SplinePickerData.GizmoType.MoveZ:
+            dragPlane = new Plane(Vector3.up, pivot); // XZ plane to catch Z moves
+            break;
+        case SplinePickerData.GizmoType.PlanarZ:
+        case SplinePickerData.GizmoType.RotateZ:
+            dragPlane = new Plane(Vector3.up, pivot); // Matches your _ZX visual
+            break;
     }
+}
 
     public bool TryGetGizmoAxisIndex(GameObject candidate, out int axisIndex)
     {
-        for (int i = 0; i < gizmoList.Count; i++)
+        for (int i = 0; i < gizmoList.Length; i++)
         {
             if (gizmoList[i] == candidate)
             {
@@ -282,10 +325,13 @@ public class GizmoController : MonoBehaviour
 
     void DestroyGizmos()
     {
-        foreach (var gizmo in gizmoList)
+        if (gizmoList != null)
         {
+            foreach (var gizmo in gizmoList)
+            {
             Destroy(gizmo);
+            }
         }
-        gizmoList.Clear();
+        gizmoList = null;
     }
 }

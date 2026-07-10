@@ -11,10 +11,17 @@ public class SplinePickerData : ScriptableObject
     public GameObject lastHighlighted = null;
     public bool isSelecting = false;
     public List<ControlPointGroup> controlSphereGroup = new();
-    public int activeGizmoAxis = -1; // 0=X, 1=Y, 2=Z. -1 means not currently dragging
     public Color highlightColor = Color.yellow;
     public float gizmoEmissionIntensity = 0.6f; // Emission intensity for gizmos
     public Color unselectedOriginalColor = Color.white;
+    public enum GizmoType
+    {
+        None = -1,
+        MoveX = 0, MoveY = 1, MoveZ = 2,
+        PlanarX = 3, PlanarY = 4, PlanarZ = 5,
+        RotateX = 6, RotateY = 7, RotateZ = 8
+    }
+    public int activeGizmoAxis = (int)GizmoType.None; // 0=X, 1=Y, 2=Z. -1 means not currently dragging
 
     List<Transform> GetDirectChildrenByName(Transform parent, string name)
     {

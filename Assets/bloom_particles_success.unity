@@ -5878,8 +5878,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 479538059}
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
-  m_Value: 0.9999999
-  m_Size: 0
+  m_Value: 1
+  m_Size: 0.2413485
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -14612,6 +14612,7 @@ MonoBehaviour:
   SPD: {fileID: 11400000, guid: fb0ef59bfac3537419a2a4fec1993ca9, type: 2}
   moveGizmoPrefab: {fileID: 8471987075741126960, guid: 917c8a2c60019844ba11f8730a948f7a, type: 3}
   planarGizmoPrefab: {fileID: 5661324351575738629, guid: a2cb2c9e19bf5e843acfdfdc350a1c2d, type: 3}
+  rotateGizmoPrefab: {fileID: 5585790955548796127, guid: 59ea314d29d9e9b4cab25266530cf98c, type: 3}
   gizmoScale: 0.1
 --- !u!4 &735388309
 Transform:
@@ -14658,6 +14659,7 @@ MonoBehaviour:
   pointsPerSpline: 20
   lineMaterial: {fileID: 2100000, guid: 4dabd2e1c280f5543943c9a8d6a50aea, type: 2}
   lineWidth: 0.03
+  particleManager: {fileID: 527990700}
 --- !u!114 &735388312
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19214,7 +19216,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1841466637}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.99999994
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -19950,7 +19952,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -4331.8994, y: 0}
+  m_AnchoredPosition: {x: -4331.9, y: 0}
   m_SizeDelta: {x: 5710, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1927305298
