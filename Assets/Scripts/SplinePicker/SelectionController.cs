@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,7 +24,6 @@ public class SelectionController : MonoBehaviour
     private GizmoController gizmoController;
 
     private BezierSpline selectedSpline = null; // Reference to the spline that is currently selected
-
 
     void Awake()
     {

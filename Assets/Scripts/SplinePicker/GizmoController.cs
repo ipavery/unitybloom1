@@ -26,6 +26,10 @@ public class GizmoController : MonoBehaviour
     private float distance;
     private Vector3 initialOffset;
 
+    // rotation variables state tracking
+    private Vector3 initialHitVector; 
+    private Dictionary<int, Vector3> initialPointPositions = new Dictionary<int, Vector3>();
+
     void OnEnable()
     {
         EventHub.Subscribe<ShowMoveGizmosEvent>(OnShowMoveGizmos);
@@ -57,6 +61,7 @@ public class GizmoController : MonoBehaviour
         {
             distance = Vector3.Distance(Camera.main.transform.position, SPD.lastHighlighted.transform.position);
         }
+
         if (gizmoList != null)
         {
             foreach (var gizmo in gizmoList)
@@ -86,23 +91,64 @@ public class GizmoController : MonoBehaviour
         {
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
             SetDragPlane();
-            FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, SPD.lastHighlighted.transform.position);
+            Vector3 pivot = SPD.lastHighlighted.transform.position;
+            SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis;
 
-            Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position;
-            foreach (var sphereGroup in SPD.controlSphereGroup)
+            // --- TRANSLATION (Move & Planar) ---
+            if (activeGizmoAxis < (int)SplinePickerData.GizmoType.RotateX)
             {
-                if (!sphereGroup.isSelected)
+                FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, pivot);
+                Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position;
+
+                foreach (var sphereGroup in SPD.controlSphereGroup)
                 {
-                    continue;
+                    if (!sphereGroup.isSelected) continue;
+
+                    var sphere = sphereGroup.sphereObject;
+                    Vector3 diff = sphere.transform.position - lastHighlightedPos;
+                    Vector3 offset = newControlPos - lastHighlightedPos - initialOffset;
+                    sphere.transform.position = lastHighlightedPos + diff + offset;
+
+                    var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
+                    spline.points[sphereGroup.index] += offset;
                 }
+            }
+            // --- ROTATION ---
+            else
+            {
+                if (dragPlane.Raycast(ray, out float enter))
+                {
+                    Vector3 currentHitPoint = ray.GetPoint(enter);
+                    Vector3 currentVector = (currentHitPoint - pivot).normalized;
 
-                var sphere = sphereGroup.sphereObject;
-                Vector3 diff = sphere.transform.position - lastHighlightedPos;
-                Vector3 offset = newControlPos - lastHighlightedPos - initialOffset;
-                sphere.transform.position = lastHighlightedPos + diff + offset; // Update sphere position
+                    // Figure out what axis we are rotating AROUND based on the visual rings
+                    Vector3 rotAxis = Vector3.zero;
+                    if (axis == SplinePickerData.GizmoType.RotateX) rotAxis = Vector3.forward; // Red (_XY Visual) rotates around Z
+                    else if (axis == SplinePickerData.GizmoType.RotateY) rotAxis = Vector3.right; // Green (_YZ Visual) rotates around X
+                    else if (axis == SplinePickerData.GizmoType.RotateZ) rotAxis = Vector3.up; // Blue (_ZX Visual) rotates around Y
 
-                var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                spline.points[sphereGroup.index] += offset; // Update spline point position
+                    // Calculate the angle difference
+                    float angle = Vector3.SignedAngle(initialHitVector, currentVector, rotAxis);
+                    Quaternion rotationDelta = Quaternion.AngleAxis(angle, rotAxis);
+
+                    foreach (var sphereGroup in SPD.controlSphereGroup)
+                    {
+                        if (!sphereGroup.isSelected) continue;
+
+                        var sphere = sphereGroup.sphereObject;
+
+                        // Get the starting position relative to the pivot, then rotate it
+                        Vector3 initialPos = initialPointPositions[sphereGroup.index];
+                        Vector3 dirFromPivot = initialPos - pivot;
+                        Vector3 newPos = pivot + (rotationDelta * dirFromPivot);
+
+                        sphere.transform.position = newPos;
+
+                        var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
+                        Vector3 localPosition = newPos - spline.transform.position; // Convert to local position
+                        spline.points[sphereGroup.index] = localPosition;
+                    }
+                }
             }
         }
     }
@@ -113,21 +159,41 @@ public class GizmoController : MonoBehaviour
     }
 
     void OnGizmoDragStarted(GizmoDragStarted e)
-    {
-        if (SPD.lastHighlighted == null)
-        {
-            return;
-        }
+{
+    if (SPD.lastHighlighted == null) return;
 
-        activeGizmoAxis = SPD.activeGizmoAxis;
-        initialOffset = e.position - SPD.lastHighlighted.transform.position;
+    activeGizmoAxis = SPD.activeGizmoAxis;
+    Vector3 pivot = SPD.lastHighlighted.transform.position;
+    initialOffset = e.position - pivot;
+
+    // Cache initial positions so points don't drift or double-transform while dragging
+    initialPointPositions.Clear();
+    foreach (var sphereGroup in SPD.controlSphereGroup)
+    {
+        if (sphereGroup.isSelected)
+        {
+            initialPointPositions[sphereGroup.index] = sphereGroup.sphereObject.transform.position;
+        }
     }
+
+    // If we clicked a Rotate Gizmo, calculate the starting angle vector
+    if (activeGizmoAxis >= (int)SplinePickerData.GizmoType.RotateX)
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        SetDragPlane(); // Ensure the plane is set to the correct visual rotation ring
+        if (dragPlane.Raycast(ray, out float enter))
+        {
+            initialHitVector = (ray.GetPoint(enter) - pivot).normalized;
+        }
+    }
+}
 
     void OnGizmoDragEnded(GizmoDragEnded e)
     {
         activeGizmoAxis = -1;
         SPD.activeGizmoAxis = -1;
         initialOffset = Vector3.zero;
+        initialPointPositions.Clear();
     }
 
     void OnClearSelection(ClearSelection e)
@@ -136,6 +202,7 @@ public class GizmoController : MonoBehaviour
         activeGizmoAxis = -1;
         SPD.activeGizmoAxis = -1;
         initialOffset = Vector3.zero;
+        initialPointPositions.Clear();
     }
 
     void ShowMoveGizmos(Vector3 position)
