@@ -199,6 +199,8 @@ public class GizmoController : MonoBehaviour
 
     void OnGizmoDragStarted(GizmoDragStarted e)
     {
+        UndoManager.Instance.RecordState(); // Record the current scene state for undo before any changes are applied
+
         if (SPD.lastHighlighted == null) return;
 
         activeGizmoAxis = SPD.activeGizmoAxis;

@@ -31,9 +31,5 @@ public class ColorPickerManager : MonoBehaviour
         {
             Destroy(currentPicker.gameObject);
         }
-        else
-        {
-            Debug.Log("there is no current picker");
-        }
     }
 }

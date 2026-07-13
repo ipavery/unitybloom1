@@ -254,7 +254,7 @@ public class SaveLoadUI : MonoBehaviour
     }
 
     // Build SaveData from savableRoot by scanning for BezierSpline components
-    private SaveData BuildSaveDataFromRoot()
+    public SaveData BuildSaveDataFromRoot()
     {
         var data = new SaveData();
         if (savableRoot == null) return data;
@@ -400,29 +400,11 @@ public class SaveLoadUI : MonoBehaviour
         if (saveWindowPanel) saveWindowPanel.SetActive(false);
     }
 
-    private void LoadSaveGroup(string filename)
+    public void LoadSaveDataInMemory(SaveData data)
     {
-        if (savableRoot == null)
-        {
-            Debug.LogError("savableroot not assigned in SaveLoadUI.");
-            return;
-        }
-
-        if (splinePrefab == null)
-        {
-            Debug.LogError("splinePrefab not assigned in SaveLoadUI.");
-            return;
-        }
+        if (savableRoot == null || splinePrefab == null) return;
 
         ClearSavedObjects();
-
-        var data = SaveSystem.LoadSaveFile(filename);
-        if (data == null)
-        {
-            Debug.LogError("Save file missing or invalid: " + filename);
-            return;
-        }
-
         var lookup = new Dictionary<string, BezierSpline>();
 
         foreach (var sd in data.splines)
@@ -441,15 +423,8 @@ public class SaveLoadUI : MonoBehaviour
                     bs.points = new Vector3[vecCount];
                     for (int i = 0; i < vecCount; i++)
                     {
-                        float x = sd.points[i * 3 + 0];
-                        float y = sd.points[i * 3 + 1];
-                        float z = sd.points[i * 3 + 2];
-                        bs.points[i] = new Vector3(x, y, z);
+                        bs.points[i] = new Vector3(sd.points[i * 3], sd.points[i * 3 + 1], sd.points[i * 3 + 2]);
                     }
-                }
-                else
-                {
-                    Debug.LogWarning($"Spline '{sd.name}' has invalid points list (count {sd.points?.Count ?? 0}). Using prefab defaults.");
                 }
 
                 bs.s_life = sd.s_life;
@@ -461,26 +436,17 @@ public class SaveLoadUI : MonoBehaviour
                 bs.lerpColor1 = sd.lerpColor1;
                 bs.lerpColor2 = sd.lerpColor2;
                 bs.musicChannel = sd.musicChannel;
-
-
                 bs.activationThreshhold = sd.activationThreshhold;
                 bs.isActive = sd.isActive;
 
-                // set private guid via reflection (your existing approach)
-                typeof(BezierSpline).GetField("guid", BindingFlags.NonPublic | BindingFlags.Instance)
-                        .SetValue(bs, sd.id);
-
+                typeof(BezierSpline).GetField("guid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(bs, sd.id);
                 lookup[sd.id] = bs;
 
                 go.SetActive(true);
-
                 EventHub.Publish(new NewSplineCreated(bs, false));
             }
-            else
-            {
-                Debug.LogWarning("Instantiated prefab does not contain a BezierSpline component.");
-            }
         }
+
         foreach (var sd in data.splines)
         {
             if (!string.IsNullOrEmpty(sd.lerpSplineId) && lookup.TryGetValue(sd.lerpSplineId, out var target))
@@ -491,6 +457,17 @@ public class SaveLoadUI : MonoBehaviour
 
         EventHub.Publish(new ReloadLerpUI(true));
         EventHub.Publish(new ReloadParticles(true));
+    }
+
+    private void LoadSaveGroup(string filename)
+    {
+        var data = SaveSystem.LoadSaveFile(filename);
+        if (data == null)
+        {
+            Debug.LogError("Save file missing or invalid: " + filename);
+            return;
+        }
+        LoadSaveDataInMemory(data);
     }
 
     private void ClearSavedObjects()
