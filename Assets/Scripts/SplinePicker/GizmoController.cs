@@ -3,33 +3,43 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Controls the move gizmos and updates selected control points while dragging.
+/// Manages the spawning, visual scaling, and mathematical dragging logic for 3D manipulation gizmos
+/// (Move, Planar, and Rotate handles) used to edit spline control points.
 /// </summary>
 public class GizmoController : MonoBehaviour
 {
-    [SerializeField] private SplinePickerData SPD;
+    [Header("References")]
+    [SerializeField] private SplinePickerData SPD; // Central data container for the selection state
 
-    [Header("Gizmo Settings")]
-    public GameObject moveGizmoPrefab;
-    public GameObject planarGizmoPrefab;
-    public GameObject rotateGizmoPrefab;
+    [Header("Gizmo Prefabs")]
+    public GameObject moveGizmoPrefab;     // Standard 1D arrow handles
+    public GameObject planarGizmoPrefab;   // 2D plane handles (the squares between axes)
+    public GameObject rotateGizmoPrefab;   // rotation rings
+
+    [Header("Visual Settings")]
+    public float gizmoScale = 0.1f;                  // Base multiplier for how large gizmos appear
+    private float gizmoOffsetDistance = 0.15f;       // Distance to push translation gizmos out from the pivot
+    private float rotateGizmoOffsetDistance = 0.6f;  // Distance to push rotation rings out from the pivot
+
+    // Cached prefab scales so we can dynamically scale them up/down without losing their original proportions
     private Vector3 gizmoPrefabScale;
     private Vector3 planarGizmoPrefabScale;
     private Vector3 rotateGizmoPrefabScale;
-    private float rotateGizmoOffsetDistance = .6f;
-    private float gizmoOffsetDistance = .15f;
-    public float gizmoScale = .1f;
-    private GameObject[] gizmoList; //array of all gizmos
 
-    private int activeGizmoAxis = -1;
-    private Plane dragPlane;
-    private float distance;
-    private Vector3 initialOffset;
+    // We use a fixed 9-slot array corresponding exactly to the SplinePickerData.GizmoType enum (3 axes * 3 types (Move, Planar, Rotate))
+    private GameObject[] gizmoList;
 
-    // rotation variables state tracking
-    private Vector3 initialHitVector; 
-    private Dictionary<int, Vector3> initialPointPositions = new Dictionary<int, Vector3>();
+    [Header("Drag State")]
+    private int activeGizmoAxis = -1; // -1 means nothing is currently being dragged
+    private Plane dragPlane;          // The invisible mathematical plane we cast our mouse ray against
+    private float distanceToCamera;   // Used to keep gizmos the same visual size on screen regardless of zoom
+    private Vector3 initialOffset;    // Distance from the exact mouse click point to the gizmo's origin
 
+    // --- State Tracking to Prevent Jitter ---
+    private Vector3 initialHitVector; // Rotation: The exact directional vector from pivot to mouse when the drag started
+    private Dictionary<int, Vector3> initialPointPositions = new Dictionary<int, Vector3>(); // Caches starting positions of selected points (rotation)
+
+    #region Event Subscription
     void OnEnable()
     {
         EventHub.Subscribe<ShowMoveGizmosEvent>(OnShowMoveGizmos);
@@ -45,89 +55,112 @@ public class GizmoController : MonoBehaviour
         EventHub.Unsubscribe<GizmoDragEnded>(OnGizmoDragEnded);
         EventHub.Unsubscribe<ClearSelection>(OnClearSelection);
     }
+    #endregion
 
     void Start()
     {
+        // Cache original prefab scales so dynamic scaling doesn't distort them
         gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
         planarGizmoPrefabScale = planarGizmoPrefab.transform.localScale;
         rotateGizmoPrefabScale = rotateGizmoPrefab.transform.localScale;
 
-        gizmoList = new GameObject[9]; // Exactly 9 slots
+        // Initialize array to exact size of the GizmoType enum (9 handles total)
+        gizmoList = new GameObject[9];
     }
 
     void Update()
     {
+        // ---------------------------------------------------------------------
+        // PART 1: VISUAL GIZMO UPDATES (Runs every frame if something is selected)
+        // ---------------------------------------------------------------------
         if (SPD.lastHighlighted != null)
         {
-            distance = Vector3.Distance(Camera.main.transform.position, SPD.lastHighlighted.transform.position);
+            // Calculate distance to camera so we can scale gizmos up as you zoom out (keeps them selectable)
+            distanceToCamera = Vector3.Distance(Camera.main.transform.position, SPD.lastHighlighted.transform.position);
         }
 
-        if (gizmoList != null)
+        if (gizmoList != null && SPD.lastHighlighted != null)
         {
             foreach (var gizmo in gizmoList)
             {
-                if (gizmo != null && SPD.lastHighlighted != null)
+                if (gizmo == null) continue;
+
+                // Dynamically update position and scale of each gizmo based on camera distance
+                if (gizmo.name.Contains("MoveGizmoPrefab"))
                 {
-                    if (gizmo.name.Contains("MoveGizmoPrefab"))
-                    {
-                        gizmo.transform.localScale = distance * gizmoScale * gizmoPrefabScale;
-                        gizmo.transform.position = SPD.lastHighlighted.transform.position + distance * gizmoOffsetDistance * gizmo.transform.up;
-                    }
-                    else if (gizmo.name.Contains("PlanarGizmoPrefab"))
-                    {
-                        gizmo.transform.localScale = distance * gizmoScale * planarGizmoPrefabScale;
-                        gizmo.transform.position = SPD.lastHighlighted.transform.position + distance * gizmoOffsetDistance * (gizmo.transform.up + gizmo.transform.right * .5f);
-                    }
-                    else if (gizmo.name.Contains("RotateGizmoPrefab"))
-                    {
-                        gizmo.transform.localScale = distance * gizmoScale * rotateGizmoPrefabScale;
-                        gizmo.transform.position = SPD.lastHighlighted.transform.position + distance * rotateGizmoOffsetDistance * (gizmo.transform.up * .5f);
-                    }
+                    gizmo.transform.localScale = distanceToCamera * gizmoScale * gizmoPrefabScale;
+                    gizmo.transform.position = SPD.lastHighlighted.transform.position + distanceToCamera * gizmoOffsetDistance * gizmo.transform.up;
+                }
+                else if (gizmo.name.Contains("PlanarGizmoPrefab"))
+                {
+                    gizmo.transform.localScale = distanceToCamera * gizmoScale * planarGizmoPrefabScale;
+                    gizmo.transform.position = SPD.lastHighlighted.transform.position + distanceToCamera * gizmoOffsetDistance * (gizmo.transform.up + gizmo.transform.right * 0.5f);
+                }
+                else if (gizmo.name.Contains("RotateGizmoPrefab"))
+                {
+                    gizmo.transform.localScale = distanceToCamera * gizmoScale * rotateGizmoPrefabScale;
+                    gizmo.transform.position = SPD.lastHighlighted.transform.position + distanceToCamera * rotateGizmoOffsetDistance * (gizmo.transform.up * 0.5f);
                 }
             }
         }
 
+        // ---------------------------------------------------------------------
+        // PART 2: ACTIVE DRAGGING LOGIC (Runs only while a gizmo is clicked)
+        // ---------------------------------------------------------------------
         if (activeGizmoAxis != -1 && SPD.lastHighlighted != null)
         {
+            // Cast a ray from the mouse cursor into the 3D scene
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            SetDragPlane();
-            Vector3 pivot = SPD.lastHighlighted.transform.position;
-            SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis;
 
-            // --- TRANSLATION (Move & Planar) ---
+            // Re-evaluate the plane we are dragging against (helps if camera angle changes)
+            SetDragPlane();
+
+            Vector3 pivot = SPD.lastHighlighted.transform.position;
+            SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis; // Cast the integer to your Enum right away
+
+            // --- TRANSLATION (1D Move Arrows & 2D Planar Squares) ---
             if (activeGizmoAxis < (int)SplinePickerData.GizmoType.RotateX)
             {
+                // Find exactly where the mouse ray hits our mathematical drag plane
                 FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, pivot);
-                Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position;
+                Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position; // Store the pivot position before we start moving points
 
                 foreach (var sphereGroup in SPD.controlSphereGroup)
                 {
                     if (!sphereGroup.isSelected) continue;
 
                     var sphere = sphereGroup.sphereObject;
+
+                    // We use an incremental delta approach here. 
+                    // diff: distance from the pivot to this specific sphere
+                    // offset: distance the mouse has moved since the last frame
                     Vector3 diff = sphere.transform.position - lastHighlightedPos;
                     Vector3 offset = newControlPos - lastHighlightedPos - initialOffset;
+
                     sphere.transform.position = lastHighlightedPos + diff + offset;
 
+                    // Update underlying spline data directly by adding the world-space offset
                     var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
                     spline.points[sphereGroup.index] += offset;
                 }
             }
-            // --- ROTATION ---
+
+            // --- ROTATION (Rings) ---
             else
             {
                 if (dragPlane.Raycast(ray, out float enter))
                 {
+                    // Find where the mouse is now, and convert it to a normalized direction from the pivot
                     Vector3 currentHitPoint = ray.GetPoint(enter);
                     Vector3 currentVector = (currentHitPoint - pivot).normalized;
 
-                    // Figure out what axis we are rotating AROUND based on the visual rings
+                    // Determine which axis we are mathematically spinning around
                     Vector3 rotAxis = Vector3.zero;
-                    if (axis == SplinePickerData.GizmoType.RotateX) rotAxis = Vector3.forward; // Red (_XY Visual) rotates around Z
-                    else if (axis == SplinePickerData.GizmoType.RotateY) rotAxis = Vector3.right; // Green (_YZ Visual) rotates around X
-                    else if (axis == SplinePickerData.GizmoType.RotateZ) rotAxis = Vector3.up; // Blue (_ZX Visual) rotates around Y
+                    if (axis == SplinePickerData.GizmoType.RotateX) rotAxis = Vector3.forward;    // Red ring rotates around Z
+                    else if (axis == SplinePickerData.GizmoType.RotateY) rotAxis = Vector3.right; // Green ring rotates around X
+                    else if (axis == SplinePickerData.GizmoType.RotateZ) rotAxis = Vector3.up;    // Blue ring rotates around Y
 
-                    // Calculate the angle difference
+                    // Compare the current mouse direction to the initial mouse direction to find total angle moved
                     float angle = Vector3.SignedAngle(initialHitVector, currentVector, rotAxis);
                     Quaternion rotationDelta = Quaternion.AngleAxis(angle, rotAxis);
 
@@ -137,15 +170,20 @@ public class GizmoController : MonoBehaviour
 
                         var sphere = sphereGroup.sphereObject;
 
-                        // Get the starting position relative to the pivot, then rotate it
+                        // To rotate an object around a pivot: 
+                        // 1. Find its starting offset from the pivot.
+                        // 2. Multiply that offset by the rotation quaternion.
+                        // 3. Add the result back to the pivot position.
                         Vector3 initialPos = initialPointPositions[sphereGroup.index];
                         Vector3 dirFromPivot = initialPos - pivot;
                         Vector3 newPos = pivot + (rotationDelta * dirFromPivot);
 
                         sphere.transform.position = newPos;
 
+                        // Update underlying spline data.
+                        // FIX: Changed naive subtraction to InverseTransformPoint to support scaled/rotated parent objects.
                         var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                        Vector3 localPosition = newPos - spline.transform.position; // Convert to local position
+                        Vector3 localPosition = spline.transform.InverseTransformPoint(newPos);
                         spline.points[sphereGroup.index] = localPosition;
                     }
                 }
@@ -153,43 +191,49 @@ public class GizmoController : MonoBehaviour
         }
     }
 
+    #region Event Handlers
     void OnShowMoveGizmos(ShowMoveGizmosEvent e)
     {
         ShowMoveGizmos(e.position);
     }
 
     void OnGizmoDragStarted(GizmoDragStarted e)
-{
-    if (SPD.lastHighlighted == null) return;
-
-    activeGizmoAxis = SPD.activeGizmoAxis;
-    Vector3 pivot = SPD.lastHighlighted.transform.position;
-    initialOffset = e.position - pivot;
-
-    // Cache initial positions so points don't drift or double-transform while dragging
-    initialPointPositions.Clear();
-    foreach (var sphereGroup in SPD.controlSphereGroup)
     {
-        if (sphereGroup.isSelected)
+        if (SPD.lastHighlighted == null) return;
+
+        activeGizmoAxis = SPD.activeGizmoAxis;
+        Vector3 pivot = SPD.lastHighlighted.transform.position;
+
+        // Cache the exact offset of the mouse to prevent snapping when the user first clicks
+        initialOffset = e.position - pivot;
+
+        // Cache initial positions of all selected points. 
+        // Crucial for rotation math so points don't incrementally drift over time.
+        initialPointPositions.Clear();
+        foreach (var sphereGroup in SPD.controlSphereGroup)
         {
-            initialPointPositions[sphereGroup.index] = sphereGroup.sphereObject.transform.position;
+            if (sphereGroup.isSelected)
+            {
+                initialPointPositions[sphereGroup.index] = sphereGroup.sphereObject.transform.position;
+            }
+        }
+
+        // Setup for Rotation: Cache the starting direction vector of the mouse
+        if (activeGizmoAxis >= (int)SplinePickerData.GizmoType.RotateX)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            SetDragPlane();
+
+            if (dragPlane.Raycast(ray, out float enter))
+            {
+                initialHitVector = (ray.GetPoint(enter) - pivot).normalized;
+            }
         }
     }
-
-    // If we clicked a Rotate Gizmo, calculate the starting angle vector
-    if (activeGizmoAxis >= (int)SplinePickerData.GizmoType.RotateX)
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-        SetDragPlane(); // Ensure the plane is set to the correct visual rotation ring
-        if (dragPlane.Raycast(ray, out float enter))
-        {
-            initialHitVector = (ray.GetPoint(enter) - pivot).normalized;
-        }
-    }
-}
 
     void OnGizmoDragEnded(GizmoDragEnded e)
     {
+        // Reset state
         activeGizmoAxis = -1;
         SPD.activeGizmoAxis = -1;
         initialOffset = Vector3.zero;
@@ -198,45 +242,47 @@ public class GizmoController : MonoBehaviour
 
     void OnClearSelection(ClearSelection e)
     {
+        // Wipe everything
         DestroyGizmos();
         activeGizmoAxis = -1;
         SPD.activeGizmoAxis = -1;
         initialOffset = Vector3.zero;
         initialPointPositions.Clear();
     }
+    #endregion
 
+    #region Helper Methods
+    /// <summary>
+    /// Instantiates all 9 gizmos (3 axes * 3 types) around the target position and colors them.
+    /// </summary>
     void ShowMoveGizmos(Vector3 position)
     {
         DestroyGizmos();
-        gizmoList = new GameObject[9]; // Exactly 9 slots
+        gizmoList = new GameObject[9];
 
         for (int i = 0; i < 3; i++)
         {
-            GameObject moveGizmo = Instantiate(moveGizmoPrefab, position, Quaternion.identity);
-            moveGizmo.transform.SetParent(transform, false);
+            // 1. Spawn Prefabs
+            GameObject moveGizmo = Instantiate(moveGizmoPrefab, position, Quaternion.identity, transform);
+            GameObject planarGizmo = Instantiate(planarGizmoPrefab, position, Quaternion.identity, transform);
+            GameObject rotateGizmo = Instantiate(rotateGizmoPrefab, position, Quaternion.identity, transform);
+
+            // 2. Set Rendering Layers
             moveGizmo.layer = LayerMask.NameToLayer("PP Layer");
-            if (moveGizmo.TryGetComponent<Renderer>(out var rend))
-            {
-                rend.material.EnableKeyword("_EMISSION");
-            }
-
-            GameObject planarGizmo = Instantiate(planarGizmoPrefab, position, Quaternion.identity);
-            planarGizmo.transform.SetParent(transform, false);
             planarGizmo.layer = LayerMask.NameToLayer("PP Layer");
-            if (planarGizmo.TryGetComponent<Renderer>(out var planarRend))
-            {
-                planarRend.material.EnableKeyword("_EMISSION");
-            }
-
-            GameObject rotateGizmo = Instantiate(rotateGizmoPrefab, position, Quaternion.identity);
-            rotateGizmo.transform.SetParent(transform, false);
             rotateGizmo.layer = LayerMask.NameToLayer("PP Layer");
-            if (rotateGizmo.TryGetComponent<Renderer>(out var rotateRend))
-            {
-                rotateRend.material.EnableKeyword("_EMISSION");
-            }
 
+            // 3. Enable Material Emission
+            moveGizmo.TryGetComponent<Renderer>(out var rend);
+            planarGizmo.TryGetComponent<Renderer>(out var planarRend);
+            rotateGizmo.TryGetComponent<Renderer>(out var rotateRend);
 
+            if (rend) rend.material.EnableKeyword("_EMISSION");
+            if (planarRend) planarRend.material.EnableKeyword("_EMISSION");
+            if (rotateRend) rotateRend.material.EnableKeyword("_EMISSION");
+
+            // 4. Orient and Color based on Axis (i)
+            // X-Axis (RED)
             if (i == 0)
             {
                 moveGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
@@ -259,6 +305,7 @@ public class GizmoController : MonoBehaviour
                 gizmoList[(int)SplinePickerData.GizmoType.PlanarX] = planarGizmo;
                 gizmoList[(int)SplinePickerData.GizmoType.RotateX] = rotateGizmo;
             }
+            // Y-Axis (GREEN)
             else if (i == 1)
             {
                 moveGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
@@ -281,6 +328,7 @@ public class GizmoController : MonoBehaviour
                 gizmoList[(int)SplinePickerData.GizmoType.PlanarY] = planarGizmo;
                 gizmoList[(int)SplinePickerData.GizmoType.RotateY] = rotateGizmo;
             }
+            // Z-Axis (BLUE)
             else if (i == 2)
             {
                 moveGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
@@ -305,10 +353,16 @@ public class GizmoController : MonoBehaviour
             }
         }
     }
-//z-planar mover is currently x-planar mover??
+
+    /// <summary>
+    /// Calculates the exact 3D point the user is trying to drag to, constraining 
+    /// axes based on which gizmo (move arrow or planar square) is being dragged.
+    /// </summary>
     void FindGizmoAxisHitPoint(out Vector3 intersection, Ray ray, Plane dragPlane, int gizmoAxisDir, Vector3 controlPointPosition)
 {
-    intersection = Vector3.zero;
+    // FIX: Default to the current position. Prevents a teleport-to-origin bug if the raycast fails.
+    intersection = controlPointPosition; 
+    
     if (dragPlane.Raycast(ray, out float enter))
     {
         intersection = ray.GetPoint(enter);
@@ -316,65 +370,73 @@ public class GizmoController : MonoBehaviour
 
     SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)gizmoAxisDir;
 
-    // --- LINEAR MOVES ---
+    // --- 1D LINEAR MOVES (Lock 2 of the 3 axes to the original point) ---
     if (axis == SplinePickerData.GizmoType.MoveX) { intersection.y = controlPointPosition.y; intersection.z = controlPointPosition.z; }
     else if (axis == SplinePickerData.GizmoType.MoveY) { intersection.x = controlPointPosition.x; intersection.z = controlPointPosition.z; }
     else if (axis == SplinePickerData.GizmoType.MoveZ) { intersection.x = controlPointPosition.x; intersection.y = controlPointPosition.y; }
-    
-    // --- PLANAR MOVES ---
-    // Red Planar (Visually XY Plane) -> Lock Z
-    else if (axis == SplinePickerData.GizmoType.PlanarX) 
+
+    // --- 2D PLANAR MOVES (Lock 1 of the 3 axes to the original point) ---
+    else if (axis == SplinePickerData.GizmoType.PlanarX)
     {
         intersection.z = controlPointPosition.z;
     }
-    // Green Planar (Visually YZ Plane) -> Lock X
-    else if (axis == SplinePickerData.GizmoType.PlanarY) 
+    else if (axis == SplinePickerData.GizmoType.PlanarY)
     {
         intersection.x = controlPointPosition.x;
     }
-    // Blue Planar (Visually ZX Plane) -> Lock Y
-    else if (axis == SplinePickerData.GizmoType.PlanarZ) 
+    else if (axis == SplinePickerData.GizmoType.PlanarZ)
     {
         intersection.y = controlPointPosition.y;
     }
 }
 
+    /// <summary>
+    /// Determines the mathematical plane to raycast against. 
+    /// 1D axes use a dynamic plane that rotates to face the camera to prevent raycast skipping at shallow angles.
+    /// </summary>
     void SetDragPlane()
-{
-    Vector3 pivot = SPD.lastHighlighted.transform.position;
-    SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis;
-
-    switch (axis)
     {
-        // --- X Axes (Red) ---
-        case SplinePickerData.GizmoType.MoveX:
-            dragPlane = new Plane(Vector3.up, pivot); // XZ plane to catch X moves
-            break;
-        case SplinePickerData.GizmoType.PlanarX:
-        case SplinePickerData.GizmoType.RotateX:
-            dragPlane = new Plane(Vector3.forward, pivot); // Matches your _XY visual
-            break;
+        Vector3 pivot = SPD.lastHighlighted.transform.position;
+        SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis;
+        Vector3 camForward = Camera.main.transform.forward;
 
-        // --- Y Axes (Green) ---
-        case SplinePickerData.GizmoType.MoveY:
-            dragPlane = new Plane(Vector3.right, pivot); // YZ plane to catch Y moves
-            break;
-        case SplinePickerData.GizmoType.PlanarY:
-        case SplinePickerData.GizmoType.RotateY:
-            dragPlane = new Plane(Vector3.right, pivot); // Matches your _YZ visual
-            break;
+        switch (axis)
+        {
+            // --- 1D Dynamic Axes ---
+            case SplinePickerData.GizmoType.MoveX:
+                Vector3 crossX = Vector3.Cross(Vector3.right, camForward);
+                dragPlane = new Plane(Vector3.Cross(crossX, Vector3.right).normalized, pivot);
+                break;
+            case SplinePickerData.GizmoType.MoveY:
+                Vector3 crossY = Vector3.Cross(Vector3.up, camForward);
+                dragPlane = new Plane(Vector3.Cross(crossY, Vector3.up).normalized, pivot);
+                break;
+            case SplinePickerData.GizmoType.MoveZ:
+                Vector3 crossZ = Vector3.Cross(Vector3.forward, camForward);
+                dragPlane = new Plane(Vector3.Cross(crossZ, Vector3.forward).normalized, pivot);
+                break;
 
-        // --- Z Axes (Blue) ---
-        case SplinePickerData.GizmoType.MoveZ:
-            dragPlane = new Plane(Vector3.up, pivot); // XZ plane to catch Z moves
-            break;
-        case SplinePickerData.GizmoType.PlanarZ:
-        case SplinePickerData.GizmoType.RotateZ:
-            dragPlane = new Plane(Vector3.up, pivot); // Matches your _ZX visual
-            break;
+            // --- 2D Planar / Rotation Axes (Remain Fixed) ---
+            case SplinePickerData.GizmoType.PlanarX:
+            case SplinePickerData.GizmoType.RotateX:
+                dragPlane = new Plane(Vector3.forward, pivot); // XY plane
+                break;
+
+            case SplinePickerData.GizmoType.PlanarY:
+            case SplinePickerData.GizmoType.RotateY:
+                dragPlane = new Plane(Vector3.right, pivot); // YZ plane
+                break;
+
+            case SplinePickerData.GizmoType.PlanarZ:
+            case SplinePickerData.GizmoType.RotateZ:
+                dragPlane = new Plane(Vector3.up, pivot); // XZ plane
+                break;
+        }
     }
-}
 
+    /// <summary>
+    /// Helper to find the enum index based on which physical GameObject was clicked.
+    /// </summary>
     public bool TryGetGizmoAxisIndex(GameObject candidate, out int axisIndex)
     {
         for (int i = 0; i < gizmoList.Length; i++)
@@ -390,15 +452,19 @@ public class GizmoController : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Cleans up all instantiated gizmo objects.
+    /// </summary>
     void DestroyGizmos()
     {
         if (gizmoList != null)
         {
             foreach (var gizmo in gizmoList)
             {
-            Destroy(gizmo);
+                if (gizmo != null) Destroy(gizmo);
             }
         }
         gizmoList = null;
     }
 }
+#endregion
