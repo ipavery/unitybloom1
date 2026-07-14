@@ -38,7 +38,6 @@ public class CurveEditorUI : MonoBehaviour
 
     [Header("Inspector Setup")]
     public List<InspectorField> fields = new List<InspectorField>();
-
     private BezierSpline selectedObject;
     private Renderer selectedRenderer;
     private Color originalColor;
@@ -83,6 +82,14 @@ public class CurveEditorUI : MonoBehaviour
         activateButton.onClick.AddListener(ActivateButton);
     }
 
+    void Update()
+    {
+        if(selectedObject == null && inspectorPanel.activeSelf)
+        {
+            Debug.Log("selectedObject is null in CurveEditorUI Update and the panel is open");
+        }
+    }
+
     void ColorButton1()
     {
         ColorPickerManager.Instance.Show(selectedObject.lerpColor1, OnColorPicked, inspectorPanel);
@@ -109,7 +116,6 @@ public class CurveEditorUI : MonoBehaviour
 
     void ActivateButton()
     {
-
         selectedObject.isActive = !selectedObject.isActive; // flips between true and false
         ReloadParticles();
     }
@@ -184,53 +190,53 @@ public class CurveEditorUI : MonoBehaviour
             // Example fields: position X/Y/Z
 
             var fields = new List<InspectorField>
-        {
-            new InspectorField
             {
-                fieldName = "Symmetry",
-                getter = () => selectedObject.splineSymmetry,
-                setter = v => { var p = selectedObject.splineSymmetry; p = (int)v; selectedObject.splineSymmetry = p; },
-                minMax = new(1,70)
-            },
-            new InspectorField
-            {
-                fieldName = "Quantity",
-                getter = () => selectedObject.frequency,
-                setter = v => { var p = selectedObject.frequency; p = (int)v; selectedObject.frequency = p; },
-                minMax = new(2,100)
-            },
-            new InspectorField
-            {
-                fieldName = "Lifetime",
-                getter = () => selectedObject.s_life,
-                setter = v => { var p = selectedObject.s_life; p = v; selectedObject.s_life = p; },
-                minMax = new(.2f,4),
-                wholeNumbers = false
-            },
-            new InspectorField
-            {
-                fieldName = "Offset",
-                getter = () => selectedObject.lifetimeOffset,
-                setter = v => { var p = selectedObject.lifetimeOffset; p = v; selectedObject.lifetimeOffset = p; },
-                minMax = new(0,.5f),
-                wholeNumbers = false
-            },
-            new InspectorField
-            {
-                fieldName = "Repeats",
-                getter = () => selectedObject.lerpTimes,
-                setter = v => { var p = selectedObject.lerpTimes; p = (int)v; selectedObject.lerpTimes = p; },
-                minMax = new(1,30)
-            },
-            new InspectorField
-            {
-                fieldName = "Repeat Offset",
-                getter = () => selectedObject.lerpLifetimeOffset,
-                setter = v => { var p = selectedObject.lerpLifetimeOffset; p = v; selectedObject.lerpLifetimeOffset = p; },
-                minMax = new(0,.5f),
-                wholeNumbers = false
-            }
-        };
+                new InspectorField
+                {
+                    fieldName = "Symmetry",
+                    getter = () => selectedObject.splineSymmetry,
+                    setter = v => { var p = selectedObject.splineSymmetry; p = (int)v; selectedObject.splineSymmetry = p; },
+                    minMax = new(1,70)
+                },
+                new InspectorField
+                {
+                    fieldName = "Quantity",
+                    getter = () => selectedObject.frequency,
+                    setter = v => { var p = selectedObject.frequency; p = (int)v; selectedObject.frequency = p; },
+                    minMax = new(2,100)
+                },
+                new InspectorField
+                {
+                    fieldName = "Lifetime",
+                    getter = () => selectedObject.s_life,
+                    setter = v => { var p = selectedObject.s_life; p = v; selectedObject.s_life = p; },
+                    minMax = new(.2f,4),
+                    wholeNumbers = false
+                },
+                new InspectorField
+                {
+                    fieldName = "Offset",
+                    getter = () => selectedObject.lifetimeOffset,
+                    setter = v => { var p = selectedObject.lifetimeOffset; p = v; selectedObject.lifetimeOffset = p; },
+                    minMax = new(0,.5f),
+                    wholeNumbers = false
+                },
+                new InspectorField
+                {
+                    fieldName = "Repeats",
+                    getter = () => selectedObject.lerpTimes,
+                    setter = v => { var p = selectedObject.lerpTimes; p = (int)v; selectedObject.lerpTimes = p; },
+                    minMax = new(1,30)
+                },
+                new InspectorField
+                {
+                    fieldName = "Repeat Offset",
+                    getter = () => selectedObject.lerpLifetimeOffset,
+                    setter = v => { var p = selectedObject.lerpLifetimeOffset; p = v; selectedObject.lerpLifetimeOffset = p; },
+                    minMax = new(0,.5f),
+                    wholeNumbers = false
+                }
+            };
             if (particleManager.spawnMode == ParticleSpawnMode.Music)
             {
                 fields.Add(new InspectorField

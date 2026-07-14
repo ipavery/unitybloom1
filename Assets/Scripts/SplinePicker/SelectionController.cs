@@ -23,7 +23,7 @@ public class SelectionController : MonoBehaviour
     private bool raycastHit = false;
     private GizmoController gizmoController;
 
-    private BezierSpline selectedSpline = null; // Reference to the spline that is currently selected
+    public BezierSpline selectedSpline { get; private set; } = null; // Reference to the spline that is currently selected
 
     void Awake()
     {

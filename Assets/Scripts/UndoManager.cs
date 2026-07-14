@@ -5,10 +5,10 @@ using UnityEngine.InputSystem;
 public class UndoManager : MonoBehaviour
 {
     public static UndoManager Instance { get; private set; }
-    
+
     public SaveLoadUI saveLoadUI;
-    public SplinePickerData SPD; // Assign this in the Inspector!
-    
+    public SplinePickerData SPD;
+
     private Stack<string> undoStack = new Stack<string>();
     private Stack<string> redoStack = new Stack<string>();
 
@@ -20,7 +20,6 @@ public class UndoManager : MonoBehaviour
 
     private void Update()
     {
-        // Simple InputSystem check for Ctrl+Z and Ctrl+Y
         if (Keyboard.current.ctrlKey.isPressed)
         {
             if (Keyboard.current.zKey.wasPressedThisFrame) Undo();
@@ -49,100 +48,149 @@ public class UndoManager : MonoBehaviour
         RestoreState(redoStack.Pop());
     }
 
+    // Call this from SaveLoadUI when loading a new file or creating a blank one
+    public void ClearHistory()
+    {
+        undoStack.Clear();
+        redoStack.Clear();
+    }
+
     private void RestoreState(string json)
     {
         // ==========================================
-        // STEP 1: CAPTURE SELECTION BEFORE WIPE
+        // STEP 1: CAPTURE EXACT SELECTION STATE
         // ==========================================
         string activeSplineGuid = null;
         List<int> selectedIndices = new List<int>();
+        int lastHighlightedIndex = -1;
 
-        if (SPD != null) 
+        // A. Capture Spline UI Selection
+        SelectionController selectionController = FindFirstObjectByType<SelectionController>();
+        if (selectionController != null && selectionController.selectedSpline != null)
         {
-            foreach (var group in SPD.controlSphereGroup) 
+            activeSplineGuid = GetSplineGuid(selectionController.selectedSpline);
+        }
+
+        // B. Capture Point Selection & Last Highlighted
+        if (SPD != null)
+        {
+            foreach (var group in SPD.controlSphereGroup)
             {
-                if (group.isSelected) 
+                if (group.isSelected)
                 {
-                    var spline = group.sphereObject.GetComponentInParent<BezierSpline>();
-                    if (spline != null) 
+                    if (activeSplineGuid == null)
                     {
-                        activeSplineGuid = GetSplineGuid(spline);
-                        selectedIndices.Add(group.index);
+                        var spline = group.sphereObject.GetComponentInParent<BezierSpline>();
+                        if (spline != null) activeSplineGuid = GetSplineGuid(spline);
+                    }
+
+                    selectedIndices.Add(group.index);
+
+                    if (SPD.lastHighlighted == group.sphereObject)
+                    {
+                        lastHighlightedIndex = group.index;
                     }
                 }
             }
-        } else
+        }
+
+        // ---> ADD THIS FIX HERE: Cache the old splines so we can ignore them later
+        HashSet<BezierSpline> oldSplines = new HashSet<BezierSpline>();
+        if (saveLoadUI != null && saveLoadUI.savableRoot != null)
         {
-            Debug.LogError("SplinePickerData (SPD) is not assigned in UndoManager. Please assign it in the Inspector.");
+            foreach (var bs in saveLoadUI.savableRoot.GetComponentsInChildren<BezierSpline>(true))
+            {
+                oldSplines.Add(bs);
+            }
         }
 
         // ==========================================
         // STEP 2: CLEAR AND LOAD SNAPSHOT
         // ==========================================
-        EventHub.Publish(new ClearSelection()); 
+        EventHub.Publish(new ClearSelection());
         SaveData data = JsonUtility.FromJson<SaveData>(json);
         saveLoadUI.LoadSaveDataInMemory(data);
-        
+
         // ==========================================
-        // STEP 3: RESTORE SELECTION TO NEW OBJECTS
+        // STEP 3: RESTORE SELECTION EXACTLY
         // ==========================================
-        if (activeSplineGuid != null && SPD != null) 
+        if (activeSplineGuid != null)
         {
             BezierSpline targetSpline = null;
-            
-            // Find the newly spawned spline with the matching GUID
-            foreach (var spline in FindObjectsByType<BezierSpline>(FindObjectsSortMode.None)) 
+
+            if (saveLoadUI != null && saveLoadUI.savableRoot != null)
             {
-                if (GetSplineGuid(spline) == activeSplineGuid) 
+                BezierSpline[] allSplines = saveLoadUI.savableRoot.GetComponentsInChildren<BezierSpline>(true);
+                foreach (var spline in allSplines)
                 {
-                    targetSpline = spline;
-                    break;
+                    // ---> ADD THIS FIX HERE: Skip the old splines waiting to be destroyed
+                    if (oldSplines.Contains(spline)) continue;
+
+                    if (GetSplineGuid(spline) == activeSplineGuid)
+                    {
+                        targetSpline = spline;
+                        break;
+                    }
                 }
             }
 
-            // If the spline still exists in this timeline, re-select it
-            if (targetSpline != null) 
+            if (targetSpline != null)
             {
-                // Re-open the UI Inspector (CurveEditorUI)
-                EventHub.Publish(new SplineSelectionChange(targetSpline, true));
+                GameObject exactLastHighlighted = null;
+                GameObject fallbackHighlighted = null;
 
-                GameObject firstHighlighted = null;
-
-                // Re-select the specific control points for the gizmos
-                foreach (var group in SPD.controlSphereGroup) 
+                if (SPD != null)
                 {
-                    var spline = group.sphereObject.GetComponentInParent<BezierSpline>();
-                    if (spline == targetSpline && selectedIndices.Contains(group.index)) 
+                    foreach (var group in SPD.controlSphereGroup)
                     {
-                        group.isSelected = true;
-                        if (firstHighlighted == null) firstHighlighted = group.sphereObject;
-                        
-                        // Re-apply visual highlight to the sphere // IDEA make this into a method in controlpointcontroller so that it can be reused easily
-                        if (group.sphereObject.TryGetComponent<Renderer>(out var rend)) 
+                        var spline = group.sphereObject.GetComponentInParent<BezierSpline>();
+
+                        if (spline != null && GetSplineGuid(spline) == activeSplineGuid && selectedIndices.Contains(group.index))
                         {
-                            rend.material.color = SPD.highlightColor;
-                            rend.material.SetColor("_EmissionColor", SPD.highlightColor * SPD.gizmoEmissionIntensity);
+                            group.isSelected = true;
+                            if (fallbackHighlighted == null) fallbackHighlighted = group.sphereObject;
+
+                            if (group.index == lastHighlightedIndex) exactLastHighlighted = group.sphereObject;
+
+                            if (group.sphereObject.TryGetComponent<Renderer>(out var rend))
+                            {
+                                rend.material.color = SPD.highlightColor;
+                                rend.material.SetColor("_EmissionColor", SPD.highlightColor * SPD.gizmoEmissionIntensity);
+                            }
                         }
                     }
                 }
 
-                // Re-enable Gizmos on the highlighted point
-                if (firstHighlighted != null) 
+                // Restore UI Inspector connection
+                // This instantly updates all the sliders to reflect the UNDONE values!
+                EventHub.Publish(new SplineSelectionChange(targetSpline, true));
+
+                // Restore Gizmo to the exact same point
+                GameObject targetGizmoAnchor = exactLastHighlighted != null ? exactLastHighlighted : fallbackHighlighted;
+                if (targetGizmoAnchor != null)
                 {
-                    SPD.lastHighlighted = firstHighlighted;
-                    EventHub.Publish(new ShowMoveGizmosEvent(firstHighlighted.transform.position));
+                    SPD.lastHighlighted = targetGizmoAnchor;
+                    EventHub.Publish(new ShowMoveGizmosEvent(targetGizmoAnchor.transform.position));
                 }
+            }
+            else
+            {
+                Debug.LogWarning("UndoManager: Could not find target spline to reconnect UI. This shouldn't happen anymore!");
             }
         }
     }
 
-    /// <summary>
-    /// Helper method to read the private 'guid' field from a BezierSpline using Reflection.
-    /// This allows us to match the destroyed spline to the newly created one.
-    /// </summary>
     private string GetSplineGuid(BezierSpline spline)
     {
+        if (spline == null) return null;
+
+        // Robust fallback: Check for both the private field and public property
         var field = typeof(BezierSpline).GetField("guid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        return field != null ? (string)field.GetValue(spline) : null;
+        if (field != null) return (string)field.GetValue(spline);
+
+        var prop = typeof(BezierSpline).GetProperty("Guid", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+        if (prop != null) return (string)prop.GetValue(spline);
+
+        return null;
     }
 }

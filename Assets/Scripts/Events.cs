@@ -67,6 +67,9 @@ public struct ReloadParticles
     }
 }
 
+/// <summary>
+/// Communicate with the CurveEditorUI.cs script to update the inspector panel when a spline is selected or deselected.
+/// </summary>
 public struct SplineSelectionChange
 {
     public BezierSpline spline;

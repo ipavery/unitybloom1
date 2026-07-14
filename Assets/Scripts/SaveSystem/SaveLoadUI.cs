@@ -394,7 +394,8 @@ public class SaveLoadUI : MonoBehaviour
 
     // --- selection / loading ---
     public void OnSaveSelected(string filename)
-    {
+    {   
+        UndoManager.Instance.ClearHistory(); // clear undo history so that you don't load different saves
         activeFilename = filename;
         LoadSaveGroup(filename);
         if (saveWindowPanel) saveWindowPanel.SetActive(false);
@@ -643,6 +644,8 @@ public class SaveLoadUI : MonoBehaviour
                 Debug.LogWarning("[SaveLoadUI] Failed to save snapshot of current scene: " + ex.Message);
             }
         }
+
+        UndoManager.Instance.ClearHistory(); // clear undo history so that you don't load different saves
 
         // Clear the scene
         ClearSavedObjects();
