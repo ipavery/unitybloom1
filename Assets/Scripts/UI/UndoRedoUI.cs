@@ -17,13 +17,13 @@ public class UndoRedoUI : MonoBehaviour
 
     void UndoButton()
     {
-        Debug.Log("Undo button clicked");
+        // Debug.Log("Undo button clicked");
         UndoManager.Instance.Undo();
     }
 
     void RedoButton()
     {
-        Debug.Log("Redo button clicked");
+        // Debug.Log("Redo button clicked");
         UndoManager.Instance.Redo();
     }
 }

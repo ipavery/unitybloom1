@@ -36,14 +36,22 @@ public class UndoManager : MonoBehaviour
 
     public void Undo()
     {
-        if (undoStack.Count == 0) return;
+        if (undoStack.Count == 0)
+        {
+            Debug.LogWarning("UndoManager: Nothing to undo");
+            return;
+        }
         redoStack.Push(JsonUtility.ToJson(saveLoadUI.BuildSaveDataFromRoot()));
         RestoreState(undoStack.Pop());
     }
 
     public void Redo()
     {
-        if (redoStack.Count == 0) return;
+        if (redoStack.Count == 0)
+        {
+            Debug.LogWarning("UndoManager: Nothing to redo");
+            return;
+        }
         undoStack.Push(JsonUtility.ToJson(saveLoadUI.BuildSaveDataFromRoot()));
         RestoreState(redoStack.Pop());
     }

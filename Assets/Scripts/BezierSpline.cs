@@ -21,6 +21,7 @@ public class BezierSpline : MonoBehaviour
     [SerializeField, HideInInspector]
     private string guid;
     public string Guid => guid; // public read-only accessor
+    
     private void Awake()
     {
         // If GUID is missing, generate a new one
@@ -29,7 +30,6 @@ public class BezierSpline : MonoBehaviour
     }
 
     public GameObject splinePrefab;
-
     public BezierSpline lerpSpline;
 
     public int CurveCount
@@ -52,6 +52,47 @@ public class BezierSpline : MonoBehaviour
         lerpColor2 = other.lerpColor2;
         isActive = other.isActive;
     }
+
+    // --- CONTINUITY METHODS ---
+
+    public void SetControlPoint(int index, Vector3 point)
+    {
+        if (index % 3 == 0) // It's a Knot (Anchor Point)
+        {
+            Vector3 delta = point - points[index];
+            if (index > 0) points[index - 1] += delta;
+            if (index + 1 < points.Length) points[index + 1] += delta;
+            points[index] = point;
+        }
+        else // It's a Tangent (Control Point)
+        {
+            points[index] = point;
+            EnforceMirroredTangent(index);
+        }
+    }
+
+    private void EnforceMirroredTangent(int index)
+    {
+        // Determine the knot this tangent belongs to
+        int knotIndex = (index % 3 == 1) ? index - 1 : index + 1;
+        int oppositeTangentIndex = (index % 3 == 1) ? index - 2 : index + 2;
+
+        if (oppositeTangentIndex >= 0 && oppositeTangentIndex < points.Length)
+        {
+            Vector3 knot = points[knotIndex];
+            Vector3 currentTangent = points[index];
+            
+            // Mathematical mirror: Knot + (Knot - Tangent)
+            points[oppositeTangentIndex] = knot + (knot - currentTangent);
+        }
+    }
+
+    public void ResetWithPoints(Vector3[] newPoints)
+    {
+        points = newPoints;
+    }
+
+    // --- ORIGINAL METHODS ---
 
     public Vector3 GetPoint(float t)
     {
@@ -77,7 +118,6 @@ public class BezierSpline : MonoBehaviour
         {
             return transform.TransformPoint(Vector3.zero);
         }
-
     }
 
     public Vector3 GetLerpPoint(float t, float l)

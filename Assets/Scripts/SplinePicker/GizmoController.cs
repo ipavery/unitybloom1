@@ -140,12 +140,15 @@ public class GizmoController : MonoBehaviour
                     Vector3 diff = sphere.transform.position - lastHighlightedPos;
                     Vector3 offset = newControlPos - lastHighlightedPos - initialOffset;
 
-                    sphere.transform.position = lastHighlightedPos + diff + offset;
+                    // sphere.transform.position = lastHighlightedPos + diff + offset;
 
                     // Update underlying spline data directly by adding the world-space offset
                     var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                    spline.points[sphereGroup.index] += offset;
+                    // spline.points[sphereGroup.index] += offset;
+                    spline.SetControlPoint(sphereGroup.index, spline.points[sphereGroup.index] + offset);
                 }
+                
+                SyncSpherePositions(); // After all points have been mathematically updated, loop through and snap all visual spheres to their new correct positions (important for mirrored tangents)
             }
 
             // --- ROTATION (Rings) ---
@@ -181,14 +184,16 @@ public class GizmoController : MonoBehaviour
                         Vector3 dirFromPivot = initialPos - pivot;
                         Vector3 newPos = pivot + (rotationDelta * dirFromPivot);
 
-                        sphere.transform.position = newPos;
+                        // sphere.transform.position = newPos;
 
                         // Update underlying spline data.
                         // FIX: Changed naive subtraction to InverseTransformPoint to support scaled/rotated parent objects.
                         var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
                         Vector3 localPosition = spline.transform.InverseTransformPoint(newPos);
-                        spline.points[sphereGroup.index] = localPosition;
+                        spline.SetControlPoint(sphereGroup.index, localPosition);
                     }
+
+                    SyncSpherePositions();
                 }
             }
         }
@@ -470,6 +475,27 @@ public class GizmoController : MonoBehaviour
             }
         }
         gizmoList = null;
+    }
+
+    /// <summary>
+    /// Forces all control point spheres to visually align with their mathematical coordinates in the spline array.
+    /// This is required because moving one tangent mathematically mirrors the opposite tangent, 
+    /// and we need the unselected opposite sphere to physically update its position.
+    /// </summary>
+    void SyncSpherePositions()
+    {
+        foreach (var sphereGroup in SPD.controlSphereGroup)
+        {
+            if (sphereGroup.sphereObject == null) continue;
+            
+            var spline = sphereGroup.sphereObject.transform.parent.parent.GetComponent<BezierSpline>();
+            if (spline != null)
+            {
+                // Retrieve the updated local coordinate from the array, convert to World Space, and snap the visual sphere
+                Vector3 correctWorldPos = spline.transform.TransformPoint(spline.points[sphereGroup.index]);
+                sphereGroup.sphereObject.transform.position = correctWorldPos;
+            }
+        }
     }
 }
 #endregion
