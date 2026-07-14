@@ -149,6 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   saveLoadUI: {fileID: 1974333482}
+  SPD: {fileID: 11400000, guid: fb0ef59bfac3537419a2a4fec1993ca9, type: 2}
 --- !u!4 &632346
 Transform:
   m_ObjectHideFlags: 0
@@ -5924,7 +5925,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 479538058}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0.24134849
+  m_Size: 0
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7268,6 +7269,7 @@ GameObject:
   - component: {fileID: 424850237}
   - component: {fileID: 424850239}
   - component: {fileID: 424850238}
+  - component: {fileID: 424850240}
   m_Layer: 5
   m_Name: UndoRedoButtons
   m_TagString: Untagged
@@ -7334,6 +7336,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 424850236}
   m_CullTransparentMesh: 1
+--- !u!114 &424850240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 424850236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7735f2e97cd30f94f98187ac62c5a391, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  undoButton: {fileID: 1341221315}
+  redoButton: {fileID: 1166733806}
 --- !u!1 &433620539
 GameObject:
   m_ObjectHideFlags: 0
@@ -8037,12 +8053,54 @@ MonoBehaviour:
   lineWidth: 0.04
   controlPointSpherePrefab: {fileID: 5226196431980889662, guid: 844f90834966a984794ced4f7c01dee7, type: 3}
   particleManager: {fileID: 527990700}
+  splineList: []
   moveGizmoPrefab: {fileID: 8471987075741126960, guid: 917c8a2c60019844ba11f8730a948f7a, type: 3}
   planarGizmoPrefab: {fileID: 5661324351575738629, guid: a2cb2c9e19bf5e843acfdfdc350a1c2d, type: 3}
+  gizmoPrefabScale: {x: 0, y: 0, z: 0}
+  planarGizmoPrefabScale: {x: 0, y: 0, z: 0}
+  gizmoOffsetDistance: 0.15
   gizmoScale: 0.1
-  highlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  highlightColor:
+    r: 1
+    g: 0.92156863
+    b: 0.015686275
+    a: 1
   gizmoEmissionIntensity: 0.6
-  unselectedOriginalColor: {r: 1, g: 1, b: 1, a: 0.40784314}
+  gizmoList: []
+  controlSphereGroup: []
+  activeGizmoAxis: -1
+  dragStartPoint: {x: 0, y: 0, z: 0}
+  distance: 0
+  originalColors: []
+  lastHighlighted: {fileID: 0}
+  unselectedOriginalColor:
+    r: 1
+    g: 1
+    b: 1
+    a: 0.40784314
+  mousePosition:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 4227a7ae-550e-439a-8930-3a2e48e590aa
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  select:
+    m_Name: 
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 68377383-4186-4a5f-8a19-6de51c219dbd
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+  selectionStart: {x: 0, y: 0}
+  selectionEnd: {x: 0, y: 0}
+  isSelecting: 0
+  selectedSpline: {fileID: 0}
+  isInputBlocked: 0
 --- !u!1 &538849273
 GameObject:
   m_ObjectHideFlags: 0

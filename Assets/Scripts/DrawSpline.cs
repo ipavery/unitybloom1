@@ -83,6 +83,7 @@ public class DrawSpline : MonoBehaviour
     {
         if (InputBlocker.inputBlockOverride == true)
         {
+            UndoManager.Instance.RecordState(); // Record the state before starting to draw for undo functionality
             drawingSpline = true;
             samplePoints.Clear();
             _timer = sampleInterval - Time.deltaTime;

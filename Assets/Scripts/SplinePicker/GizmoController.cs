@@ -77,6 +77,9 @@ public class GizmoController : MonoBehaviour
         {
             // Calculate distance to camera so we can scale gizmos up as you zoom out (keeps them selectable)
             distanceToCamera = Vector3.Distance(Camera.main.transform.position, SPD.lastHighlighted.transform.position);
+        } else
+        {
+            DestroyGizmos(); // If nothing is selected, destroy all gizmos to prevent them from floating in space
         }
 
         if (gizmoList != null && SPD.lastHighlighted != null)

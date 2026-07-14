@@ -138,6 +138,19 @@ public class CurveEditorUI : MonoBehaviour
             input.contentType = TMP_InputField.ContentType.EmailAddress;
             input.text = f.getter().ToString("0.##");
 
+            // --- UNDO SYSTEM: Record state on Slider click (PointerDown) ---
+            EventTrigger trigger = slider.gameObject.GetComponent<EventTrigger>();
+            if (trigger == null) trigger = slider.gameObject.AddComponent<EventTrigger>();
+
+            EventTrigger.Entry pointerDownEntry = new EventTrigger.Entry();
+            pointerDownEntry.eventID = EventTriggerType.PointerDown;
+            pointerDownEntry.callback.AddListener((data) => 
+            {
+                UndoManager.Instance.RecordState();
+            });
+            trigger.triggers.Add(pointerDownEntry);
+            // ---------------------------------------------------------------
+
             // Sync slider -> input -> property
             slider.onValueChanged.AddListener(val =>
             {
@@ -145,10 +158,13 @@ public class CurveEditorUI : MonoBehaviour
                 f.setter(val);
                 ReloadParticles();
             });
+
+            // Input field handles its own undo record state when the user finishes typing
             input.onEndEdit.AddListener(str =>
             {
                 if (float.TryParse(str, out float v))
                 {
+                    UndoManager.Instance.RecordState(); // Record the state before changing the value for undo functionality
                     v = Mathf.Clamp(v, f.minMax.x, f.minMax.y);
                     slider.value = v;
                     f.setter(v);
@@ -253,8 +269,7 @@ public class CurveEditorUI : MonoBehaviour
     void OnSelectClicked() => EventHub.Publish(new SelectSpline(selectedObject));
     void OnDeleteClicked()
     {
-
+        UndoManager.Instance.RecordState(); // Record the state before deletion for undo functionality
         EventHub.Publish(new DeleteSpline(selectedObject));
-
     }
 }
