@@ -162,7 +162,7 @@ public class UndoManager : MonoBehaviour
 
                             if (group.sphereObject.TryGetComponent<Renderer>(out var rend))
                             {
-                                rend.material.color = SPD.highlightColor;
+                                rend.material.color = SPD.highlightColor; //could change this to eventhub publish selectcontrolpoint to reduce duplicate code
                                 rend.material.SetColor("_EmissionColor", SPD.highlightColor * SPD.gizmoEmissionIntensity);
                             }
                         }

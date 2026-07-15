@@ -77,7 +77,8 @@ public class GizmoController : MonoBehaviour
         {
             // Calculate distance to camera so we can scale gizmos up as you zoom out (keeps them selectable)
             distanceToCamera = Vector3.Distance(Camera.main.transform.position, SPD.lastHighlighted.transform.position);
-        } else
+        }
+        else
         {
             DestroyGizmos(); // If nothing is selected, destroy all gizmos to prevent them from floating in space
         }
@@ -112,43 +113,51 @@ public class GizmoController : MonoBehaviour
         // ---------------------------------------------------------------------
         if (activeGizmoAxis != -1 && SPD.lastHighlighted != null)
         {
-            // Cast a ray from the mouse cursor into the 3D scene
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-
-            // Re-evaluate the plane we are dragging against (helps if camera angle changes)
             SetDragPlane();
 
             Vector3 pivot = SPD.lastHighlighted.transform.position;
-            SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis; // Cast the integer to your Enum right away
+            SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis;
+
+            // --- CONFLICT RESOLUTION PREP (For Translation Only) ---
+            HashSet<int> selectedKnots = new HashSet<int>();
+            foreach (var group in SPD.controlSphereGroup)
+            {
+                if (group.isSelected && group.index % 3 == 0)
+                {
+                    selectedKnots.Add(group.index);
+                }
+            }
 
             // --- TRANSLATION (1D Move Arrows & 2D Planar Squares) ---
             if (activeGizmoAxis < (int)SplinePickerData.GizmoType.RotateX)
             {
-                // Find exactly where the mouse ray hits our mathematical drag plane
                 FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, pivot);
-                Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position; // Store the pivot position before we start moving points
+                Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position; 
 
                 foreach (var sphereGroup in SPD.controlSphereGroup)
                 {
                     if (!sphereGroup.isSelected) continue;
 
-                    var sphere = sphereGroup.sphereObject;
+                    // TRANSLATION RULE: If an Anchor is selected, let the internal Bezier math handle its Tangents.
+                    if (sphereGroup.index % 3 != 0)
+                    {
+                        int parentKnotIndex = (sphereGroup.index % 3 == 1) ? sphereGroup.index - 1 : sphereGroup.index + 1;
+                        if (selectedKnots.Contains(parentKnotIndex)) continue; // Prevent double-movement
+                    }
 
-                    // We use an incremental delta approach here. 
-                    // diff: distance from the pivot to this specific sphere
-                    // offset: distance the mouse has moved since the last frame
+                    var sphere = sphereGroup.sphereObject;
+                    var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
+
                     Vector3 diff = sphere.transform.position - lastHighlightedPos;
                     Vector3 offset = newControlPos - lastHighlightedPos - initialOffset;
-
-                    // sphere.transform.position = lastHighlightedPos + diff + offset;
-
-                    // Update underlying spline data directly by adding the world-space offset
-                    var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                    // spline.points[sphereGroup.index] += offset;
-                    spline.SetControlPoint(sphereGroup.index, spline.points[sphereGroup.index] + offset);
+                    
+                    Vector3 newWorldPos = lastHighlightedPos + diff + offset;
+                    Vector3 localPosition = spline.transform.InverseTransformPoint(newWorldPos);
+                    spline.SetControlPoint(sphereGroup.index, localPosition);
                 }
                 
-                SyncSpherePositions(); // After all points have been mathematically updated, loop through and snap all visual spheres to their new correct positions (important for mirrored tangents)
+                SyncSpherePositions(); 
             }
 
             // --- ROTATION (Rings) ---
@@ -156,43 +165,35 @@ public class GizmoController : MonoBehaviour
             {
                 if (dragPlane.Raycast(ray, out float enter))
                 {
-                    // Find where the mouse is now, and convert it to a normalized direction from the pivot
                     Vector3 currentHitPoint = ray.GetPoint(enter);
                     Vector3 currentVector = (currentHitPoint - pivot).normalized;
 
-                    // Determine which axis we are mathematically spinning around
                     Vector3 rotAxis = Vector3.zero;
-                    if (axis == SplinePickerData.GizmoType.RotateX) rotAxis = Vector3.forward;    // Red ring rotates around Z
-                    else if (axis == SplinePickerData.GizmoType.RotateY) rotAxis = Vector3.right; // Green ring rotates around X
-                    else if (axis == SplinePickerData.GizmoType.RotateZ) rotAxis = Vector3.up;    // Blue ring rotates around Y
+                    if (axis == SplinePickerData.GizmoType.RotateX) rotAxis = Vector3.forward;    
+                    else if (axis == SplinePickerData.GizmoType.RotateY) rotAxis = Vector3.right; 
+                    else if (axis == SplinePickerData.GizmoType.RotateZ) rotAxis = Vector3.up;    
 
-                    // Compare the current mouse direction to the initial mouse direction to find total angle moved
                     float angle = Vector3.SignedAngle(initialHitVector, currentVector, rotAxis);
                     Quaternion rotationDelta = Quaternion.AngleAxis(angle, rotAxis);
 
+                    // ROTATION RULE: We cannot skip tangents. We must rigidly rotate everything.
+                    
+                    // PASS 1: Rotate Anchors (Knots) First
                     foreach (var sphereGroup in SPD.controlSphereGroup)
                     {
-                        if (!sphereGroup.isSelected) continue;
+                        if (!sphereGroup.isSelected || sphereGroup.index % 3 != 0) continue; 
 
-                        var sphere = sphereGroup.sphereObject;
-
-                        // To rotate an object around a pivot: 
-                        // 1. Find its starting offset from the pivot.
-                        // 2. Multiply that offset by the rotation quaternion.
-                        // 3. Add the result back to the pivot position.
-                        Vector3 initialPos = initialPointPositions[sphereGroup.index];
-                        Vector3 dirFromPivot = initialPos - pivot;
-                        Vector3 newPos = pivot + (rotationDelta * dirFromPivot);
-
-                        // sphere.transform.position = newPos;
-
-                        // Update underlying spline data.
-                        // FIX: Changed naive subtraction to InverseTransformPoint to support scaled/rotated parent objects.
-                        var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-                        Vector3 localPosition = spline.transform.InverseTransformPoint(newPos);
-                        spline.SetControlPoint(sphereGroup.index, localPosition);
+                        ApplyRotationToPoint(sphereGroup, pivot, rotationDelta);
                     }
 
+                    // PASS 2: Rotate Tangents Second
+                    foreach (var sphereGroup in SPD.controlSphereGroup)
+                    {
+                        if (!sphereGroup.isSelected || sphereGroup.index % 3 == 0) continue;
+
+                        ApplyRotationToPoint(sphereGroup, pivot, rotationDelta);
+                    }
+                    
                     SyncSpherePositions();
                 }
             }
@@ -262,6 +263,24 @@ public class GizmoController : MonoBehaviour
     #endregion
 
     #region Helper Methods
+    /// <summary>
+    /// Helper method to apply mathematical rotation to a single control point.
+    /// </summary>
+    void ApplyRotationToPoint(ControlPointGroup sphereGroup, Vector3 pivot, Quaternion rotationDelta)
+    {
+        var sphere = sphereGroup.sphereObject;
+        var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
+
+        // Calculate rotation relative to the original click state
+        Vector3 initialPos = initialPointPositions[sphereGroup.index];
+        Vector3 dirFromPivot = initialPos - pivot;
+        Vector3 newWorldPos = pivot + (rotationDelta * dirFromPivot);
+
+        // Apply it to the underlying math array
+        Vector3 localPosition = spline.transform.InverseTransformPoint(newWorldPos);
+        spline.SetControlPoint(sphereGroup.index, localPosition);
+    }
+    
     /// <summary>
     /// Instantiates all 9 gizmos (3 axes * 3 types) around the target position and colors them.
     /// </summary>

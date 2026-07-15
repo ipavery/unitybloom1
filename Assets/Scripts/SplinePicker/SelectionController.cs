@@ -79,7 +79,7 @@ public class SelectionController : MonoBehaviour
 
         EventHub.Publish(new SplineSelectionChange(targetSpline, true));
 
-        // FIX: Search for the spheres in "SphereContainer", not "SplineLine"
+        // Search for sphereContainer which has this spline's control points as children
         Transform sphereContainer = targetSpline.transform.Find("SphereContainer");
 
         if (sphereContainer == null)
@@ -93,7 +93,7 @@ public class SelectionController : MonoBehaviour
         {
             GameObject sphere = sphereTransform.gameObject;
             
-            // Find the matching data group in your scriptable object
+            // Find the matching data group in SPD
             var sphereGroupRef = SPD.controlSphereGroup.Find(item => item.sphereObject == sphere);
             
             if (sphereGroupRef != null)
