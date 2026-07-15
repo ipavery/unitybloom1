@@ -11,8 +11,11 @@ public class ColorPickerUI : MonoBehaviour
     public Button confirmButton;
     public Button cancelButton;
     public Slider valueSlider;
+
+    [Header("UI References")]
     [SerializeField] private RectTransform wheelRect;
     [SerializeField] private ColorWheelRenderer wheelRenderer;
+    [SerializeField] private RectTransform colorDarkener;
 
     void Start()
     {
@@ -22,7 +25,7 @@ public class ColorPickerUI : MonoBehaviour
 
     public void Open(Color initial, System.Action<Color> onPicked)
     {
-        Debug.Log($"initial color: {initial}");
+        //Debug.Log($"initial color: {initial}");
         this.onPicked = onPicked;
         this.selectedColor = initial;
         this.initialColor = initial;
@@ -38,7 +41,9 @@ public class ColorPickerUI : MonoBehaviour
         valueSlider.onValueChanged.AddListener(val =>
         {
             wheelRenderer.value = val;
-            wheelRenderer.GenerateWheelTexture();
+            colorDarkener.GetComponent<Image>().color = new Color(0, 0, 0, 1 - val); //makes the darkening rectangle more or less transparent
+            OnWheelChanged(wheelRenderer.XYToColor(wheelRenderer.colorIndicator.anchoredPosition, val));
+            // wheelRenderer.GenerateWheelTexture();
         });
 
         //Add listeners for confirm and cancel buttons
@@ -64,7 +69,7 @@ public class ColorPickerUI : MonoBehaviour
 
     public void OnCancel()
     {
-        Debug.Log($"Cancelling...color was {selectedColor}, initial was {initialColor}");
+        //Debug.Log($"Cancelling...color was {selectedColor}, initial was {initialColor}");
         onPicked(initialColor);
         gameObject.SetActive(false);
     }

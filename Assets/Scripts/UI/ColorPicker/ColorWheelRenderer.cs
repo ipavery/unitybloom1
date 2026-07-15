@@ -23,7 +23,7 @@ public class ColorWheelRenderer : MonoBehaviour, IPointerDownHandler, IDragHandl
         tex = new Texture2D(textureSize, textureSize);
         rawImage.texture = tex;
         GenerateWheelTexture();
-        Debug.Log("I ran!");
+        // Debug.Log("I ran!");
     }
 
     public void GenerateWheelTexture()
@@ -51,11 +51,11 @@ public class ColorWheelRenderer : MonoBehaviour, IPointerDownHandler, IDragHandl
         float x = (wheelRadius * S) * Mathf.Cos(angle);
         float y = (wheelRadius * S) * Mathf.Sin(angle);
         Vector2 pos = new(x, y);
-        Debug.Log($"H: {H}, S: {S}, V: {V}, pos: {pos}");
+        //Debug.Log($"H: {H}, S: {S}, V: {V}, pos: {pos}");
         return pos;
     }
 
-    Color32 XYToColor(Vector2 pos, float value)
+    public Color32 XYToColor(Vector2 pos, float value)
     {
 
         float angle = Mathf.Atan2(pos.y, pos.x) * Mathf.Rad2Deg;
