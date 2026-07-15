@@ -75,7 +75,7 @@ public class ClipLerper : MonoBehaviour
 
     void OnClipLerpClick(ClipLerpClick e)
     {
-        EventHub.Publish(new SplineSelectionChange(e.clipObj.GetComponent<DraggableClip>().attachedSpline, true));
+        EventHub.Publish(new SplineSelectionChange(true, e.clipObj.GetComponent<DraggableClip>().attachedSpline));
         if (selectingLerp == false)
         {
             selectingLerp = true;

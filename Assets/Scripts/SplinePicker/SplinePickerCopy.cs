@@ -214,7 +214,7 @@ public class SplinePickerCopy : MonoBehaviour
         }
 
         selectedSpline = e.spline;
-        EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
+        EventHub.Publish(new SplineSelectionChange(true, selectedSpline));
         var lineObj = selectedSpline.transform.Find("SplineLine");
 
         foreach (Transform sphereTransform in lineObj)
@@ -299,7 +299,7 @@ public class SplinePickerCopy : MonoBehaviour
         if (selectedSpline == null)
         {
             selectedSpline = sphereObject.GetComponentInParent<BezierSpline>();
-            EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
+            EventHub.Publish(new SplineSelectionChange(true, selectedSpline));
         }
     }
 
@@ -392,7 +392,7 @@ public class SplinePickerCopy : MonoBehaviour
 
             if (selectedSpline != null)
             {
-                EventHub.Publish(new SplineSelectionChange(selectedSpline, false));
+                EventHub.Publish(new SplineSelectionChange(false, selectedSpline));
             }
         }
     }

@@ -129,7 +129,11 @@ public class SplineRenderer : MonoBehaviour
         // Remove excess LineRenderers if the user deleted curves
         while (tangentContainer.childCount > knotCount)
         {
-            Destroy(tangentContainer.GetChild(tangentContainer.childCount - 1).gameObject);
+            // Detach it from the parent so childCount updates instantly in this frame
+            Transform excessLine = tangentContainer.GetChild(tangentContainer.childCount - 1);
+            excessLine.SetParent(null); 
+            
+            Destroy(excessLine.gameObject);
         }
 
         // Position the lines

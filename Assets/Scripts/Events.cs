@@ -74,7 +74,7 @@ public struct SplineSelectionChange
 {
     public BezierSpline spline;
     public bool isSelected;
-    public SplineSelectionChange(BezierSpline spline, bool isSelected)
+    public SplineSelectionChange(bool isSelected, BezierSpline spline = null)
     {
         this.spline = spline;
         this.isSelected = isSelected;
@@ -92,6 +92,9 @@ public struct NewSplineCreated
      }
 }
 
+/// <summary>
+/// Reloads particle system. Not used by gizmocontroller. Currently unused.
+/// </summary>
 public struct SplineUpdated
 {
     public BezierSpline spline;

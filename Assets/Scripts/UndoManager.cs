@@ -172,7 +172,7 @@ public class UndoManager : MonoBehaviour
 
                 // Restore UI Inspector connection
                 // This instantly updates all the sliders to reflect the UNDONE values!
-                EventHub.Publish(new SplineSelectionChange(targetSpline, true));
+                EventHub.Publish(new SplineSelectionChange(true, targetSpline));
 
                 // Restore Gizmo to the exact same point
                 GameObject targetGizmoAnchor = exactLastHighlighted != null ? exactLastHighlighted : fallbackHighlighted;
