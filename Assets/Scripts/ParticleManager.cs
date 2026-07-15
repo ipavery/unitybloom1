@@ -33,6 +33,9 @@ public class ParticleManager : MonoBehaviour
     public float catchParticlesBufferTimeRatio = 0.2f;
     public float musicModeWait;
 
+    [Header("New Spline Event")]
+    public GameObject drawSplineContainer; //where the new splines go
+
     private bool started = false;
     [Header("audio debug")]
     public Vector3 audioDebugPos;
@@ -131,8 +134,10 @@ public class ParticleManager : MonoBehaviour
         }
         else if (e.isDrawSpline == true)
         {
-            e.spline.CopyFrom(splineParticleGroup[^1].spline);
+            e.spline.CopyFrom(splineParticleGroup[^1].spline); // just for splines created by drawing
         }
+
+        if (drawSplineContainer != null) e.spline.transform.SetParent(drawSplineContainer.transform); //make sure parent is the drawspline box (all splines go there even if not draw splines)
         splineParticleGroup.Add(new SplineParticleGroup { spline = e.spline });
     }
 

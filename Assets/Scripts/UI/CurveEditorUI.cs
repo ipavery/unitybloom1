@@ -35,6 +35,7 @@ public class CurveEditorUI : MonoBehaviour
     public Button selectButton;
     public Button deleteButton;
     public Button activateButton;
+    public Button copyButton;
 
     [Header("Inspector Setup")]
     public List<InspectorField> fields = new List<InspectorField>();
@@ -42,6 +43,10 @@ public class CurveEditorUI : MonoBehaviour
     private Renderer selectedRenderer;
     private Color originalColor;
     private Texture2D paletteTexture;
+
+    [Header("Copy Setup")]
+    public BezierSpline splinePrefab; // Prefab for copying splines
+    public GameObject drawSplineContainer; //where the new splines go
 
     void OnEnable()
     {
@@ -80,6 +85,7 @@ public class CurveEditorUI : MonoBehaviour
         selectButton.onClick.AddListener(OnSelectClicked);
         deleteButton.onClick.AddListener(OnDeleteClicked);
         activateButton.onClick.AddListener(ActivateButton);
+        copyButton.onClick.AddListener(OnCopyClicked);
     }
 
     void Update()
@@ -116,8 +122,29 @@ public class CurveEditorUI : MonoBehaviour
 
     void ActivateButton()
     {
+        if (selectedObject == null)
+        {
+            Debug.LogWarning("No spline selected to activate/deactivate.");
+            return;
+        }
         selectedObject.isActive = !selectedObject.isActive; // flips between true and false
         ReloadParticles();
+    }
+
+    void OnCopyClicked()
+    {
+        if (selectedObject == null)
+        {
+            Debug.LogWarning("No spline selected to copy.");
+            return;
+        }
+        UndoManager.Instance.RecordState(); // Record the state before copying for undo functionality
+
+        BezierSpline newSpline = Instantiate(splinePrefab, selectedObject.transform.position + Vector3.down * 2, Quaternion.identity); //blank prefab
+        newSpline.CopyFrom(selectedObject); //copy spline settings
+        newSpline.points = (Vector3[])selectedObject.points.Clone(); // Copy the points array (make a new one so the points aren't linked)
+        newSpline.name += "_Copy";
+        EventHub.Publish(new NewSplineCreated(newSpline));
     }
 
     public void InitializeFields(List<InspectorField> inspectorFields)

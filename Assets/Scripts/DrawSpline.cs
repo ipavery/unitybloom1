@@ -16,7 +16,6 @@ public class DrawSpline : MonoBehaviour
 
     [Header("Spline Generation Settings")]
     public BezierSpline splinePrefab;
-    public GameObject drawSplineContainer;
     
     [Tooltip("Minimum distance mouse must move to capture a new raw point.")]
     public float pointCaptureDistance = 0.1f;
@@ -86,9 +85,7 @@ public class DrawSpline : MonoBehaviour
     void OnSelectStart(InputAction.CallbackContext ctx)
     {
         if (InputBlocker.inputBlockOverride)
-        {
-            if (UndoManager.Instance != null) UndoManager.Instance.RecordState(); 
-            
+        {            
             drawingSpline = true;
             rawPoints.Clear();
             lineRenderer.positionCount = 0;
@@ -135,24 +132,26 @@ public class DrawSpline : MonoBehaviour
 
     void FinishDrawing()
     {
-        if (rawPoints.Count < 2) 
+        if (rawPoints.Count < 2)
         {
             lineRenderer.positionCount = 0;
             return;
         }
+        
+        UndoManager.Instance.RecordState(); // Record the state before creating a new spline for undo functionality
 
         // 1. Spatially filter the dense mouse points using RDP
         List<Vector3> simplifiedKnots = RamerDouglasPeucker(rawPoints, errorThreshold);
 
         // 2. Instantiate the actual spline object at the first point
         BezierSpline newSpline = Instantiate(splinePrefab, simplifiedKnots[0], Quaternion.identity);
-        if (drawSplineContainer != null) newSpline.transform.SetParent(drawSplineContainer.transform);
 
         // 3. Generate Bezier Control Points using Catmull-Rom derivation
         GenerateBezierFromKnots(newSpline, simplifiedKnots);
 
         // 4. Notify system
         EventHub.Publish(new NewSplineCreated(newSpline));
+        EventHub.Publish(new ReloadParticles(true)); // reload particle system
         
         // Hide the temporary drawing line
         lineRenderer.positionCount = 0; 

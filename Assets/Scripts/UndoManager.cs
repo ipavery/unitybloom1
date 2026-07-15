@@ -29,6 +29,7 @@ public class UndoManager : MonoBehaviour
 
     public void RecordState()
     {
+        Debug.Log("UndoManager: Recording state");
         string jsonState = JsonUtility.ToJson(saveLoadUI.BuildSaveDataFromRoot());
         undoStack.Push(jsonState);
         redoStack.Clear();

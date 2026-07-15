@@ -77,7 +77,7 @@ public class SelectionController : MonoBehaviour
         BezierSpline targetSpline = e.spline;
         if (targetSpline == null) return;
 
-        EventHub.Publish(new SplineSelectionChange(targetSpline, true));
+        EventHub.Publish(new SplineSelectionChange(targetSpline, true)); //maybe change to allow multiselect spline ability
 
         // Search for sphereContainer which has this spline's control points as children
         Transform sphereContainer = targetSpline.transform.Find("SphereContainer");
@@ -292,6 +292,7 @@ public class SelectionController : MonoBehaviour
                 {
                     SPD.lastHighlighted = sphere; // Set the first highlighted sphere
                     EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position));
+                    EventHub.Publish(new SplineSelectionChange(sphere.GetComponentInParent<BezierSpline>(), true)); // Select the spline of the first highlighted control point
                 }
                 EventHub.Publish(new ControlPointSelected(sphereGroup));
                 //Debug.Log("Selected control point: " + sphere.name);
