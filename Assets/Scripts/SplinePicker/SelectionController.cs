@@ -46,6 +46,7 @@ public class SelectionController : MonoBehaviour
         mousePosition.Enable();
         select.Enable();
         EventHub.Subscribe<SplineSelectionChange>(OnSplineSelectionChanged);
+        EventHub.Subscribe<SelectSpline>(OnSelectSpline);
     }
 
     void OnDisable()
@@ -54,8 +55,10 @@ public class SelectionController : MonoBehaviour
         mousePosition.Disable();
         select.Disable();
         EventHub.Unsubscribe<SplineSelectionChange>(OnSplineSelectionChanged);
+        EventHub.Unsubscribe<SelectSpline>(OnSelectSpline);
     }
 
+    #region Event Handlers
     void OnSplineSelectionChanged(SplineSelectionChange e)
     {
         if (e.isSelected == true)
@@ -66,8 +69,53 @@ public class SelectionController : MonoBehaviour
         {
             selectedSpline = null;
         }
-
     }
+
+    void OnSelectSpline(SelectSpline e)
+    {
+        // Use the spline passed through the event to easily support multi-selection later
+        BezierSpline targetSpline = e.spline;
+        if (targetSpline == null) return;
+
+        EventHub.Publish(new SplineSelectionChange(targetSpline, true));
+
+        // FIX: Search for the spheres in "SphereContainer", not "SplineLine"
+        Transform sphereContainer = targetSpline.transform.Find("SphereContainer");
+
+        if (sphereContainer == null)
+        {
+            Debug.LogWarning("SphereContainer not found on this spline!");
+            return;
+        }
+
+        // Iterate through all the spheres attached to this spline
+        foreach (Transform sphereTransform in sphereContainer)
+        {
+            GameObject sphere = sphereTransform.gameObject;
+            
+            // Find the matching data group in your scriptable object
+            var sphereGroupRef = SPD.controlSphereGroup.Find(item => item.sphereObject == sphere);
+            
+            if (sphereGroupRef != null)
+            {
+                // Efficiency check: Only process points that aren't already selected
+                if (!sphereGroupRef.isSelected)
+                {
+                    // If nothing is highlighted yet, make this the anchor for the Gizmos
+                    if (SPD.lastHighlighted == null)
+                    {
+                        SPD.lastHighlighted = sphere;
+                        EventHub.Publish(new ShowMoveGizmosEvent(sphere.transform.position));
+                    }
+
+                    // Fire the selection event (which will now correctly color it without overwriting lastHighlighted)
+                    EventHub.Publish(new ControlPointSelected(sphereGroupRef));
+                }
+            }
+        }
+    }
+
+    #endregion
 
     void Update()
     {
@@ -222,7 +270,6 @@ public class SelectionController : MonoBehaviour
             EventHub.Publish(new SplineSelectionChange(selectedSpline, true));
         }
     }
-
     void SelectControlPointsInRect()
     {
         Vector2 min = Vector2.Min(selectionStart, mousePosition.ReadValue<Vector2>());
@@ -234,8 +281,10 @@ public class SelectionController : MonoBehaviour
             {
                 continue; // Skip spheres that are selected
             }
+
             GameObject sphere = sphereGroup.sphereObject;
             Vector3 screenPos = Camera.main.WorldToScreenPoint(sphere.transform.position);
+
             if (screenPos.z > 0 && screenPos.x >= min.x && screenPos.x <= max.x && screenPos.y >= min.y && screenPos.y <= max.y)
             {
                 //UpdateSelectedSpline(sphere); //ADD this back to make inspector work
@@ -244,17 +293,7 @@ public class SelectionController : MonoBehaviour
                     SPD.lastHighlighted = sphere; // Set the first highlighted sphere
                     EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position));
                 }
-                sphereGroup.isSelected = true; // Mark the control point as selected
-                if (sphere.TryGetComponent<Renderer>(out var rend))
-                {
-                    // change color of spheres to show they are selected
-                    rend.material.color = SPD.highlightColor;
-                    rend.material.SetColor("_EmissionColor", SPD.highlightColor * SPD.gizmoEmissionIntensity);
-                }
-                else
-                {
-                    Debug.LogWarning("Renderer not found on control sphere: " + sphere.name);
-                }
+                EventHub.Publish(new ControlPointSelected(sphereGroup));
                 //Debug.Log("Selected control point: " + sphere.name);
             }
         }
