@@ -27,12 +27,14 @@ public class SplineRenderer : MonoBehaviour
     {
         EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
+        EventHub.Subscribe<HideShow3DUI>(OnHideShow3DUI);
     }
 
     void OnDisable()
     {
         EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
+        EventHub.Unsubscribe<HideShow3DUI>(OnHideShow3DUI);
     }
 
     void Update()
@@ -59,6 +61,29 @@ public class SplineRenderer : MonoBehaviour
     void OnNewSplineCreated(NewSplineCreated e)
     {
         InitializeSpline(e.spline);
+    }
+
+    void OnHideShow3DUI(HideShow3DUI e)
+    {
+        if (e.hide == true)
+        {
+            foreach (var spline in particleManager.splineParticleGroup.Select(g => g.spline).Where(s => s != null))
+            {
+                foreach (var lr in spline.GetComponentsInChildren<LineRenderer>())
+                {
+                    lr.enabled = false;
+                }
+            }
+        } else
+        {
+            foreach (var spline in particleManager.splineParticleGroup.Select(g => g.spline).Where(s => s != null))
+            {
+                foreach (var lr in spline.GetComponentsInChildren<LineRenderer>())
+                {
+                    lr.enabled = true;
+                }
+            }
+        }
     }
 
     void InitializeSpline(BezierSpline spline)

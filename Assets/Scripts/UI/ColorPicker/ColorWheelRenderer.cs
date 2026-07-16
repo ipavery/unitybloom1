@@ -36,7 +36,7 @@ public class ColorWheelRenderer : MonoBehaviour, IPointerDownHandler, IDragHandl
                 float radius = textureSize / 2;
                 Vector2 centerToPixel = new Vector2(x, y) - new Vector2(radius, radius);
                 Vector2 normalized = new(centerToPixel.x / radius, centerToPixel.y / radius);
-                tex.SetPixel(x, y, XYToColor(normalized, value));
+                tex.SetPixel(x, y, XYToColor(normalized, 1));
             }
         }
         tex.Apply();

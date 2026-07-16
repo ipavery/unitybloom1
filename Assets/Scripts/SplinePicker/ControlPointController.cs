@@ -18,6 +18,7 @@ public class ControlPointController : MonoBehaviour
         EventHub.Subscribe<ClearSelection>(OnClearSelection);
         EventHub.Subscribe<DeleteSpline>(OnDeleteSpline);
         EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
+        EventHub.Subscribe<HideShow3DUI>(OnHideShow3DUI);
     }
 
     void OnDisable()
@@ -27,6 +28,7 @@ public class ControlPointController : MonoBehaviour
         EventHub.Unsubscribe<ClearSelection>(OnClearSelection);
         EventHub.Unsubscribe<DeleteSpline>(OnDeleteSpline);
         EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
+        EventHub.Unsubscribe<HideShow3DUI>(OnHideShow3DUI);
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -54,7 +56,7 @@ public class ControlPointController : MonoBehaviour
         }
     }
 
-    void OnSplineUpdated(SplineUpdated e)
+    void OnSplineUpdated(SplineUpdated e) //currently unused i think...
     {
         if (e.spline == null) return; // not sure why it would be null but it was in splinepicker so here it is
 
@@ -107,11 +109,28 @@ public class ControlPointController : MonoBehaviour
         }
     }
 
+    void OnHideShow3DUI(HideShow3DUI e)
+    {
+        if (e.hide == true)
+        {
+            foreach (var sphereGroup in SPD.controlSphereGroup)
+            {
+                sphereGroup.sphereObject.GetComponent<Renderer>().enabled = false;
+            }
+        }
+        else
+        {
+            foreach (var sphereGroup in SPD.controlSphereGroup)
+            {
+                sphereGroup.sphereObject.GetComponent<Renderer>().enabled = true;
+            }
+        }
+    }
+
     /// <summary>
     /// Called when the user clicks somewhere empty to clear the selection and make
     /// the highlighted sphere return to normal color
     /// </summary>
-    /// ISSUE: if the user clicks on load or anything on the save load ui, this unselect thing gets triggered.
     void UnselectAllPoints()
     {
         SPD.lastHighlighted = null;

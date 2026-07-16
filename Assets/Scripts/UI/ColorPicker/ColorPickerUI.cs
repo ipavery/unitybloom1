@@ -50,6 +50,7 @@ public class ColorPickerUI : MonoBehaviour
         confirmButton.onClick.AddListener(OnConfirm);
         cancelButton.onClick.AddListener(OnCancel);
 
+        colorDarkener.GetComponent<Image>().color = new Color(0, 0, 0, 1 - v); //initialize darkening rectangle
         wheelRenderer.Initialize();
         wheelRenderer.colorIndicator.anchoredPosition = wheelRenderer.ColorToXY(initial);
         

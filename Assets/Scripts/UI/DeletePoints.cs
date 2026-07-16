@@ -70,6 +70,8 @@ public class DeletePoints : MonoBehaviour
 
             if (deleteStart)
             {
+                UndoManager.Instance.RecordState(); // Record state before deletion for undo functionality
+                
                 // Calculate how many curves to delete based on the furthest selected point
                 int curvesToDelete = (maxIdx == 0) ? 1 : (maxIdx + 2) / 3;
                 
@@ -101,6 +103,8 @@ public class DeletePoints : MonoBehaviour
             }
             else if (deleteEnd)
             {
+                UndoManager.Instance.RecordState(); // Record state before deletion for undo functionality
+
                 // Calculate how many curves to delete based on the furthest selected point from the end
                 int distanceFromEnd = maxSplineIndex - minIdx;
                 int curvesToDelete = (distanceFromEnd == 0) ? 1 : (distanceFromEnd + 2) / 3;
