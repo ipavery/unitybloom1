@@ -549,7 +549,7 @@ public class ParticleManager : MonoBehaviour
         }
         if (spawnMode == ParticleSpawnMode.Independent)
         {
-
+            //do nothing i guess
         }
     }
 }
