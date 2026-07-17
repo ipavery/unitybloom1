@@ -175,7 +175,7 @@ public class ParticleManager : MonoBehaviour
         }
         if (spawnMode == ParticleSpawnMode.Independent)
         {
-            StopAllCoroutines();
+            //StopAllCoroutines();
             conditionManager.StopAndClearAllEntries();
             StartIndependent();
         }
@@ -207,7 +207,7 @@ public class ParticleManager : MonoBehaviour
         }
         if (spawnMode == ParticleSpawnMode.Independent)
         {
-            Invoke(nameof(StartIndependent), 1f);
+            //Invoke(nameof(StartIndependent), 1f); //commented out because saveloadsystem already auto-loads and starts system
         }
         //conditionManager.CreateEntry("test", () => Input.GetMouseButton(0), () => SimulateSpline(splineParticleGroup[0].spline), musicModeWait, true, .08f);
     }
@@ -432,6 +432,8 @@ public class ParticleManager : MonoBehaviour
         yield return new WaitForSeconds(startTimeOffset);
         for (int i = 0; i <= currentFrequency; i++)
         {
+            if (currentSpline == null) yield break; // exit the coroutine if the spline has been deleted
+            
             //the row coroutine should start here
             Vector3 newParticlePosition = currentSpline.GetLerpPoint(i * stepSize, l);
 

@@ -173,3 +173,24 @@ public struct ClearSelection
         this.clear = clear;
     }
 }
+
+/// <summary>
+/// Communicate with the LerpManager.cs and SelectionController scripts to enter or exit lerping mode.
+/// </summary>
+public struct EnterExitLerping
+{
+    public bool isConnecting;
+    public EnterExitLerping(bool isConnecting)
+    {
+        this.isConnecting = isConnecting;
+    }
+}
+
+public struct LerpConnectionMade
+{
+    public BezierSpline splineClicked;
+    public LerpConnectionMade(BezierSpline splineClicked)
+    {
+        this.splineClicked = splineClicked;
+    }
+}

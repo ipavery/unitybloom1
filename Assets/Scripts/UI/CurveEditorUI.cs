@@ -39,7 +39,7 @@ public class CurveEditorUI : MonoBehaviour
 
     [Header("Inspector Setup")]
     public List<InspectorField> fields = new List<InspectorField>();
-    private BezierSpline selectedObject;
+    public BezierSpline selectedObject;
     private Renderer selectedRenderer;
     private Color originalColor;
     private Texture2D paletteTexture;

@@ -8,9 +8,9 @@ using System.Linq;
 [Serializable]
 public class LerpLines
 {
-    public GameObject firstClip;              // or whatever your “line” type is
-    public GameObject secondClip; // list of particles for this line
-    public GameObject lerpLine; // Index of the control point in the spline
+    public GameObject firstClip;      
+    public GameObject secondClip; 
+    public GameObject lerpLine;
     public bool nowSelecting;
 }
 
@@ -22,7 +22,6 @@ public class ClipLerper : MonoBehaviour
     private LerpLines newLerpGroup;
     private bool selectingLerp = false;
     private GameObject firstSelectedClip;
-    Camera cam;
     public GameObject cancelButtonObject;
     public ParticleManager particleManager;
     public RectTransform canvasrt;

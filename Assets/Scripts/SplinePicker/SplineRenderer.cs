@@ -14,6 +14,7 @@ public class SplineRenderer : MonoBehaviour
     [Header("Main Curve Settings")]
     [SerializeField] private int pointsPerSpline = 20; 
     [SerializeField] private Material lineMaterial = null; 
+    [SerializeField] private Material highlightedLineMaterial = null; 
     [SerializeField] private float lineWidth = .01f; 
 
     [Header("Tangent Handle Settings")]
@@ -28,6 +29,7 @@ public class SplineRenderer : MonoBehaviour
         EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
         EventHub.Subscribe<HideShow3DUI>(OnHideShow3DUI);
+        EventHub.Subscribe<SplineSelectionChange>(OnSplineSelectionChange);
     }
 
     void OnDisable()
@@ -35,6 +37,7 @@ public class SplineRenderer : MonoBehaviour
         EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
         EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
         EventHub.Unsubscribe<HideShow3DUI>(OnHideShow3DUI);
+        EventHub.Unsubscribe<SplineSelectionChange>(OnSplineSelectionChange);
     }
 
     void Update()
@@ -74,7 +77,8 @@ public class SplineRenderer : MonoBehaviour
                     lr.enabled = false;
                 }
             }
-        } else
+        }
+        else
         {
             foreach (var spline in particleManager.splineParticleGroup.Select(g => g.spline).Where(s => s != null))
             {
@@ -82,6 +86,24 @@ public class SplineRenderer : MonoBehaviour
                 {
                     lr.enabled = true;
                 }
+            }
+        }
+    }
+    
+    void OnSplineSelectionChange(SplineSelectionChange e)
+    {
+        if (e.isSelected == true)
+        {
+            var lr = e.spline.GetComponentInChildren<LineRenderer>();
+            lr.material = highlightedLineMaterial;
+            lr.widthMultiplier = lineWidth * 2; // make it thicker when selected
+        } else
+        {
+            foreach (var spline in particleManager.splineParticleGroup.Select(g => g.spline).Where(s => s != null))
+            {
+                var lr = spline.GetComponentInChildren<LineRenderer>();
+                lr.material = lineMaterial;
+                lr.widthMultiplier = lineWidth;
             }
         }
     }

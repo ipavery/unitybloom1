@@ -25,6 +25,9 @@ public class SelectionController : MonoBehaviour
 
     public BezierSpline selectedSpline { get; private set; } = null; // Reference to the spline that is currently selected
 
+    [Header("Connect Mode")]
+    private bool isConnectMode = false; // Flag to indicate if we are in connect mode (communicating with lerpmanager)
+
     void Awake()
     {
         playerControls = new PlayerInputActions();
@@ -47,6 +50,7 @@ public class SelectionController : MonoBehaviour
         select.Enable();
         EventHub.Subscribe<SplineSelectionChange>(OnSplineSelectionChanged);
         EventHub.Subscribe<SelectSpline>(OnSelectSpline);
+        EventHub.Subscribe<EnterExitLerping>(OnEnterExitLerping);
     }
 
     void OnDisable()
@@ -71,7 +75,7 @@ public class SelectionController : MonoBehaviour
         }
     }
 
-    void OnSelectSpline(SelectSpline e)
+    void OnSelectSpline(SelectSpline e) //this event adds e.spline control points to current selection
     {
         // Use the spline passed through the event to easily support multi-selection later
         BezierSpline targetSpline = e.spline;
@@ -92,10 +96,10 @@ public class SelectionController : MonoBehaviour
         foreach (Transform sphereTransform in sphereContainer)
         {
             GameObject sphere = sphereTransform.gameObject;
-            
+
             // Find the matching data group in SPD
             var sphereGroupRef = SPD.controlSphereGroup.Find(item => item.sphereObject == sphere);
-            
+
             if (sphereGroupRef != null)
             {
                 // Efficiency check: Only process points that aren't already selected
@@ -115,13 +119,24 @@ public class SelectionController : MonoBehaviour
         }
     }
 
+    void OnEnterExitLerping(EnterExitLerping e)
+    {
+        if (e.isConnecting)
+        {
+            isConnectMode = true;
+        } else
+        {
+            isConnectMode = false;
+        }
+    }
+
     #endregion
 
     void Update()
     {
         SPD.isInputBlocked = InputBlocker.IsInputBlocked("Unblocked UI Layer");
 
-        if (SPD.isSelecting && SPD.activeGizmoAxis == -1)
+        if (SPD.isSelecting && SPD.activeGizmoAxis == -1 && !isConnectMode) // Don't allow selection box while in connect mode
         {
             Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();
             selectionBoxUI.GetComponent<SelectionBoxUI>().UpdateSelection(currentMousePos);
@@ -147,6 +162,12 @@ public class SelectionController : MonoBehaviour
             if (idx != -1)
             {
                 var sphereGroup = SPD.controlSphereGroup[idx];
+                if (isConnectMode)
+                {
+                    var spline = sphereGroup.sphereObject.GetComponentInParent<BezierSpline>();
+                    EventHub.Publish(new LerpConnectionMade(spline)); //give selected spline to lerpmanager
+                    return; //stop further selection protocol
+                }
                 EventHub.Publish(new ControlPointSelected(sphereGroup));
                 UpdateSelectedSpline(sphereGroup.sphereObject);
                 if (SPD.lastHighlighted != null)
@@ -156,8 +177,11 @@ public class SelectionController : MonoBehaviour
                 return;
             }
 
+            if (isConnectMode) return; // stop further select protocol
+
             if (gizmoController != null && gizmoController.TryGetGizmoAxisIndex(hit.collider.gameObject, out int gizmoAxisIndex))
             {
+                
                 SPD.activeGizmoAxis = gizmoAxisIndex;
                 Debug.Log("The user clicked on: " + ((SplinePickerData.GizmoType)gizmoAxisIndex).ToString());
                 EventHub.Publish(new GizmoDragStarted(GetDragPlanePoint(selectionStart, gizmoAxisIndex))); // this needs to be changed somehow to have all selected splines in it if the splinerenderer should only update selected splines
@@ -188,12 +212,13 @@ public class SelectionController : MonoBehaviour
         }
 
         float selectDist = (selectionEnd - selectionStart).magnitude;
-        if (!raycastHit && selectDist < 5f)
+        if (!raycastHit && selectDist < 5f) // if you haven't moved much and didn't hit anything, clear selection
         {
             EventHub.Publish(new ClearSelection());
             if (selectedSpline != null)
             {
-                EventHub.Publish(new SplineSelectionChange(false, selectedSpline));
+                EventHub.Publish(new SplineSelectionChange(false, selectedSpline)); // unselect spline if not null
+                EventHub.Publish(new EnterExitLerping(false));
             }
         }
     }
