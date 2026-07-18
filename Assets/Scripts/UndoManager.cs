@@ -74,7 +74,7 @@ public class UndoManager : MonoBehaviour
         int lastHighlightedIndex = -1;
 
         // A. Capture Spline UI Selection
-        SelectionController selectionController = FindFirstObjectByType<SelectionController>();
+        SelectionController selectionController = FindAnyObjectByType<SelectionController>();
         if (selectionController != null && selectionController.selectedSpline != null)
         {
             activeSplineGuid = GetSplineGuid(selectionController.selectedSpline);

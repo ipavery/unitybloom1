@@ -81,4 +81,11 @@ public class ColorWheelRenderer : MonoBehaviour, IPointerDownHandler, IDragHandl
             gameObject.GetComponentInParent<ColorPickerUI>().OnWheelChanged(color);
         }
     }
+
+    public Color32 GetCurrentIndicatorColor(float currentValue)
+    {
+        // Convert the pixel coordinates into a 0 to 1 percentage
+        Vector2 normalized = colorIndicator.anchoredPosition / wheelRadius;
+        return XYToColor(normalized, currentValue);
+    }
 }

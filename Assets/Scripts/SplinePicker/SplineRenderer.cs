@@ -96,7 +96,7 @@ public class SplineRenderer : MonoBehaviour
         {
             var lr = e.spline.GetComponentInChildren<LineRenderer>();
             lr.material = highlightedLineMaterial;
-            lr.widthMultiplier = lineWidth * 2; // make it thicker when selected
+            lr.widthMultiplier = lineWidth * 1.1f; // make it thicker when selected
         } else
         {
             foreach (var spline in particleManager.splineParticleGroup.Select(g => g.spline).Where(s => s != null))

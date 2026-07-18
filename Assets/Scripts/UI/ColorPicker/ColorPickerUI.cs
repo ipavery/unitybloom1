@@ -41,9 +41,10 @@ public class ColorPickerUI : MonoBehaviour
         valueSlider.onValueChanged.AddListener(val =>
         {
             wheelRenderer.value = val;
-            colorDarkener.GetComponent<Image>().color = new Color(0, 0, 0, 1 - val); //makes the darkening rectangle more or less transparent
-            OnWheelChanged(wheelRenderer.XYToColor(wheelRenderer.colorIndicator.anchoredPosition, val));
-            // wheelRenderer.GenerateWheelTexture();
+            colorDarkener.GetComponent<Image>().color = new Color(0, 0, 0, 1 - val); 
+            
+            // Use the new method to get the properly calculated color
+            OnWheelChanged(wheelRenderer.GetCurrentIndicatorColor(val));
         });
 
         //Add listeners for confirm and cancel buttons
@@ -60,6 +61,7 @@ public class ColorPickerUI : MonoBehaviour
     {
         selectedColor = newColor;
         onPicked(newColor);
+        Debug.Log(newColor);
     }
 
     public void OnConfirm()

@@ -39,7 +39,7 @@ public class SelectionController : MonoBehaviour
         gizmoController = GetComponent<GizmoController>();
         if (gizmoController == null)
         {
-            gizmoController = FindFirstObjectByType<GizmoController>();
+            gizmoController = FindAnyObjectByType<GizmoController>();
         }
     }
 
