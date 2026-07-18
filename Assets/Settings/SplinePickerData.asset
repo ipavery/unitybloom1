@@ -14,3 +14,126 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isInputBlocked: 0
   lastHighlighted: {fileID: 0}
+  isSelecting: 0
+  controlSphereGroup:
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 0
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 1
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 2
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 3
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 4
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 5
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 6
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 7
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 8
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 9
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 10
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 11
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 12
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 13
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 14
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 15
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 16
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 17
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 18
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 0
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 1
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 2
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 3
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 4
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 5
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 6
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 7
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 8
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 9
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 10
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 11
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 12
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 0
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 1
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 2
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 3
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 4
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 5
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 6
+  highlightColor: {r: 1, g: 0.92759216, b: 0, a: 1}
+  gizmoEmissionIntensity: 0.5
+  unselectedOriginalColor: {r: 1, g: 1, b: 1, a: 1}
+  activeGizmoAxis: -1
