@@ -172,9 +172,11 @@ public class LerpManager : MonoBehaviour
             
             // Connect the data
             connectingSource.lerpSpline = e.splineClicked;
-            
+
             // Connect the visuals
             CreateVisualLine(connectingSource, e.splineClicked);
+
+            SaveLoadUI.Instance.NotifyActionPerformed();
         }
         
         // Always exit connection mode after a click, whether successful or invalid

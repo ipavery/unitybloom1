@@ -145,6 +145,8 @@ public class CurveEditorUI : MonoBehaviour
         newSpline.points = (Vector3[])selectedObject.points.Clone(); // Copy the points array (make a new one so the points aren't linked)
         newSpline.name += "_Copy";
         EventHub.Publish(new NewSplineCreated(newSpline));
+        
+        SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
     }
 
     public void InitializeFields(List<InspectorField> inspectorFields)
@@ -171,10 +173,11 @@ public class CurveEditorUI : MonoBehaviour
             input.contentType = TMP_InputField.ContentType.EmailAddress;
             input.text = f.getter().ToString("0.##");
 
-            // --- UNDO SYSTEM: Record state on Slider click (PointerDown) ---
+            // --- UNDO & AUTOSAVE SYSTEM: Event Triggers ---
             EventTrigger trigger = slider.gameObject.GetComponent<EventTrigger>();
             if (trigger == null) trigger = slider.gameObject.AddComponent<EventTrigger>();
 
+            // 1. Record state on Slider click (PointerDown)
             EventTrigger.Entry pointerDownEntry = new EventTrigger.Entry();
             pointerDownEntry.eventID = EventTriggerType.PointerDown;
             pointerDownEntry.callback.AddListener((data) => 
@@ -182,6 +185,18 @@ public class CurveEditorUI : MonoBehaviour
                 UndoManager.Instance.RecordState();
             });
             trigger.triggers.Add(pointerDownEntry);
+
+            // 2. Trigger autosave on Slider release (PointerUp)
+            EventTrigger.Entry pointerUpEntry = new EventTrigger.Entry();
+            pointerUpEntry.eventID = EventTriggerType.PointerUp;
+            pointerUpEntry.callback.AddListener((data) =>
+            {
+                if (SaveLoadUI.Instance != null)
+                {
+                    SaveLoadUI.Instance.NotifyActionPerformed();
+                }
+            });
+            trigger.triggers.Add(pointerUpEntry);
             // ---------------------------------------------------------------
 
             // Sync slider -> input -> property
@@ -202,6 +217,11 @@ public class CurveEditorUI : MonoBehaviour
                     slider.value = v;
                     f.setter(v);
                     ReloadParticles();
+                    
+                    if (SaveLoadUI.Instance != null)
+                    {
+                        SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
+                    }
                 }
             });
         }
@@ -304,5 +324,6 @@ public class CurveEditorUI : MonoBehaviour
     {
         UndoManager.Instance.RecordState(); // Record the state before deletion for undo functionality
         EventHub.Publish(new DeleteSpline(selectedObject));
+        SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
     }
 }

@@ -17,12 +17,6 @@ public class ColorPickerUI : MonoBehaviour
     [SerializeField] private ColorWheelRenderer wheelRenderer;
     [SerializeField] private RectTransform colorDarkener;
 
-    void Start()
-    {
-        
-        
-    }
-
     public void Open(Color initial, System.Action<Color> onPicked)
     {
         //Debug.Log($"initial color: {initial}");

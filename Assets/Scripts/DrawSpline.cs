@@ -25,6 +25,12 @@ public class DrawSpline : MonoBehaviour
 
     [Header("Input & Planes")]
     public Plane drawPlane = new Plane(Vector3.forward, Vector3.zero);
+
+    [Header("Cursor Settings")]
+    public Texture2D cursorTexture;
+    public Vector2 cursorHotspot = new Vector2(0f, 0f);
+    private Texture2D whiteCursorTexture;
+    private bool cursorIsCustom = false;
     
     // State variables
     private PlayerInputActions playerControls;
@@ -69,17 +75,101 @@ public class DrawSpline : MonoBehaviour
     {
         mousePosition.Disable();
         select.Disable();
+        if (cursorIsCustom)
+        {
+            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+            cursorIsCustom = false;
+        }
     }
 
     void Start()
     {
         if (drawSplineButton != null)
             drawSplineButton.onClick.AddListener(OnDrawSpline);
+
+        if (cursorTexture != null)
+        {
+            CreateWhiteCursor();
+        }
+
+        UpdateToggleButtonState();
     }
 
     void OnDrawSpline()
     {
         InputBlocker.inputBlockOverride = !InputBlocker.inputBlockOverride;
+        UpdateToggleButtonState();
+    }
+
+    private void CreateWhiteCursor()
+    {
+        if (cursorTexture == null) return;
+        try
+        {
+            whiteCursorTexture = new Texture2D(cursorTexture.width, cursorTexture.height, TextureFormat.RGBA32, false);
+            Color[] pixels = cursorTexture.GetPixels();
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                pixels[i] = new Color(1f, 1f, 1f, pixels[i].a);
+            }
+            whiteCursorTexture.SetPixels(pixels);
+            whiteCursorTexture.Apply();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Failed to create white cursor: " + e.Message);
+        }
+    }
+
+    private void UpdateToggleButtonState()
+    {
+        bool isActive = InputBlocker.inputBlockOverride;
+
+        if (isActive)
+        {
+            if (whiteCursorTexture != null)
+            {
+                Cursor.SetCursor(whiteCursorTexture, cursorHotspot, CursorMode.Auto);
+                cursorIsCustom = true;
+            }
+            else if (cursorTexture != null)
+            {
+                CreateWhiteCursor();
+                if (whiteCursorTexture != null)
+                {
+                    Cursor.SetCursor(whiteCursorTexture, cursorHotspot, CursorMode.Auto);
+                    cursorIsCustom = true;
+                }
+            }
+        }
+        else
+        {
+            if (cursorIsCustom)
+            {
+                Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+                cursorIsCustom = false;
+            }
+        }
+
+        if (drawSplineButton != null)
+        {
+            var cb = drawSplineButton.colors;
+            if (isActive)
+            {
+                cb.normalColor = new Color(2.5f, 2.5f, 2.5f, 1f);
+                cb.highlightedColor = new Color(2.2f, 2.2f, 2.2f, 1f);
+                cb.selectedColor = new Color(2.5f, 2.5f, 2.5f, 1f);
+                cb.pressedColor = new Color(1.8f, 1.8f, 1.8f, 1f);
+            }
+            else
+            {
+                cb.normalColor = Color.white;
+                cb.highlightedColor = new Color(0.86f, 0.86f, 0.86f, 1f);
+                cb.selectedColor = Color.white;
+                cb.pressedColor = new Color(0.62f, 0.62f, 0.62f, 1f);
+            }
+            drawSplineButton.colors = cb;
+        }
     }
 
     void OnSelectStart(InputAction.CallbackContext ctx)
@@ -152,6 +242,8 @@ public class DrawSpline : MonoBehaviour
         // 4. Notify system
         EventHub.Publish(new NewSplineCreated(newSpline));
         EventHub.Publish(new ReloadParticles(true)); // reload particle system
+
+        SaveLoadUI.Instance.NotifyActionPerformed();
         
         // Hide the temporary drawing line
         lineRenderer.positionCount = 0; 

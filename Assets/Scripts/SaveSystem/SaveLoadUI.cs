@@ -4,9 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Reflection;
+using System.Collections;
 
 public class SaveLoadUI : MonoBehaviour
 {
+    // Singleton Instance for easy access across any script
+    public static SaveLoadUI Instance { get; private set; }
+
     [Header("Scene Roots")]
     public Transform savableRoot;        // parent containing current splines (to save from)
     public Transform savedObjectsRoot;   // parent where loaded splines are instantiated
@@ -19,8 +23,10 @@ public class SaveLoadUI : MonoBehaviour
     public Transform saveListContent;       // content parent inside ScrollRect
     public GameObject saveSlotButtonPrefab; // button prefab for each save entry (must have Button + TMP_Text)
     public Button loadButton;               // opens the save list
+    public Button saveButton;
     public Button clearButton;              // clears all saves
     public Button closeButton;
+    public SaveIconFader saveIconFader;
 
     [Header("UI - new blank")]
     public Button newBlankFileButton;       // create/save & clear and create an empty file
@@ -37,11 +43,45 @@ public class SaveLoadUI : MonoBehaviour
     public Button confirmDeleteButton;
     public Button cancelDeleteButton;
 
+    [Header("Autosave Settings")]
+    public bool enableAutosave = true;
+    [Tooltip("How long to wait after the last user action before saving to disk.")]
+    public float debounceTime = 1f; 
+    private Coroutine pendingAutosave;
+    
+
     // Internal state
     private List<SaveMeta> currentIndex = new();
     private string activeFilename;         // currently-active save file (set when user selects a save or creates new blank)
     private string pendingRenameTarget;    // filename being renamed
     private string pendingDeleteTarget;    // filename pending deletion
+
+
+    private void Awake()
+    {
+        // Setup Singleton
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    // void OnEnable()
+    // {
+    //     EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
+    // }
+
+    // void OnDisable()
+    // {
+    //     EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
+    // }
+
+    // void OnNewSplineCreated(NewSplineCreated e)
+    // {
+    //     NotifyActionPerformed();
+    // }
 
     void Start()
     {
@@ -51,7 +91,8 @@ public class SaveLoadUI : MonoBehaviour
         if (confirmDeleteDialog) confirmDeleteDialog.SetActive(false);
 
         if (loadButton != null) loadButton.onClick.AddListener(OpenSaveWindow);
-        if (clearButton != null) clearButton.onClick.AddListener(ClearAllSaves);
+        if (saveButton != null) saveButton.onClick.AddListener(QuickSaveCurrentScene);
+        if (clearButton != null) clearButton.onClick.AddListener(OpenClearAllSavesConfirm);
         if (closeButton != null) closeButton.onClick.AddListener(() => { if (saveWindowPanel) saveWindowPanel.SetActive(false); });
         if (newBlankFileButton != null) newBlankFileButton.onClick.AddListener(OnNewBlankFileClicked);
 
@@ -67,6 +108,32 @@ public class SaveLoadUI : MonoBehaviour
 
         //uncomment this if you want to import prepopulated saves from Resources/PrepopulatedHistory on start (make sure to add .json files there first, and that they match your SaveData structure)
         //ImportPrepopulatedSaves_FromResources();
+    }
+
+    /// <summary>
+    /// Call this from any script whenever a user finishes an action (e.g. added spline, edited point, executed command).
+    /// </summary>
+    public void NotifyActionPerformed()
+    {
+        if (!enableAutosave || string.IsNullOrEmpty(activeFilename)) return;
+
+        // If the user performs another action while a save is pending, reset the timer.
+        // This prevents multiple file writes while actively editing/drawing continuously.
+        if (pendingAutosave != null)
+        {
+            StopCoroutine(pendingAutosave);
+        }
+
+        pendingAutosave = StartCoroutine(DebouncedAutosaveRoutine());
+    }
+
+    private IEnumerator DebouncedAutosaveRoutine()
+    {
+        yield return new WaitForSeconds(debounceTime);
+
+        // Perform the quiet background save
+        QuickSaveCurrentScene();
+        pendingAutosave = null;
     }
 
     private void ImportPrepopulatedSaves_FromResources()
@@ -207,6 +274,7 @@ public class SaveLoadUI : MonoBehaviour
     // --- top-level actions ---
     void ClearAllSaves()
     {
+        if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(false);
         SaveSystem.ClearAllSaves();
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
         PopulateSaveList();
@@ -215,7 +283,7 @@ public class SaveLoadUI : MonoBehaviour
     public void OpenSaveWindow()
     {
         // Quick-save behavior: if there's an active file, overwrite it; otherwise create a quick save.
-        QuickSaveCurrentScene();
+        //QuickSaveCurrentScene();
         PopulateSaveList();
         if (saveWindowPanel) saveWindowPanel.SetActive(true);
     }
@@ -251,6 +319,11 @@ public class SaveLoadUI : MonoBehaviour
         }
 
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
+
+        if (saveIconFader != null)
+        {
+            saveIconFader.ShowSaveIcon();
+        }
     }
 
     // Build SaveData from savableRoot by scanning for BezierSpline components
@@ -562,6 +635,28 @@ public class SaveLoadUI : MonoBehaviour
         if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(true);
     }
 
+    private void OpenClearAllSavesConfirm()
+    {
+        if (confirmDeleteText != null) confirmDeleteText.text = $"Clear all saves? This cannot be undone.";
+
+        if (confirmDeleteButton != null)
+        {
+            confirmDeleteButton.onClick.RemoveAllListeners();
+            confirmDeleteButton.onClick.AddListener(ClearAllSaves);
+        }
+
+        if (cancelDeleteButton != null)
+        {
+            cancelDeleteButton.onClick.RemoveAllListeners();
+            cancelDeleteButton.onClick.AddListener(() =>
+            {
+                if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(false);
+            });
+        }
+
+        if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(true);
+    }
+
     private void ConfirmDelete()
     {
         if (string.IsNullOrEmpty(pendingDeleteTarget))
@@ -638,6 +733,11 @@ public class SaveLoadUI : MonoBehaviour
             try
             {
                 SaveSystem.SaveSceneAs(snapshot, displayName);
+
+                if (saveIconFader != null)
+                {
+                    saveIconFader.ShowSaveIcon(); //show the saved text so user knows the file was saved.
+                }
             }
             catch (Exception ex)
             {

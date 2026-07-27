@@ -99,6 +99,8 @@ public class DeletePoints : MonoBehaviour
                     splineSpheres[i].index -= pointsToRemove;
                 }
 
+                SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
+
                 Debug.Log($"Deleted {curvesToDelete} START curve(s) of '{spline.name}'.");
             }
             else if (deleteEnd)
@@ -127,6 +129,8 @@ public class DeletePoints : MonoBehaviour
                     SPD.controlSphereGroup.Remove(splineSpheres[i]);
                     Destroy(splineSpheres[i].sphereObject);
                 }
+
+                SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
 
                 Debug.Log($"Deleted {curvesToDelete} END curve(s) of '{spline.name}'.");
             }

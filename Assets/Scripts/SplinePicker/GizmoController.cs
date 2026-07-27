@@ -249,6 +249,8 @@ public class GizmoController : MonoBehaviour
         SPD.activeGizmoAxis = -1;
         initialOffset = Vector3.zero;
         initialPointPositions.Clear();
+
+        SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
     }
 
     void OnClearSelection(ClearSelection e)

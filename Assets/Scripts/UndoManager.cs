@@ -44,6 +44,8 @@ public class UndoManager : MonoBehaviour
         }
         redoStack.Push(JsonUtility.ToJson(saveLoadUI.BuildSaveDataFromRoot()));
         RestoreState(undoStack.Pop());
+
+        SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
     }
 
     public void Redo()
@@ -55,6 +57,8 @@ public class UndoManager : MonoBehaviour
         }
         undoStack.Push(JsonUtility.ToJson(saveLoadUI.BuildSaveDataFromRoot()));
         RestoreState(redoStack.Pop());
+
+        SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
     }
 
     // Call this from SaveLoadUI when loading a new file or creating a blank one
