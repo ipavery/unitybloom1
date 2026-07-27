@@ -23,7 +23,6 @@ public class ParticleManager : MonoBehaviour
     public ParticleSpawnMode spawnMode = ParticleSpawnMode.Music;
 
     public List<SplineParticleGroup> splineParticleGroup;
-    [SerializeField] Transform ParticleCubeTransform;
     [SerializeField] Transform symmetryPosition;
 
     ParticleSystem.Particle[] particleArray;
@@ -43,6 +42,9 @@ public class ParticleManager : MonoBehaviour
     public ConditionManager conditionManager;
     public RuntimeLineDrawer runtimeLineDrawer;
     public GameObject UIButtonContainer;
+
+    [Header("Isolation")]
+    public bool isPreviewMode = false; // Check this ONLY on the PreviewBoothPrefab
 
     void PrintArray(Vector3[] arr)
     {
@@ -65,24 +67,26 @@ public class ParticleManager : MonoBehaviour
     // Event system - restart particle system when clip drag ends
     void OnEnable()
     {
-        EventHub.Subscribe<ClipDragEnded>(OnClipDragEnded);
-        EventHub.Subscribe<GizmoDragEnded>(OnGizmoDragEnded);
-        EventHub.Subscribe<ReloadParticles>(OnReloadParticles);
-        EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
-        EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
-
-
+        if (!isPreviewMode)
+        {
+            EventHub.Subscribe<ClipDragEnded>(OnClipDragEnded);
+            EventHub.Subscribe<GizmoDragEnded>(OnGizmoDragEnded);
+            EventHub.Subscribe<ReloadParticles>(OnReloadParticles);
+            EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
+            EventHub.Subscribe<SplineUpdated>(OnSplineUpdated);
+        }
     }
 
     void OnDisable()
     {
-        EventHub.Unsubscribe<ClipDragEnded>(OnClipDragEnded);
-        EventHub.Unsubscribe<GizmoDragEnded>(OnGizmoDragEnded);
-        EventHub.Unsubscribe<ReloadParticles>(OnReloadParticles);
-        EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
-        EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
-
-
+        if (!isPreviewMode)
+        {
+            EventHub.Unsubscribe<ClipDragEnded>(OnClipDragEnded);
+            EventHub.Unsubscribe<GizmoDragEnded>(OnGizmoDragEnded);
+            EventHub.Unsubscribe<ReloadParticles>(OnReloadParticles);
+            EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
+            EventHub.Unsubscribe<SplineUpdated>(OnSplineUpdated);
+        }
     }
 
     // void HandleAudioBands(RealtimeAudioAnalyzer bands)
@@ -219,6 +223,7 @@ public class ParticleManager : MonoBehaviour
             var curSpline = group.spline;              // capture the spline object
             int musicChannel = curSpline.musicChannel; // capture primitive values too, if you use them
             float threshold = curSpline.activationThreshhold;
+            Debug.Log(curSpline);
             conditionManager.CreateEntry($"spline_{i}", () => true, () => SimulateSpline(curSpline), curSpline.s_life, true, 0f);
         }
     }
@@ -448,7 +453,7 @@ public class ParticleManager : MonoBehaviour
             {
 
                 symmetryPosition.transform.position = newParticlePosition;
-                symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * angleStep);
+                symmetryPosition.transform.RotateAround(transform.position, Vector3.back, z * angleStep);
 
                 var emitParams = new ParticleSystem.EmitParams
                 {

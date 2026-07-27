@@ -158,7 +158,7 @@ public class SelectionController : MonoBehaviour
         {
             raycastHit = true;
 
-            int idx = SPD.controlSphereGroup.FindIndex(group => group.sphereObject == hit.collider.gameObject);
+            int idx = SPD.controlSphereGroup.FindIndex(group => group != null && group.sphereObject != null && group.sphereObject == hit.collider.gameObject);
             if (idx != -1)
             {
                 var sphereGroup = SPD.controlSphereGroup[idx];
@@ -300,27 +300,33 @@ public class SelectionController : MonoBehaviour
         Vector2 min = Vector2.Min(selectionStart, mousePosition.ReadValue<Vector2>());
         Vector2 max = Vector2.Max(selectionStart, mousePosition.ReadValue<Vector2>());
 
-        foreach (var sphereGroup in SPD.controlSphereGroup)
+        // Iterate backwards so we can safely remove destroyed items from the list as we find them
+        for (int i = SPD.controlSphereGroup.Count - 1; i >= 0; i--)
         {
-            if (sphereGroup.isSelected == true)
+            var sphereGroup = SPD.controlSphereGroup[i];
+            
+            // 1. The Failsafe: Purge destroyed GameObjects from the ScriptableObject
+            if (sphereGroup == null || sphereGroup.sphereObject == null)
             {
-                continue; // Skip spheres that are selected
+                SPD.controlSphereGroup.RemoveAt(i);
+                continue;
             }
+
+            if (sphereGroup.isSelected == true) continue;
 
             GameObject sphere = sphereGroup.sphereObject;
             Vector3 screenPos = Camera.main.WorldToScreenPoint(sphere.transform.position);
 
             if (screenPos.z > 0 && screenPos.x >= min.x && screenPos.x <= max.x && screenPos.y >= min.y && screenPos.y <= max.y)
             {
-                //UpdateSelectedSpline(sphere); //ADD this back to make inspector work
+                UpdateSelectedSpline(sphere);
                 if (SPD.lastHighlighted == null)
                 {
-                    SPD.lastHighlighted = sphere; // Set the first highlighted sphere
+                    SPD.lastHighlighted = sphere; 
                     EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position));
-                    EventHub.Publish(new SplineSelectionChange(true, sphere.GetComponentInParent<BezierSpline>())); // Select the spline of the first highlighted control point
+                    EventHub.Publish(new SplineSelectionChange(true, sphere.GetComponentInParent<BezierSpline>())); 
                 }
                 EventHub.Publish(new ControlPointSelected(sphereGroup));
-                //Debug.Log("Selected control point: " + sphere.name);
             }
         }
     }

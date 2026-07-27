@@ -43,6 +43,14 @@ public class SaveLoadUI : MonoBehaviour
     public Button confirmDeleteButton;
     public Button cancelDeleteButton;
 
+    // Add these new variables to your existing headers in SaveLoadUI.cs
+    [Header("Pagination UI")]
+    public Button nextPageButton;
+    public Button prevPageButton;
+    public TMP_Text pageText;
+    private int currentPage = 0;
+    private const int SAVES_PER_PAGE = 4;
+
     [Header("Autosave Settings")]
     public bool enableAutosave = true;
     [Tooltip("How long to wait after the last user action before saving to disk.")]
@@ -99,6 +107,9 @@ public class SaveLoadUI : MonoBehaviour
         if (renameCancelButton != null) renameCancelButton.onClick.AddListener(CancelRename);
         if (cancelDeleteButton != null) cancelDeleteButton.onClick.AddListener(CancelDelete);
 
+        if (nextPageButton != null) nextPageButton.onClick.AddListener(NextPage);
+        if (prevPageButton != null) prevPageButton.onClick.AddListener(PrevPage);
+
         // confirm buttons wired when used to avoid stale listeners, but it's safe to clear here
         if (renameConfirmButton != null) renameConfirmButton.onClick.RemoveAllListeners();
         if (confirmDeleteButton != null) confirmDeleteButton.onClick.RemoveAllListeners();
@@ -107,7 +118,7 @@ public class SaveLoadUI : MonoBehaviour
         AutoLoadMostRecentSave();
 
         //uncomment this if you want to import prepopulated saves from Resources/PrepopulatedHistory on start (make sure to add .json files there first, and that they match your SaveData structure)
-        //ImportPrepopulatedSaves_FromResources();
+        ImportPrepopulatedSaves_FromResources();
     }
 
     /// <summary>
@@ -383,67 +394,106 @@ public class SaveLoadUI : MonoBehaviour
     {
         if (saveListContent == null || saveSlotButtonPrefab == null) return;
 
-        // clear existing UI entries
+        // Clean up UI and 3D Previews
+        foreach (Transform t in saveListContent) 
+        {
+            // Detach it from the layout group instantly so it doesn't take up a grid cell
+            t.SetParent(null); 
+            Destroy(t.gameObject);
+        }
+
+        // Clean up UI and 3D Previews
         foreach (Transform t in saveListContent) Destroy(t.gameObject);
+        if (SavePreviewManager.Instance != null) SavePreviewManager.Instance.ClearPreviews();
 
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
 
-        var contentRect = saveListContent.GetComponent<RectTransform>();
-        float slotHeight = saveSlotButtonPrefab.GetComponent<RectTransform>().sizeDelta.y;
-        contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, 1.5f * currentIndex.Count * Mathf.Max(1f, slotHeight));
+        // Pagination math
+        int totalPages = Mathf.Max(1, Mathf.CeilToInt((float)currentIndex.Count / SAVES_PER_PAGE));
+        currentPage = Mathf.Clamp(currentPage, 0, totalPages - 1);
+        int startIndex = currentPage * SAVES_PER_PAGE;
+        
+        UpdatePaginationUI(totalPages);
 
-        foreach (var meta in currentIndex)
+        List<SaveData> pageSaveData = new List<SaveData>();
+
+        for (int i = 0; i < SAVES_PER_PAGE; i++)
         {
-            var go = Instantiate(saveSlotButtonPrefab, saveListContent);
-            Button rootBtn = FindChildButtonByName(go, "LoadButton", "load"); ;
+            int dataIndex = startIndex + i;
+            if (dataIndex >= currentIndex.Count) break;
 
-            // TEXTMESH PRO: look for TMP_Text (TextMeshProUGUI)
-            var tmpText = rootBtn.GetComponentInChildren<TMP_Text>();
+            var meta = currentIndex[dataIndex];
+            var go = Instantiate(saveSlotButtonPrefab, saveListContent);
+            
+            // Standard Button Setup (Your existing FindChildButtonByName logic goes here)
+            Button rootBtn = go.GetComponent<Button>();
+            var tmpText = go.GetComponentInChildren<TMP_Text>();
             if (tmpText != null)
             {
                 var dt = new DateTime(meta.timestamp, DateTimeKind.Utc).ToLocalTime();
-                tmpText.text = $"{meta.displayName} — {dt:g}";
-            }
-            else
-            {
-                Debug.LogWarning("Save slot prefab does not contain a TMP_Text child. Please add one.");
+                tmpText.text = $"{meta.displayName}\n{dt:g}";
             }
 
-            // capture loop variable
             string filenameForListeners = meta.filename;
-            string displayForListeners = meta.displayName;
-
-            // Root click selects / loads the save and sets it as active
             if (rootBtn != null)
             {
                 rootBtn.onClick.RemoveAllListeners();
                 rootBtn.onClick.AddListener(() => OnSaveSelected(filenameForListeners));
             }
 
-            // Per-slot buttons: try to find children named "RenameButton", "CopyButton", "DeleteButton".
-            // Fall back to scanning child buttons and matching name contains.
-            Button renameBtn = FindChildButtonByName(go, "RenameButton", "rename");
-            Button copyBtn = FindChildButtonByName(go, "CopyButton", "copy");
-            Button deleteBtn = FindChildButtonByName(go, "DeleteButton", "delete");
-
-            if (renameBtn != null)
+            var rawImage = go.GetComponentInChildren<RawImage>();
+            if (rawImage != null)
             {
-                renameBtn.onClick.RemoveAllListeners();
-                renameBtn.onClick.AddListener(() => OpenRenameFor(filenameForListeners));
+                // Assign the texture
+                if (SavePreviewManager.Instance != null)
+                {
+                    rawImage.texture = SavePreviewManager.Instance.previewTextures[i];
+                }
+
+                // Ensure the image catches mouse clicks
+                rawImage.raycastTarget = true;
+
+                // Attach or grab a Button component directly on the RawImage
+                if (!rawImage.TryGetComponent<Button>(out var previewButton)) 
+                {
+                    previewButton = rawImage.gameObject.AddComponent<Button>();
+                }
+
+                // Bind the load action
+                string targetFilename = meta.filename;
+                previewButton.onClick.RemoveAllListeners();
+                previewButton.onClick.AddListener(() => OnSaveSelected(targetFilename));
             }
 
-            if (copyBtn != null)
-            {
-                copyBtn.onClick.RemoveAllListeners();
-                copyBtn.onClick.AddListener(() => CopySaveFile(filenameForListeners));
-            }
-
-            if (deleteBtn != null)
-            {
-                deleteBtn.onClick.RemoveAllListeners();
-                deleteBtn.onClick.AddListener(() => OpenDeleteConfirm(filenameForListeners, displayForListeners));
-            }
+            // Load the actual save data from disk to pass to the preview manager
+            SaveData data = SaveSystem.LoadSaveFile(meta.filename);
+            pageSaveData.Add(data ?? new SaveData()); // Add empty if corrupted so indices match
         }
+
+        // Send the loaded page data to the Preview Manager to spawn the booths
+        if (SavePreviewManager.Instance != null)
+        {
+            SavePreviewManager.Instance.GeneratePreviews(pageSaveData);
+        }
+    }
+
+    private void UpdatePaginationUI(int totalPages)
+    {
+        if (pageText != null) pageText.text = $"Page {currentPage + 1} of {totalPages}";
+        if (prevPageButton != null) prevPageButton.interactable = currentPage > 0;
+        if (nextPageButton != null) nextPageButton.interactable = currentPage < totalPages - 1;
+    }
+
+    private void NextPage()
+    {
+        currentPage++;
+        PopulateSaveList();
+    }
+
+    private void PrevPage()
+    {
+        currentPage--;
+        PopulateSaveList();
     }
 
     // Helper: find a child button by exact name or by substring fallback
