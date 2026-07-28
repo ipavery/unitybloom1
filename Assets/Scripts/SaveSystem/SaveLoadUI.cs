@@ -101,7 +101,10 @@ public class SaveLoadUI : MonoBehaviour
         if (loadButton != null) loadButton.onClick.AddListener(OpenSaveWindow);
         if (saveButton != null) saveButton.onClick.AddListener(QuickSaveCurrentScene);
         if (clearButton != null) clearButton.onClick.AddListener(OpenClearAllSavesConfirm);
-        if (closeButton != null) closeButton.onClick.AddListener(() => { if (saveWindowPanel) saveWindowPanel.SetActive(false); });
+        if (closeButton != null) closeButton.onClick.AddListener(() => { 
+            if (saveWindowPanel) saveWindowPanel.SetActive(false); 
+            if (SavePreviewManager.Instance != null) SavePreviewManager.Instance.ClearPreviews();
+        });
         if (newBlankFileButton != null) newBlankFileButton.onClick.AddListener(OnNewBlankFileClicked);
 
         if (renameCancelButton != null) renameCancelButton.onClick.AddListener(CancelRename);
@@ -118,7 +121,7 @@ public class SaveLoadUI : MonoBehaviour
         AutoLoadMostRecentSave();
 
         //uncomment this if you want to import prepopulated saves from Resources/PrepopulatedHistory on start (make sure to add .json files there first, and that they match your SaveData structure)
-        ImportPrepopulatedSaves_FromResources();
+        //ImportPrepopulatedSaves_FromResources();
     }
 
     /// <summary>
@@ -448,6 +451,7 @@ public class SaveLoadUI : MonoBehaviour
                 if (SavePreviewManager.Instance != null)
                 {
                     rawImage.texture = SavePreviewManager.Instance.previewTextures[i];
+                    //Debug.Log($"[UI Mapping] Save Slot {i} (File: {meta.displayName}) is reading from Texture '{SavePreviewManager.Instance.previewTextures[i].name}'");
                 }
 
                 // Ensure the image catches mouse clicks
@@ -517,11 +521,13 @@ public class SaveLoadUI : MonoBehaviour
 
     // --- selection / loading ---
     public void OnSaveSelected(string filename)
-    {   
+    {
         UndoManager.Instance.ClearHistory(); // clear undo history so that you don't load different saves
         activeFilename = filename;
         LoadSaveGroup(filename);
         if (saveWindowPanel) saveWindowPanel.SetActive(false);
+        
+        if (SavePreviewManager.Instance != null) SavePreviewManager.Instance.ClearPreviews();
     }
 
     public void LoadSaveDataInMemory(SaveData data)

@@ -223,7 +223,7 @@ public class ParticleManager : MonoBehaviour
             var curSpline = group.spline;              // capture the spline object
             int musicChannel = curSpline.musicChannel; // capture primitive values too, if you use them
             float threshold = curSpline.activationThreshhold;
-            Debug.Log(curSpline);
+            //Debug.Log(curSpline);
             conditionManager.CreateEntry($"spline_{i}", () => true, () => SimulateSpline(curSpline), curSpline.s_life, true, 0f);
         }
     }
@@ -406,14 +406,22 @@ public class ParticleManager : MonoBehaviour
                         // set position and life with radial symmetry
                         for (int z = 0; z < currentSpline.splineSymmetry; z++)
                         {
-
                             symmetryPosition.transform.position = newParticlePosition;
-                            symmetryPosition.transform.RotateAround(Vector3.zero, Vector3.back, z * angleStep);
+                            
+                            // FIXED PIVOT
+                            symmetryPosition.transform.RotateAround(transform.position, Vector3.back, z * angleStep);
+                            
                             var p = particleArray[currentParticleIndex];
-                            p.position = symmetryPosition.transform.position;
+                            
+                            // CONVERT TO LOCAL SPACE
+                            p.position = ps.main.simulationSpace == ParticleSystemSimulationSpace.Local 
+                                ? ps.transform.InverseTransformPoint(symmetryPosition.transform.position) 
+                                : symmetryPosition.transform.position;
+                                
                             p.remainingLifetime = life;
                             p.startColor = particleColor;
                             p.startLifetime = currentSpline.s_life;
+                            
                             particleArray[currentParticleIndex] = p;
                             currentParticleIndex++;
                         }
@@ -451,16 +459,21 @@ public class ParticleManager : MonoBehaviour
             // set position and life with radial symmetry
             for (int z = 0; z < currentSpline.splineSymmetry; z++)
             {
-
                 symmetryPosition.transform.position = newParticlePosition;
                 symmetryPosition.transform.RotateAround(transform.position, Vector3.back, z * angleStep);
+                
+                // CONVERT TO LOCAL SPACE
+                Vector3 finalPos = ps.main.simulationSpace == ParticleSystemSimulationSpace.Local 
+                    ? ps.transform.InverseTransformPoint(symmetryPosition.transform.position) 
+                    : symmetryPosition.transform.position;
 
                 var emitParams = new ParticleSystem.EmitParams
                 {
-                    position = symmetryPosition.transform.position,
+                    position = finalPos,
                     startColor = particleColor,
                     startLifetime = currentSpline.s_life,
                 };
+                
                 ps.Emit(emitParams, 1);
             }
             yield return new WaitForSeconds(particleTimeOffset);

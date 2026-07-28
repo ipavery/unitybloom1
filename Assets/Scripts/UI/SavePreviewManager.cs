@@ -35,14 +35,15 @@ public class SavePreviewManager : MonoBehaviour
             GameObject booth = Instantiate(previewBoothPrefab, boothPos, Quaternion.identity);
             activeBooths.Add(booth);
 
-            // 2. Link the camera to the corresponding RenderTexture
             Camera boothCam = booth.GetComponentInChildren<Camera>();
             boothCam.targetTexture = previewTextures[i];
+            //Debug.Log($"[Preview Mapping] Booth {i} (Y={boothPos.y}) Camera '{boothCam.name}' is rendering to Texture '{previewTextures[i].name}'");
 
             // 3. Load the data quietly
             Transform container = booth.transform.Find("SplineContainer");
             ParticleManager boothPM = booth.GetComponentInChildren<ParticleManager>();
 
+            //Debug.Log($"quietloading. first spline has color {pageData[i].splines[0].lerpColor1}");
             QuietLoadPreviewData(pageData[i], container, boothPM);
             
         }
@@ -61,12 +62,15 @@ public class SavePreviewManager : MonoBehaviour
     {
         boothPM.splineParticleGroup = new List<SplineParticleGroup>();
         int previewLayer = LayerMask.NameToLayer("Preview");
+        
+        // 1. Create a lookup dictionary (just like in SaveLoadUI)
+        var lookup = new Dictionary<string, BezierSpline>();
 
         foreach (var sd in data.splines)
         {
             GameObject go = Instantiate(splinePrefab, container);
             go.transform.localPosition = new Vector3(sd.posX, sd.posY, sd.posZ);
-            SetLayerRecursively(go, previewLayer); 
+            SetLayerRecursively(go, previewLayer);
 
             BezierSpline bs = go.GetComponent<BezierSpline>();
             if (bs != null)
@@ -82,22 +86,37 @@ public class SavePreviewManager : MonoBehaviour
                     }
                 }
                 
-                // Apply visual settings
+                // Apply visual settings (Added missing offsets)
                 bs.s_life = sd.s_life;
                 bs.splineSymmetry = sd.splineSymmetry;
                 bs.frequency = sd.frequency;
+                bs.lifetimeOffset = sd.lifetimeOffset; // FIXED
+                bs.lerpLifetimeOffset = sd.lerpLifetimeOffset; // FIXED
                 bs.lerpTimes = sd.lerpTimes;
                 bs.lerpColor1 = sd.lerpColor1;
                 bs.lerpColor2 = sd.lerpColor2;
                 bs.isActive = sd.isActive;
+                
+                // Set GUID via reflection so the dictionary lookup works
+                typeof(BezierSpline).GetField("guid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(bs, sd.id);
+                lookup[sd.id] = bs;
 
                 boothPM.splineParticleGroup.Add(new SplineParticleGroup { spline = bs });
             }
         }
 
+        // 2. Second pass to rebuild the lerp connections
+        foreach (var sd in data.splines)
+        {
+            if (!string.IsNullOrEmpty(sd.lerpSplineId) && lookup.TryGetValue(sd.lerpSplineId, out var target))
+            {
+                lookup[sd.id].lerpSpline = target;
+            }
+        }
+
         // Force independent mode so particles emit automatically without audio input
         boothPM.spawnMode = ParticleSpawnMode.Independent;
-        boothPM.gameObject.SendMessage("StartIndependent"); 
+        boothPM.gameObject.SendMessage("StartIndependent");
     }
 
     private void SetLayerRecursively(GameObject obj, int newLayer)
