@@ -43,13 +43,16 @@ public class SaveLoadUI : MonoBehaviour
     public Button confirmDeleteButton;
     public Button cancelDeleteButton;
 
-    // Add these new variables to your existing headers in SaveLoadUI.cs
+    [Header("Prepopulated Saves")]
+    public bool importPrepopulatedSaves_FromResources = false;
+
     [Header("Pagination UI")]
+    public ResponsiveGrid responsiveGrid; // ADD THIS LINE
     public Button nextPageButton;
     public Button prevPageButton;
     public TMP_Text pageText;
+    
     private int currentPage = 0;
-    private const int SAVES_PER_PAGE = 4;
 
     [Header("Autosave Settings")]
     public bool enableAutosave = true;
@@ -121,7 +124,7 @@ public class SaveLoadUI : MonoBehaviour
         AutoLoadMostRecentSave();
 
         //uncomment this if you want to import prepopulated saves from Resources/PrepopulatedHistory on start (make sure to add .json files there first, and that they match your SaveData structure)
-        //ImportPrepopulatedSaves_FromResources();
+        if (importPrepopulatedSaves_FromResources == true) ImportPrepopulatedSaves_FromResources();
     }
 
     /// <summary>
@@ -288,6 +291,8 @@ public class SaveLoadUI : MonoBehaviour
     // --- top-level actions ---
     void ClearAllSaves()
     {
+        CancelAutosave();
+
         if (confirmDeleteDialog != null) confirmDeleteDialog.SetActive(false);
         SaveSystem.ClearAllSaves();
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
@@ -304,15 +309,14 @@ public class SaveLoadUI : MonoBehaviour
 
     private void QuickSaveCurrentScene()
     {
-        var sd = BuildSaveDataFromRoot();
+        CancelAutosave(); // ADDED
 
+        var sd = BuildSaveDataFromRoot();
         if (!string.IsNullOrEmpty(activeFilename))
         {
-            // try to keep the same displayName while replacing file on disk (SaveSystem creates a new filename).
             var meta = currentIndex?.Find(m => m.filename == activeFilename);
             string displayName = meta != null ? meta.displayName : "Saved_File";
-
-            // delete the old file / index entry, then create a new save with same displayName
+            
             try
             {
                 SaveSystem.DeleteSave(activeFilename);
@@ -321,22 +325,27 @@ public class SaveLoadUI : MonoBehaviour
             {
                 Debug.LogWarning("[SaveLoadUI] Delete during quick-save failed: " + ex.Message);
             }
-
+            
             string created = SaveSystem.SaveSceneAs(sd, displayName);
-            activeFilename = created; // update active to the newly created filename
+            activeFilename = created; 
         }
         else
         {
-            // create a quick save (no active file)
             string created = SaveSystem.SaveSceneAs(sd, "Saved_File");
             activeFilename = created;
         }
-
+        
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
-
+        
         if (saveIconFader != null)
         {
             saveIconFader.ShowSaveIcon();
+        }
+
+        // ADDED: If the UI is currently open, refresh the buttons so they don't point to the deleted file!
+        if (saveWindowPanel != null && saveWindowPanel.activeSelf)
+        {
+            PopulateSaveList();
         }
     }
 
@@ -345,6 +354,15 @@ public class SaveLoadUI : MonoBehaviour
     {
         var data = new SaveData();
         if (savableRoot == null) return data;
+
+        // 1. Record the Main Camera's exact position and rotation
+        Transform mainCam = Camera.main.transform;
+        data.camPosX = mainCam.position.x;
+        data.camPosY = mainCam.position.y;
+        data.camPosZ = mainCam.position.z;
+        data.camRotX = mainCam.eulerAngles.x;
+        data.camRotY = mainCam.eulerAngles.y;
+        data.camRotZ = mainCam.eulerAngles.z;
 
         foreach (Transform child in savableRoot)
         {
@@ -396,39 +414,39 @@ public class SaveLoadUI : MonoBehaviour
     private void PopulateSaveList()
     {
         if (saveListContent == null || saveSlotButtonPrefab == null) return;
+        
+        // Force the grid to calculate its sizes before we populate
+        if (responsiveGrid != null) responsiveGrid.RecalculateGrid();
 
         // Clean up UI and 3D Previews
-        foreach (Transform t in saveListContent) 
+        for (int i = saveListContent.childCount - 1; i >= 0; i--)
         {
-            // Detach it from the layout group instantly so it doesn't take up a grid cell
-            t.SetParent(null); 
-            Destroy(t.gameObject);
+            Transform child = saveListContent.GetChild(i);
+            child.SetParent(null); // Detach from grid layout instantly
+            Destroy(child.gameObject);
         }
 
-        // Clean up UI and 3D Previews
-        foreach (Transform t in saveListContent) Destroy(t.gameObject);
         if (SavePreviewManager.Instance != null) SavePreviewManager.Instance.ClearPreviews();
 
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
 
-        // Pagination math
-        int totalPages = Mathf.Max(1, Mathf.CeilToInt((float)currentIndex.Count / SAVES_PER_PAGE));
+        // Pagination math using the dynamic ItemsPerPage
+        int dynamicSavesPerPage = responsiveGrid != null ? responsiveGrid.ItemsPerPage : 4;
+        
+        int totalPages = Mathf.Max(1, Mathf.CeilToInt((float)currentIndex.Count / dynamicSavesPerPage));
         currentPage = Mathf.Clamp(currentPage, 0, totalPages - 1);
-        int startIndex = currentPage * SAVES_PER_PAGE;
+        int startIndex = currentPage * dynamicSavesPerPage;
         
         UpdatePaginationUI(totalPages);
 
-        List<SaveData> pageSaveData = new List<SaveData>();
-
-        for (int i = 0; i < SAVES_PER_PAGE; i++)
+        for (int i = 0; i < dynamicSavesPerPage; i++)
         {
             int dataIndex = startIndex + i;
             if (dataIndex >= currentIndex.Count) break;
-
+            
             var meta = currentIndex[dataIndex];
             var go = Instantiate(saveSlotButtonPrefab, saveListContent);
             
-            // Standard Button Setup (Your existing FindChildButtonByName logic goes here)
             Button rootBtn = go.GetComponent<Button>();
             var tmpText = go.GetComponentInChildren<TMP_Text>();
             if (tmpText != null)
@@ -444,40 +462,57 @@ public class SaveLoadUI : MonoBehaviour
                 rootBtn.onClick.AddListener(() => OnSaveSelected(filenameForListeners));
             }
 
-            var rawImage = go.GetComponentInChildren<RawImage>();
-            if (rawImage != null)
-            {
-                // Assign the texture
-                if (SavePreviewManager.Instance != null)
-                {
-                    rawImage.texture = SavePreviewManager.Instance.previewTextures[i];
-                    //Debug.Log($"[UI Mapping] Save Slot {i} (File: {meta.displayName}) is reading from Texture '{SavePreviewManager.Instance.previewTextures[i].name}'");
-                }
+            // Per-slot buttons: try to find children named "RenameButton", "CopyButton", "DeleteButton".
+            // Fall back to scanning child buttons and matching name contains.
+            Button renameBtn = FindChildButtonByName(go, "RenameButton", "rename");
+            Button copyBtn = FindChildButtonByName(go, "CopyButton", "copy");
+            Button deleteBtn = FindChildButtonByName(go, "DeleteButton", "delete");
 
-                // Ensure the image catches mouse clicks
+            if (renameBtn != null) //not really needed since switching to tiles
+            {
+                renameBtn.onClick.RemoveAllListeners();
+                renameBtn.onClick.AddListener(() => OpenRenameFor(filenameForListeners));
+            }
+
+            if (copyBtn != null)
+            {
+                copyBtn.onClick.RemoveAllListeners();
+                copyBtn.onClick.AddListener(() => CopySaveFile(filenameForListeners));
+            }
+
+            if (deleteBtn != null)
+            {
+                deleteBtn.onClick.RemoveAllListeners();
+                deleteBtn.onClick.AddListener(() => OpenDeleteConfirm(filenameForListeners, "drawing"));
+            }
+
+            // Generate Preview Texture & Assign to Booth
+            var rawImage = go.GetComponentInChildren<RawImage>();
+            if (rawImage != null && SavePreviewManager.Instance != null)
+            {
+                // Grab the exact pixel dimensions the grid chose for this cell
+                Vector2 cellSize = saveListContent.GetComponent<GridLayoutGroup>().cellSize;
+                
+                // Ask the Manager to create a texture for this specific slot
+                RenderTexture slotTexture = SavePreviewManager.Instance.CreatePreviewTexture((int)cellSize.x, (int)cellSize.y);
+                rawImage.texture = slotTexture;
                 rawImage.raycastTarget = true;
 
-                // Attach or grab a Button component directly on the RawImage
                 if (!rawImage.TryGetComponent<Button>(out var previewButton)) 
                 {
                     previewButton = rawImage.gameObject.AddComponent<Button>();
                 }
 
-                // Bind the load action
-                string targetFilename = meta.filename;
                 previewButton.onClick.RemoveAllListeners();
-                previewButton.onClick.AddListener(() => OnSaveSelected(targetFilename));
+                previewButton.onClick.AddListener(() => OnSaveSelected(filenameForListeners));
+
+                // Load Data and Spawn Booth
+                SaveData data = SaveSystem.LoadSaveFile(meta.filename);
+                if (data != null)
+                {
+                    SavePreviewManager.Instance.GenerateSinglePreviewBooth(data, slotTexture, i);
+                }
             }
-
-            // Load the actual save data from disk to pass to the preview manager
-            SaveData data = SaveSystem.LoadSaveFile(meta.filename);
-            pageSaveData.Add(data ?? new SaveData()); // Add empty if corrupted so indices match
-        }
-
-        // Send the loaded page data to the Preview Manager to spawn the booths
-        if (SavePreviewManager.Instance != null)
-        {
-            SavePreviewManager.Instance.GeneratePreviews(pageSaveData);
         }
     }
 
@@ -522,6 +557,8 @@ public class SaveLoadUI : MonoBehaviour
     // --- selection / loading ---
     public void OnSaveSelected(string filename)
     {
+        CancelAutosave();
+
         UndoManager.Instance.ClearHistory(); // clear undo history so that you don't load different saves
         activeFilename = filename;
         LoadSaveGroup(filename);
@@ -587,6 +624,9 @@ public class SaveLoadUI : MonoBehaviour
 
         EventHub.Publish(new ReloadLerpUI(true));
         EventHub.Publish(new ReloadParticles(true));
+
+        // SNAP CAMERA TO SAVED POSITION
+        Camera.main.transform.SetPositionAndRotation(new Vector3(data.camPosX, data.camPosY, data.camPosZ), Quaternion.Euler(data.camRotX, data.camRotY, data.camRotZ));
     }
 
     private void LoadSaveGroup(string filename)
@@ -680,7 +720,7 @@ public class SaveLoadUI : MonoBehaviour
     private void OpenDeleteConfirm(string filename, string displayName)
     {
         pendingDeleteTarget = filename;
-        if (confirmDeleteText != null) confirmDeleteText.text = $"Delete \"{displayName}\"? This cannot be undone.";
+        if (confirmDeleteText != null) confirmDeleteText.text = $"Delete {displayName}? This cannot be undone.";
 
         if (confirmDeleteButton != null)
         {
@@ -766,6 +806,8 @@ public class SaveLoadUI : MonoBehaviour
 
     private void OnNewBlankFileClicked()
     {
+        CancelAutosave();
+
         // If there's an active file, persist current scene by overwriting the active entry (delete old file then save snapshot)
         if (!string.IsNullOrEmpty(activeFilename))
         {
@@ -824,4 +866,12 @@ public class SaveLoadUI : MonoBehaviour
         PopulateSaveList();
     }
 
+    private void CancelAutosave()
+    {
+        if (pendingAutosave != null)
+        {
+            StopCoroutine(pendingAutosave);
+            pendingAutosave = null;
+        }
+    }
 }
