@@ -122,7 +122,7 @@ public class UndoManager : MonoBehaviour
         // ==========================================
         EventHub.Publish(new ClearSelection());
         SaveData data = JsonUtility.FromJson<SaveData>(json);
-        saveLoadUI.LoadSaveDataInMemory(data);
+        saveLoadUI.LoadSaveDataInMemory(data, false);
 
         // ==========================================
         // STEP 3: RESTORE SELECTION EXACTLY

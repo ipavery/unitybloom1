@@ -355,14 +355,32 @@ public class SaveLoadUI : MonoBehaviour
         var data = new SaveData();
         if (savableRoot == null) return data;
 
-        // 1. Record the Main Camera's exact position and rotation
+        // 1. Record the Player's exact position/yaw and the Camera's pitch
         Transform mainCam = Camera.main.transform;
-        data.camPosX = mainCam.position.x;
-        data.camPosY = mainCam.position.y;
-        data.camPosZ = mainCam.position.z;
-        data.camRotX = mainCam.eulerAngles.x;
-        data.camRotY = mainCam.eulerAngles.y;
-        data.camRotZ = mainCam.eulerAngles.z;
+        Transform playerBody = mainCam.parent;
+
+        if (playerBody != null)
+        {
+            // Save parent's world position
+            data.camPosX = playerBody.position.x;
+            data.camPosY = playerBody.position.y;
+            data.camPosZ = playerBody.position.z;
+            
+            // Save camera's local X (pitch) and parent's world Y (yaw)
+            data.camRotX = mainCam.localEulerAngles.x; 
+            data.camRotY = playerBody.eulerAngles.y;   
+            data.camRotZ = 0f;
+        }
+        else
+        {
+            // Fallback if the camera has no parent
+            data.camPosX = mainCam.position.x;
+            data.camPosY = mainCam.position.y;
+            data.camPosZ = mainCam.position.z;
+            data.camRotX = mainCam.eulerAngles.x;
+            data.camRotY = mainCam.eulerAngles.y;
+            data.camRotZ = mainCam.eulerAngles.z;
+        }
 
         foreach (Transform child in savableRoot)
         {
@@ -567,7 +585,7 @@ public class SaveLoadUI : MonoBehaviour
         if (SavePreviewManager.Instance != null) SavePreviewManager.Instance.ClearPreviews();
     }
 
-    public void LoadSaveDataInMemory(SaveData data)
+    public void LoadSaveDataInMemory(SaveData data, bool restoreCamera = true)
     {
         if (savableRoot == null || splinePrefab == null) return;
 
@@ -626,7 +644,31 @@ public class SaveLoadUI : MonoBehaviour
         EventHub.Publish(new ReloadParticles(true));
 
         // SNAP CAMERA TO SAVED POSITION
-        Camera.main.transform.SetPositionAndRotation(new Vector3(data.camPosX, data.camPosY, data.camPosZ), Quaternion.Euler(data.camRotX, data.camRotY, data.camRotZ));
+        if (restoreCamera)
+        {
+            Transform mainCam = Camera.main.transform;
+            Transform playerBody = mainCam.parent;
+
+            if (playerBody != null)
+            {
+                // Snap the parent object to the saved location
+                playerBody.position = new Vector3(data.camPosX, data.camPosY, data.camPosZ);
+                
+                // Restore horizontal look (yaw) to the parent
+                playerBody.rotation = Quaternion.Euler(0f, data.camRotY, 0f);
+                
+                // Restore vertical look (pitch) locally to the camera
+                mainCam.localRotation = Quaternion.Euler(data.camRotX, 0f, 0f);
+            }
+            else
+            {
+                // Fallback if the camera has no parent
+                mainCam.SetPositionAndRotation(
+                    new Vector3(data.camPosX, data.camPosY, data.camPosZ), 
+                    Quaternion.Euler(data.camRotX, data.camRotY, data.camRotZ)
+                );
+            }
+        }
     }
 
     private void LoadSaveGroup(string filename)

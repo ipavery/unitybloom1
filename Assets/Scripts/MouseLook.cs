@@ -167,6 +167,9 @@ public class MouseLook : MonoBehaviour
 
     void Update()
     {
+        // Hard-lock the camera to the parent's exact position to prevent any drifting or swinging offsets.
+        transform.localPosition = Vector3.zero;
+
         // Cycle through the 3 modes using Tab
         if (Keyboard.current.tabKey.wasPressedThisFrame)
         {

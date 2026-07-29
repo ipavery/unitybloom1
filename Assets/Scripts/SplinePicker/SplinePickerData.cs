@@ -10,10 +10,15 @@ public class SplinePickerData : ScriptableObject
     public bool isInputBlocked = InputBlocker.IsInputBlocked("Unblocked UI Layer");
     public GameObject lastHighlighted = null;
     public bool isSelecting = false;
+
+    //control spheres
     public List<ControlPointGroup> controlSphereGroup = new();
+    public Color unselectedOriginalColor = Color.white;
+    public float controlPointScale;
+
+    //gizmos
     public Color highlightColor = Color.yellow;
     public float gizmoEmissionIntensity = 0.6f; // Emission intensity for gizmos
-    public Color unselectedOriginalColor = Color.white;
     public enum GizmoType
     {
         None = -1,
@@ -22,6 +27,10 @@ public class SplinePickerData : ScriptableObject
         RotateX = 6, RotateY = 7, RotateZ = 8
     }
     public int activeGizmoAxis = (int)GizmoType.None; // 0=X, 1=Y, 2=Z. -1 means not currently dragging
+
+    //Selection mode - complex with gizmos, or easy direct drag
+    public enum InteractionMode { Classic, DirectDrag }
+    public InteractionMode currentInteractionMode = InteractionMode.DirectDrag;
 
     List<Transform> GetDirectChildrenByName(Transform parent, string name)
     {

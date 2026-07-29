@@ -1,27 +1,110 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using TMPro;
 
 public class SettingsUI : MonoBehaviour
 {
     public Button settingsButton;
     public RectTransform settingsPanel;
 
+    [Header("Selection Mode")]
+    public TMP_Dropdown selectionModeDropdown;
+    public SplinePickerData SPD;
+
+    [Header("Spline Draw Freq input/slider")]
+    public Slider myFloatSlider;
+    public TMP_InputField myFloatInputField;
+    public float myFloatMin = 0f;
+    public float myFloatMax = 2f;
+    public DrawSpline drawSpline;
+
     void Start()
     {
         settingsPanel.gameObject.SetActive(false);
         settingsButton.onClick.AddListener(OnSettingsClicked);
+        
+        // --- Dropdown Setup ---
+        selectionModeDropdown.onValueChanged.AddListener(OnSelectionModeChanged);
+        
+        if (SPD.currentInteractionMode == SplinePickerData.InteractionMode.Classic)
+        {
+            selectionModeDropdown.SetValueWithoutNotify(1); // 1 = DirectDrag
+        }
+        else if (SPD.currentInteractionMode == SplinePickerData.InteractionMode.DirectDrag)
+        {
+            selectionModeDropdown.SetValueWithoutNotify(0); // 0 = Classic
+        }
+
+        // --- Float Setting Setup ---
+        myFloatSlider.minValue = myFloatMin;
+        myFloatSlider.maxValue = myFloatMax;
+
+        // Initialize UI with the current value silently
+        // CHANGE 'SPD.gizmoEmissionIntensity' TO YOUR ACTUAL TARGET FLOAT
+        UpdateFloatUIWithoutNotify(drawSpline.errorThreshold);
+
+        // Hook up the listeners
+        myFloatSlider.onValueChanged.AddListener(OnSliderValueChanged);
+        myFloatInputField.onEndEdit.AddListener(OnInputFieldValueChanged);
     }
 
     void OnSettingsClicked()
     {
-        if(settingsPanel.gameObject.activeSelf)
+        settingsPanel.gameObject.SetActive(!settingsPanel.gameObject.activeSelf);
+    }
+    
+    void OnSelectionModeChanged(int dropdownIndex)
+    {
+        // 0 = Classic, 1 = DirectDrag
+        if (dropdownIndex == 0)
         {
-            settingsPanel.gameObject.SetActive(false);
+            SPD.currentInteractionMode = SplinePickerData.InteractionMode.DirectDrag;
+        }
+        else if (dropdownIndex == 1)
+        {
+            SPD.currentInteractionMode = SplinePickerData.InteractionMode.Classic;
+        }
+    }
+
+    // --- Float Setting Logic ---
+
+    private void OnSliderValueChanged(float newValue)
+    {
+        // 1. Update the actual data
+        // CHANGE THIS TO YOUR ACTUAL TARGET FLOAT
+        drawSpline.errorThreshold = newValue; 
+
+        // 2. Update the input field silently to prevent infinite feedback loops (which causes the drop-to-0 bug)
+        myFloatInputField.SetTextWithoutNotify(newValue.ToString("0.##"));
+    }
+
+    private void OnInputFieldValueChanged(string textInput)
+    {
+        // Safely parse the text. If they typed garbage, it fails gracefully.
+        if (float.TryParse(textInput, out float parsedValue))
+        {
+            // Clamp the typed value to your strict limits
+            float clampedValue = Mathf.Clamp(parsedValue, myFloatMin, myFloatMax);
+
+            // 1. Update the actual data
+            // CHANGE THIS TO YOUR ACTUAL TARGET FLOAT
+            drawSpline.errorThreshold = clampedValue; 
+
+            // 2. Update both UI elements silently
+            UpdateFloatUIWithoutNotify(clampedValue);
         }
         else
         {
-            settingsPanel.gameObject.SetActive(true);
+            // If parsing failed, revert the text box to the last known good value
+            // CHANGE 'SPD.gizmoEmissionIntensity' TO YOUR ACTUAL TARGET FLOAT
+            myFloatInputField.SetTextWithoutNotify(drawSpline.errorThreshold.ToString("0.##"));
         }
+    }
+
+    private void UpdateFloatUIWithoutNotify(float value)
+    {
+        myFloatSlider.SetValueWithoutNotify(value);
+        myFloatInputField.SetTextWithoutNotify(value.ToString("0.##"));
     }
 }

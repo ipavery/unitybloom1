@@ -28,6 +28,11 @@ public class SelectionController : MonoBehaviour
     [Header("Connect Mode")]
     private bool isConnectMode = false; // Flag to indicate if we are in connect mode (communicating with lerpmanager)
 
+    [Header("Double Click Settings")]
+    private float lastClickTime = 0f;
+    private GameObject lastClickedObject = null;
+    private float doubleClickThreshold = 0.3f; // Max time between clicks to count as a double-click
+
     void Awake()
     {
         playerControls = new PlayerInputActions();
@@ -168,11 +173,41 @@ public class SelectionController : MonoBehaviour
                     EventHub.Publish(new LerpConnectionMade(spline)); //give selected spline to lerpmanager
                     return; //stop further selection protocol
                 }
-                EventHub.Publish(new ControlPointSelected(sphereGroup));
-                UpdateSelectedSpline(sphereGroup.sphereObject);
-                if (SPD.lastHighlighted != null)
+
+                GameObject currentSphere = sphereGroup.sphereObject;
+
+                // --- DOUBLE CLICK LOGIC ---
+                if (Time.time - lastClickTime < doubleClickThreshold && lastClickedObject == currentSphere)
                 {
-                    EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position));
+                    // Double click detected! Select the entire spline.
+                    var spline = currentSphere.GetComponentInParent<BezierSpline>();
+                    EventHub.Publish(new SelectSpline(spline));
+                    
+                    // Reset tracking to avoid a triple-click triggering it again
+                    lastClickTime = 0f;
+                    lastClickedObject = null;
+                }
+                else
+                {
+                    // Single click logic
+                    lastClickTime = Time.time;
+                    lastClickedObject = currentSphere;
+
+                    EventHub.Publish(new ControlPointSelected(sphereGroup));
+                    UpdateSelectedSpline(currentSphere);
+                    if (SPD.lastHighlighted != null)
+                    {
+                        EventHub.Publish(new ShowMoveGizmosEvent(SPD.lastHighlighted.transform.position));
+                    }
+                }
+
+                // --- DIRECT DRAG LOGIC ---
+                // (Runs for both single and double clicks so holding the second click lets you drag)
+                if (SPD.currentInteractionMode == SplinePickerData.InteractionMode.DirectDrag)
+                {
+                    // Trick the system into thinking we clicked the XY Planar Gizmo
+                    SPD.activeGizmoAxis = (int)SplinePickerData.GizmoType.PlanarX; 
+                    EventHub.Publish(new GizmoDragStarted(GetDragPlanePoint(selectionStart, SPD.activeGizmoAxis)));
                 }
                 return;
             }

@@ -159,6 +159,7 @@ public class ControlPointController : MonoBehaviour
     {
         GameObject sphere = Instantiate(controlPointSpherePrefab, point, Quaternion.identity);
         sphere.transform.SetParent(parent, false);
+        sphere.transform.localScale = new Vector3(SPD.controlPointScale, SPD.controlPointScale, SPD.controlPointScale);
 
         // Set the sphere to the "PP Layer"
         sphere.layer = LayerMask.NameToLayer("PP Layer");
