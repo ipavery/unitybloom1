@@ -20069,7 +20069,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1207117298
 Transform:
   m_ObjectHideFlags: 0
@@ -23344,14 +23344,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6dc5d75dec70c94280361bc5dbdccbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controlMode: 1
-  mouseSensitivity: 2
-  smoothing: 0.05
+  controlMode: 2
+  mouseSensitivity: 0.3
   playerBody: {fileID: 433620540}
   acceleration: 300
   maxSpeed: 500
   deceleration: 1000
-  scrollMovementEnabled: 0
+  scrollSpeed: 300
+  lockPanToZZero: 1
+  panSensitivity: 0.22
 --- !u!114 &1654640260
 MonoBehaviour:
   m_ObjectHideFlags: 0

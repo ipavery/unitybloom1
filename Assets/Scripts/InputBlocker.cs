@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using UnityEngine.InputSystem;
 
 public static class InputBlocker
 {
@@ -20,7 +21,7 @@ public static class InputBlocker
 
         PointerEventData pointerData = new PointerEventData(EventSystem.current)
         {
-            position = Input.mousePosition
+            position = Mouse.current.position.ReadValue()
         };
 
         List<RaycastResult> raycastResults = new List<RaycastResult>();

@@ -3,40 +3,51 @@ using UnityEngine.InputSystem;
 
 public enum ControlMode
 {
-    Fly,
-    Fixed
+    Fixed,  // WASDQE movement only, no rotation
+    Fly,    // WASDQE movement + Mouse Look
+    Pan     // Unity Editor style: Scroll to zoom to mouse, right-click drag to pan
 }
 
 public class MouseLook : MonoBehaviour
 {
     [Header("Mouse Look")]
-    public ControlMode controlMode = ControlMode.Fixed; // Default to fixed mode
+    public ControlMode controlMode = ControlMode.Fixed;
     public PlayerInputActions playerControls;
+    
     private InputAction move;
     private InputAction fire;
     private InputAction verticalupdown;
     private InputAction look;
-    public float mouseSensitivity = 2f;
-    [Tooltip("Smoothing factor (default ~0.05)")]
-    [Range(0f, 1f)]
-    public float smoothing = 0.05f;
-    public Transform playerBody;
 
+    [Tooltip("Sensitivity for looking around in Fly mode")]
+    public float mouseSensitivity = 0.1f; 
+
+    public Transform playerBody;
+    private Camera cam;
 
     [Header("Movement")]
     public float acceleration = 80f;
     public float maxSpeed = 300f;
     public float deceleration = 10f;
-    public bool scrollMovementEnabled = false; // fix this so you can use ui and scroll movement
+    
+    [Header("Pan & Zoom Settings")]
+    [Tooltip("Speed for zooming in and out with the scroll wheel")]
+    public float scrollSpeed = 100f; 
+
+    [Tooltip("If true, pans 1:1 exactly with the z=0 plane. If false, uses manual sensitivity.")]
+    public bool lockPanToZZero = true;
+    
+    [Tooltip("Sensitivity for dragging the camera in Pan mode (when Lock Pan To Z Zero is false)")]
+    public float panSensitivity = 0.1f;
+
     private Vector3 currentVelocity = Vector3.zero;
-
     private Vector2 _rotation;
-
-
+    private Vector2 lastMousePos;
 
     void Awake()
     {
         playerControls = new PlayerInputActions();
+        cam = GetComponent<Camera>(); // Cache the camera attached to this object
     }
 
     void OnEnable()
@@ -46,19 +57,11 @@ public class MouseLook : MonoBehaviour
         fire = playerControls.Player.Fire;
         verticalupdown = playerControls.Player.VerticalUpDown;
         look = playerControls.Player.Look;
-
-        move.Enable();
-        fire.Enable();
-        verticalupdown.Enable();
-        look.Enable();
     }
 
     void OnDisable()
     {
-        move.Disable();
-        fire.Disable();
-        verticalupdown.Disable();
-        look.Disable();
+        playerControls.Disable();
     }
 
     void Start()
@@ -71,35 +74,27 @@ public class MouseLook : MonoBehaviour
         if (controlMode == ControlMode.Fly)
         {
             Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
-
-        else if (controlMode == ControlMode.Fixed)
+        else
         {
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
         }
-
-
     }
 
     void MovementInput()
     {
-        // Movement Input
-        //left/right and forward/backward input using the new Input System
-        // This assumes you have a PlayerInputActions class set up with a "Move" action
         Vector2 input2 = move.ReadValue<Vector2>();
         Vector3 input = Vector3.zero;
-
-        input += playerBody.right * input2.x;
+        
+        // Use 'transform' for all directions so it is 100% relative to the camera's view
+        input += transform.right * input2.x;
         input += transform.forward * input2.y;
-
-        // Vertical up/down input using the new Input System - uses an Axis action with a 1D Axis binding
         input += transform.up * verticalupdown.ReadValue<float>();
-
-        // Normalize input to ensure consistent speed in all directions (although right/left is already normalized, up/down is not)
+        
         input = input.normalized;
 
-        // Accelerate
         if (input.magnitude > 0)
         {
             currentVelocity += input * acceleration * Time.deltaTime;
@@ -110,45 +105,102 @@ public class MouseLook : MonoBehaviour
             currentVelocity = Vector3.MoveTowards(currentVelocity, Vector3.zero, deceleration * Time.deltaTime);
         }
 
-        // Scroll movement
-        if (Input.mouseScrollDelta.y != 0 && scrollMovementEnabled)
+        // Apply the velocity to the parent body so the whole rig moves
+        playerBody.position += currentVelocity * Time.deltaTime;
+    }
+
+    void PanInput()
+    {
+        // 1. Scrolling (Zoom towards mouse)
+        float scrollY = Mouse.current.scroll.ReadValue().y;
+        if (scrollY != 0 && cam != null)
         {
-            currentVelocity += .3f * acceleration * Input.mouseScrollDelta.y * transform.forward;
-            currentVelocity = Vector3.ClampMagnitude(currentVelocity, maxSpeed * 2f);
+            // Normalize the scroll value to -1 or 1
+            float scrollDir = Mathf.Clamp(scrollY, -1f, 1f);
+            
+            // Cast a ray from the camera through the mouse pointer on the screen
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            Ray ray = cam.ScreenPointToRay(mousePos);
+            
+            // Move along the exact direction the mouse is pointing
+            playerBody.position += ray.direction * scrollDir * scrollSpeed * Time.deltaTime;
         }
 
-        playerBody.position += currentVelocity * Time.deltaTime;
+        // 2. Panning (Right Mouse Drag)
+        if (Mouse.current.rightButton.wasPressedThisFrame)
+        {
+            // Record initial mouse position when drag starts
+            lastMousePos = Mouse.current.position.ReadValue();
+        }
+        else if (Mouse.current.rightButton.isPressed)
+        {
+            if (lockPanToZZero && cam != null)
+            {
+                // Exact 1:1 mapping using the Z=0 plane
+                Vector2 currentMousePos = Mouse.current.position.ReadValue();
+                
+                Ray currentRay = cam.ScreenPointToRay(currentMousePos);
+                Ray lastRay = cam.ScreenPointToRay(lastMousePos);
+                Plane zPlane = new Plane(Vector3.forward, Vector3.zero); // Z=0 plane
+
+                // If both rays hit the mathematical plane, calculate the world delta
+                if (zPlane.Raycast(currentRay, out float dist1) && zPlane.Raycast(lastRay, out float dist2))
+                {
+                    Vector3 currentWorld = currentRay.GetPoint(dist1);
+                    Vector3 lastWorld = lastRay.GetPoint(dist2);
+                    
+                    // Move the camera by the inverted difference to keep the world point pinned to the cursor
+                    playerBody.position += (lastWorld - currentWorld);
+                }
+                
+                lastMousePos = currentMousePos;
+            }
+            else
+            {
+                // Manual sensitivity mapping (fallback)
+                Vector2 panDelta = look.ReadValue<Vector2>(); 
+                Vector3 panMovement = (-transform.right * panDelta.x * panSensitivity) + (-transform.up * panDelta.y * panSensitivity);
+                playerBody.position += panMovement;
+            }
+        }
     }
 
     void Update()
     {
+        // Cycle through the 3 modes using Tab
         if (Keyboard.current.tabKey.wasPressedThisFrame)
         {
-            controlMode = (controlMode == ControlMode.Fly) ? ControlMode.Fixed : ControlMode.Fly;
+            controlMode = (ControlMode)(((int)controlMode + 1) % 3);
             UpdateCursorLock();
         }
 
         if (controlMode == ControlMode.Fixed)
         {
+            // WASDQE only, no rotation
             MovementInput();
         }
         else if (controlMode == ControlMode.Fly)
         {
-            // Mouse Look -- i tried to switch to the new Input System but it didn't work smoothly, so using the old Input System for mouse look
-            float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+            // WASDQE + Rotation
+            Vector2 lookInput = look.ReadValue<Vector2>();
+            float mouseX = lookInput.x * mouseSensitivity;
+            float mouseY = lookInput.y * mouseSensitivity;
 
             _rotation.x -= mouseY;
             _rotation.x = Mathf.Clamp(_rotation.x, -90f, 90f);
 
             // Vertical look (camera)
             transform.localRotation = Quaternion.Euler(_rotation.x, 0f, 0f);
-
+            
             // Horizontal look (player body)
             playerBody.Rotate(Vector3.up * mouseX);
 
             MovementInput();
         }
-
+        else if (controlMode == ControlMode.Pan)
+        {
+            // Scroll to zoom to mouse, Right-Click Drag to pan, no rotation
+            PanInput();
+        }
     }
 }

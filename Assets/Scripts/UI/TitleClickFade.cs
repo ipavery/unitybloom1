@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.InputSystem;
 
 public class TitleClickFade : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class TitleClickFade : MonoBehaviour
     private void Update()
     {
         // Detect a click or tap
-        if (!clicked && (Input.GetMouseButtonDown(0) || Input.touchCount > 0))
+        if (!clicked && (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) || (Touchscreen.current != null && Touchscreen.current.touches.Count > 0))
         {
             clicked = true;
             StartCoroutine(FadeOut());
