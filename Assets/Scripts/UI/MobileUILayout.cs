@@ -64,6 +64,8 @@ public class MobileUILayout : MonoBehaviour
     public UnityEvent onDesktopLayout;
     public UnityEvent onMobileLayout;
 
+    public SplinePickerData SPD;
+
     private RectTransform rectTransform;
 
     void Start()
@@ -84,6 +86,7 @@ public class MobileUILayout : MonoBehaviour
             ApplyLayout(mobileLayout);
             ApplyChildOverrides(true);
             onMobileLayout?.Invoke();
+            SPD.controlPointScale = 5;
         }
         else
         {

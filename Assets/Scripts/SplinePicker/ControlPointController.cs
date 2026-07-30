@@ -179,5 +179,25 @@ public class ControlPointController : MonoBehaviour
         }
     }
     
-    
+    /// <summary>
+    /// Updates all instantiated control point spheres to match the current SPD.controlPointScale.
+    /// Can be called from UI scripts when the user finishes dragging the scale slider.
+    /// </summary>
+    public void RefreshControlPointScales()
+    {
+        Vector3 newScale = new Vector3(SPD.controlPointScale, SPD.controlPointScale, SPD.controlPointScale);
+
+        for (int i = SPD.controlSphereGroup.Count - 1; i >= 0; i--)
+        {
+            var group = SPD.controlSphereGroup[i];
+
+            if (group == null || group.sphereObject == null)
+            {
+                SPD.controlSphereGroup.RemoveAt(i);
+                continue;
+            }
+
+            group.sphereObject.transform.localScale = newScale;
+        }
+    }
 }

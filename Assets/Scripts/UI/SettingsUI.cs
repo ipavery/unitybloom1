@@ -19,6 +19,13 @@ public class SettingsUI : MonoBehaviour
     public float myFloatMax = 2f;
     public DrawSpline drawSpline;
 
+    [Header("Control Point Size Slider")]
+    public Slider controlPointSlider;
+    public TMP_InputField controlPointInput;
+    public float controlPointMin = .1f;
+    public float controlPointMax = 10f;
+    public ControlPointController controlPointController;
+
     [Header("Mouse Look Settings")]
     public MouseLook mouseLook;
     public TMP_Dropdown lookModeDropdown;
@@ -45,27 +52,37 @@ public class SettingsUI : MonoBehaviour
         
         if (mouseLook.controlMode == ControlMode.Pan)
         {
-            lookModeDropdown.SetValueWithoutNotify(0); // FIX: Target the correct dropdown
+            lookModeDropdown.SetValueWithoutNotify(0); 
         }
         else if (mouseLook.controlMode == ControlMode.Fixed)
         {
-            lookModeDropdown.SetValueWithoutNotify(1); // FIX: Target the correct dropdown
+            lookModeDropdown.SetValueWithoutNotify(1); 
         }
         else if (mouseLook.controlMode == ControlMode.Fly)
         {
-            lookModeDropdown.SetValueWithoutNotify(2); // FIX: Target the correct dropdown
+            lookModeDropdown.SetValueWithoutNotify(2); 
         }
 
-        // --- Float Setting Setup ---
+        // --- Spline Draw Freq Setting Setup ---
         myFloatSlider.minValue = myFloatMin;
         myFloatSlider.maxValue = myFloatMax;
 
-        // Initialize UI with the current value silently
         UpdateFloatUIWithoutNotify(drawSpline.errorThreshold);
 
-        // Hook up the listeners
         myFloatSlider.onValueChanged.AddListener(OnSliderValueChanged);
         myFloatInputField.onEndEdit.AddListener(OnInputFieldValueChanged);
+
+        // --- Control Point Size Setting Setup ---
+        controlPointSlider.minValue = controlPointMin;
+        controlPointSlider.maxValue = controlPointMax;
+
+        // Initialize UI with the current value silently
+        // CHANGE 'SPD.controlPointScale' TO YOUR ACTUAL TARGET FLOAT
+        UpdateControlPointUIWithoutNotify(SPD.controlPointScale);
+
+        // Hook up the listeners
+        controlPointSlider.onValueChanged.AddListener(OnControlPointSliderValueChanged);
+        controlPointInput.onEndEdit.AddListener(OnControlPointInputFieldValueChanged);
     }
 
     void OnSettingsClicked()
@@ -88,7 +105,7 @@ public class SettingsUI : MonoBehaviour
     
     void OnLookModeChanged(int dropdownIndex)
     {
-        // 0 = Classic, 1 = DirectDrag
+        // 0 = Classic, 1 = DirectDrag (Wait, comment says 0 = Classic, 1 = DirectDrag, but code assigns differently. Kept your original logic)
         if (dropdownIndex == 0)
         {
             mouseLook.controlMode = ControlMode.Pan;
@@ -103,37 +120,24 @@ public class SettingsUI : MonoBehaviour
         }
     }
 
-    // --- Float Setting Logic ---
+    // --- Float Setting Logic (Spline Draw Freq) ---
 
     private void OnSliderValueChanged(float newValue)
     {
-        // 1. Update the actual data
-        // CHANGE THIS TO YOUR ACTUAL TARGET FLOAT
         drawSpline.errorThreshold = newValue; 
-
-        // 2. Update the input field silently to prevent infinite feedback loops (which causes the drop-to-0 bug)
         myFloatInputField.SetTextWithoutNotify(newValue.ToString("0.##"));
     }
 
     private void OnInputFieldValueChanged(string textInput)
     {
-        // Safely parse the text. If they typed garbage, it fails gracefully.
         if (float.TryParse(textInput, out float parsedValue))
         {
-            // Clamp the typed value to your strict limits
             float clampedValue = Mathf.Clamp(parsedValue, myFloatMin, myFloatMax);
-
-            // 1. Update the actual data
-            // CHANGE THIS TO YOUR ACTUAL TARGET FLOAT
             drawSpline.errorThreshold = clampedValue; 
-
-            // 2. Update both UI elements silently
             UpdateFloatUIWithoutNotify(clampedValue);
         }
         else
         {
-            // If parsing failed, revert the text box to the last known good value
-            // CHANGE 'SPD.gizmoEmissionIntensity' TO YOUR ACTUAL TARGET FLOAT
             myFloatInputField.SetTextWithoutNotify(drawSpline.errorThreshold.ToString("0.##"));
         }
     }
@@ -142,5 +146,46 @@ public class SettingsUI : MonoBehaviour
     {
         myFloatSlider.SetValueWithoutNotify(value);
         myFloatInputField.SetTextWithoutNotify(value.ToString("0.##"));
+    }
+
+    // --- Control Point Size Logic ---
+
+    private void OnControlPointSliderValueChanged(float newValue)
+    {
+        // 1. Update the actual data
+        // CHANGE 'SPD.controlPointScale' TO YOUR ACTUAL TARGET FLOAT
+        SPD.controlPointScale = newValue;
+        controlPointController.RefreshControlPointScales();
+        // 2. Update the input field silently to prevent infinite feedback loops (which causes the drop-to-0 bug)
+        controlPointInput.SetTextWithoutNotify(newValue.ToString("0.##"));
+    }
+
+    private void OnControlPointInputFieldValueChanged(string textInput)
+    {
+        // Safely parse the text. If they typed garbage, it fails gracefully.
+        if (float.TryParse(textInput, out float parsedValue))
+        {
+            // Clamp the typed value to your strict limits
+            float clampedValue = Mathf.Clamp(parsedValue, controlPointMin, controlPointMax);
+
+            // 1. Update the actual data
+            // CHANGE 'SPD.controlPointScale' TO YOUR ACTUAL TARGET FLOAT
+            SPD.controlPointScale = clampedValue; 
+            controlPointController.RefreshControlPointScales();
+            // 2. Update both UI elements silently
+            UpdateControlPointUIWithoutNotify(clampedValue);
+        }
+        else
+        {
+            // If parsing failed, revert the text box to the last known good value
+            // CHANGE 'SPD.controlPointScale' TO YOUR ACTUAL TARGET FLOAT
+            controlPointInput.SetTextWithoutNotify(SPD.controlPointScale.ToString("0.##"));
+        }
+    }
+
+    private void UpdateControlPointUIWithoutNotify(float value)
+    {
+        controlPointSlider.SetValueWithoutNotify(value);
+        controlPointInput.SetTextWithoutNotify(value.ToString("0.##"));
     }
 }
