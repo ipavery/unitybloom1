@@ -1146,6 +1146,7 @@ MonoBehaviour:
   wheelRect: {fileID: 5549461112894456777}
   wheelRenderer: {fileID: 3574688466745658209}
   colorDarkener: {fileID: 4632006601093817794}
+  updateThrottle: 0.3
 --- !u!1 &6628141319304448490
 GameObject:
   m_ObjectHideFlags: 0

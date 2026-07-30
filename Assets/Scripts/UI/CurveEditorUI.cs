@@ -4,8 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using System.Collections;
 
-[Serializable]
 public class InspectorField
 {
     public string fieldName;
@@ -47,6 +47,12 @@ public class CurveEditorUI : MonoBehaviour
     public BezierSpline splinePrefab; // Prefab for copying splines
     public GameObject drawSplineContainer; //where the new splines go
 
+    [Header("Optimization")]
+    [Tooltip("How often the particle system updates while dragging sliders (in seconds)")]
+    public float particleUpdateThrottle = 0.1f;
+    private bool isThrottlingParticles = false;
+    private bool needsParticleReload = false;
+
     void OnEnable()
     {
         EventHub.Subscribe<SplineSelectionChange>(SelectObject);
@@ -69,7 +75,34 @@ public class CurveEditorUI : MonoBehaviour
 
     void ReloadParticles()
     {
+        if (!isThrottlingParticles)
+        {
+            StartCoroutine(ThrottleParticleReload());
+        }
+        else
+        {
+            needsParticleReload = true;
+        }
+    }
+
+    private IEnumerator ThrottleParticleReload()
+    {
+        isThrottlingParticles = true;
+        
+        // Execute immediately for snappy responsiveness
         EventHub.Publish(new ReloadParticles(true));
+        needsParticleReload = false;
+
+        // Wait for the throttle duration
+        yield return new WaitForSeconds(particleUpdateThrottle);
+
+        isThrottlingParticles = false;
+
+        // If the user kept dragging during the wait, do one final clean update
+        if (needsParticleReload)
+        {
+            ReloadParticles();
+        }
     }
 
     void Start()

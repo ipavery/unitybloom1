@@ -82,21 +82,6 @@ public class SaveLoadUI : MonoBehaviour
         Instance = this;
     }
 
-    // void OnEnable()
-    // {
-    //     EventHub.Subscribe<NewSplineCreated>(OnNewSplineCreated);
-    // }
-
-    // void OnDisable()
-    // {
-    //     EventHub.Unsubscribe<NewSplineCreated>(OnNewSplineCreated);
-    // }
-
-    // void OnNewSplineCreated(NewSplineCreated e)
-    // {
-    //     NotifyActionPerformed();
-    // }
-
     void Start()
     {
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();

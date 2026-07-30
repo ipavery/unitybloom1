@@ -230,29 +230,31 @@ public class SelectionController : MonoBehaviour
 
     void OnSelectEnd(InputAction.CallbackContext ctx)
     {
-        if (SPD.isInputBlocked) return;
-
         selectionEnd = mousePosition.ReadValue<Vector2>();
-        // EventHub.Publish(new SelectionStartEnd(selectionEnd, false)); //no listeners for this yet but might need it in future
 
+        // 1. ALWAYS clean up the visual selection box
         if (SPD.isSelecting)
         {
             SPD.isSelecting = false;
             selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
         }
 
-        if (SPD.lastHighlighted != null)
+        // 2. ALWAYS end the gizmo drag cleanly
+        if (SPD.lastHighlighted != null && SPD.activeGizmoAxis != -1)
         {
             EventHub.Publish(new GizmoDragEnded(SPD.lastHighlighted, SPD.lastHighlighted.transform.position));
         }
 
+        // 3. NOW we check if input is blocked before processing background deselects
+        if (SPD.isInputBlocked) return; 
+
         float selectDist = (selectionEnd - selectionStart).magnitude;
-        if (!raycastHit && selectDist < 5f) // if you haven't moved much and didn't hit anything, clear selection
+        if (!raycastHit && selectDist < 5f) 
         {
             EventHub.Publish(new ClearSelection());
             if (selectedSpline != null)
             {
-                EventHub.Publish(new SplineSelectionChange(false, selectedSpline)); // unselect spline if not null
+                EventHub.Publish(new SplineSelectionChange(false, selectedSpline)); 
                 EventHub.Publish(new EnterExitLerping(false));
             }
         }

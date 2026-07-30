@@ -28,31 +28,32 @@ public class SettingsUI : MonoBehaviour
         settingsPanel.gameObject.SetActive(false);
         settingsButton.onClick.AddListener(OnSettingsClicked);
         
-        // --- Dropdown Setup ---
+        // --- 1. Selection Mode Dropdown Setup (0 = DirectDrag, 1 = Classic) ---
         selectionModeDropdown.onValueChanged.AddListener(OnSelectionModeChanged);
-
-        if (SPD.currentInteractionMode == SplinePickerData.InteractionMode.Classic)
-        {
-            selectionModeDropdown.SetValueWithoutNotify(1); // 1 = DirectDrag
-        }
-        else if (SPD.currentInteractionMode == SplinePickerData.InteractionMode.DirectDrag)
-        {
-            selectionModeDropdown.SetValueWithoutNotify(0); // 0 = Classic
-        }
-
-        lookModeDropdown.onValueChanged.AddListener(OnLookModeChanged);
-
-        if (mouseLook.controlMode == ControlMode.Pan)
+        
+        if (SPD.currentInteractionMode == SplinePickerData.InteractionMode.DirectDrag)
         {
             selectionModeDropdown.SetValueWithoutNotify(0); 
         }
-        else if (mouseLook.controlMode == ControlMode.Fixed)
+        else if (SPD.currentInteractionMode == SplinePickerData.InteractionMode.Classic)
         {
             selectionModeDropdown.SetValueWithoutNotify(1); 
         }
+
+        // --- 2. Look Mode Dropdown Setup ---
+        lookModeDropdown.onValueChanged.AddListener(OnLookModeChanged);
+        
+        if (mouseLook.controlMode == ControlMode.Pan)
+        {
+            lookModeDropdown.SetValueWithoutNotify(0); // FIX: Target the correct dropdown
+        }
+        else if (mouseLook.controlMode == ControlMode.Fixed)
+        {
+            lookModeDropdown.SetValueWithoutNotify(1); // FIX: Target the correct dropdown
+        }
         else if (mouseLook.controlMode == ControlMode.Fly)
         {
-            selectionModeDropdown.SetValueWithoutNotify(2);
+            lookModeDropdown.SetValueWithoutNotify(2); // FIX: Target the correct dropdown
         }
 
         // --- Float Setting Setup ---
@@ -74,7 +75,7 @@ public class SettingsUI : MonoBehaviour
 
     void OnSelectionModeChanged(int dropdownIndex)
     {
-        // 0 = Classic, 1 = DirectDrag
+        // 0 = DirectDrag, 1 = Classic
         if (dropdownIndex == 0)
         {
             SPD.currentInteractionMode = SplinePickerData.InteractionMode.DirectDrag;

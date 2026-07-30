@@ -7074,7 +7074,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Version 1.0
+  m_text: Version 1.002
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -17862,9 +17862,9 @@ MonoBehaviour:
   pointsPerSpline: 20
   lineMaterial: {fileID: 2100000, guid: 4dabd2e1c280f5543943c9a8d6a50aea, type: 2}
   highlightedLineMaterial: {fileID: 2100000, guid: c69cf62f91128a54db3ab0130fb24c84, type: 2}
-  lineWidth: 0.07
+  lineWidth: 0.13
   tangentMaterial: {fileID: 2100000, guid: 6920b5caf4b62a743ab27c0ad85affb8, type: 2}
-  tangentLineWidth: 0.05
+  tangentLineWidth: 0.1
   particleManager: {fileID: 527990700}
 --- !u!114 &735388312
 MonoBehaviour:
@@ -28161,10 +28161,10 @@ MonoBehaviour:
   deleteButton: {fileID: 250024005}
   activateButton: {fileID: 646807847}
   copyButton: {fileID: 1798102095}
-  fields: []
   selectedObject: {fileID: 0}
   splinePrefab: {fileID: 8200230412672707328, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
   drawSplineContainer: {fileID: 2120734413}
+  particleUpdateThrottle: 0.3
 --- !u!114 &1729293121
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28182,8 +28182,8 @@ MonoBehaviour:
   particleManager: {fileID: 527990700}
   scrollLineMaterial: {fileID: 2100000, guid: 21eb534d41a7c2f42ad7c89baf9f9971, type: 2}
   scrollSpeed: 10
-  arrowWorldLength: 13
-  lineWidth: 1
+  arrowWorldLength: 25
+  lineWidth: 3
 --- !u!1 &1747170245
 GameObject:
   m_ObjectHideFlags: 0

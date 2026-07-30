@@ -2,9 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 public static class SaveSystem
 {
+    [DllImport("__Internal")]
+    private static extern void SyncFiles();
+
     private static string IndexFile => Path.Combine(Application.persistentDataPath, "saves_index.json");
 
     /// <summary>
@@ -81,6 +85,10 @@ public static class SaveSystem
         metas.Insert(0, meta); // newest first
         SaveIndex(metas);
 
+        #if UNITY_WEBGL && !UNITY_EDITOR
+            SyncFiles();
+        #endif
+
         return filename;
     }
 
@@ -100,6 +108,10 @@ public static class SaveSystem
         var metas = LoadIndex();
         metas.RemoveAll(m => m.filename == filename);
         SaveIndex(metas);
+
+        #if UNITY_WEBGL && !UNITY_EDITOR
+            SyncFiles();
+        #endif
     }
 
     // Helper wrapper for serializing lists with JsonUtility
