@@ -23,6 +23,7 @@ public class SplineRenderer : MonoBehaviour
 
     // reference to ParticleManager to get the list of splines to render
     [SerializeField] private ParticleManager particleManager;
+    private bool isHidden = false;
 
     void OnEnable()
     {
@@ -68,6 +69,8 @@ public class SplineRenderer : MonoBehaviour
 
     void OnHideShow3DUI(HideShow3DUI e)
     {
+        isHidden = e.hide;
+
         if (e.hide == true)
         {
             foreach (var spline in particleManager.splineParticleGroup.Select(g => g.spline).Where(s => s != null))
@@ -122,6 +125,7 @@ public class SplineRenderer : MonoBehaviour
 
         // Note: Tangent lines aren't initialized here because UpdateSplineVisuals 
         // will dynamically generate them based on the number of knots.
+        lr.enabled = !isHidden;
     }
 
     /// <summary>
@@ -171,6 +175,8 @@ public class SplineRenderer : MonoBehaviour
             tl.material = tangentMaterial;
             tl.widthMultiplier = tangentLineWidth;
             tl.useWorldSpace = true;
+
+            tl.enabled = !isHidden;
         }
 
         // Remove excess LineRenderers if the user deleted curves

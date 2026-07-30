@@ -19,6 +19,10 @@ public class SettingsUI : MonoBehaviour
     public float myFloatMax = 2f;
     public DrawSpline drawSpline;
 
+    [Header("Mouse Look Settings")]
+    public MouseLook mouseLook;
+    public TMP_Dropdown lookModeDropdown;
+
     void Start()
     {
         settingsPanel.gameObject.SetActive(false);
@@ -26,7 +30,7 @@ public class SettingsUI : MonoBehaviour
         
         // --- Dropdown Setup ---
         selectionModeDropdown.onValueChanged.AddListener(OnSelectionModeChanged);
-        
+
         if (SPD.currentInteractionMode == SplinePickerData.InteractionMode.Classic)
         {
             selectionModeDropdown.SetValueWithoutNotify(1); // 1 = DirectDrag
@@ -36,12 +40,26 @@ public class SettingsUI : MonoBehaviour
             selectionModeDropdown.SetValueWithoutNotify(0); // 0 = Classic
         }
 
+        lookModeDropdown.onValueChanged.AddListener(OnLookModeChanged);
+
+        if (mouseLook.controlMode == ControlMode.Pan)
+        {
+            selectionModeDropdown.SetValueWithoutNotify(0); 
+        }
+        else if (mouseLook.controlMode == ControlMode.Fixed)
+        {
+            selectionModeDropdown.SetValueWithoutNotify(1); 
+        }
+        else if (mouseLook.controlMode == ControlMode.Fly)
+        {
+            selectionModeDropdown.SetValueWithoutNotify(2);
+        }
+
         // --- Float Setting Setup ---
         myFloatSlider.minValue = myFloatMin;
         myFloatSlider.maxValue = myFloatMax;
 
         // Initialize UI with the current value silently
-        // CHANGE 'SPD.gizmoEmissionIntensity' TO YOUR ACTUAL TARGET FLOAT
         UpdateFloatUIWithoutNotify(drawSpline.errorThreshold);
 
         // Hook up the listeners
@@ -53,7 +71,7 @@ public class SettingsUI : MonoBehaviour
     {
         settingsPanel.gameObject.SetActive(!settingsPanel.gameObject.activeSelf);
     }
-    
+
     void OnSelectionModeChanged(int dropdownIndex)
     {
         // 0 = Classic, 1 = DirectDrag
@@ -64,6 +82,23 @@ public class SettingsUI : MonoBehaviour
         else if (dropdownIndex == 1)
         {
             SPD.currentInteractionMode = SplinePickerData.InteractionMode.Classic;
+        }
+    }
+    
+    void OnLookModeChanged(int dropdownIndex)
+    {
+        // 0 = Classic, 1 = DirectDrag
+        if (dropdownIndex == 0)
+        {
+            mouseLook.controlMode = ControlMode.Pan;
+        }
+        else if (dropdownIndex == 1)
+        {
+            mouseLook.controlMode = ControlMode.Fixed;
+        }
+        else if (dropdownIndex == 2)
+        {
+            mouseLook.controlMode = ControlMode.Fly;
         }
     }
 

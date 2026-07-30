@@ -270,6 +270,14 @@ public class CurveEditorUI : MonoBehaviour
                 },
                 new InspectorField
                 {
+                    fieldName = "Start Offset",
+                    getter = () => selectedObject.startTimeOffset,
+                    setter = v => { var p = selectedObject.startTimeOffset; p = v; selectedObject.startTimeOffset = p; },
+                    minMax = new(0,1f),
+                    wholeNumbers = false
+                },
+                new InspectorField
+                {
                     fieldName = "Repeats",
                     getter = () => selectedObject.lerpTimes,
                     setter = v => { var p = selectedObject.lerpTimes; p = (int)v; selectedObject.lerpTimes = p; },

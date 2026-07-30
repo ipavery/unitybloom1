@@ -24,7 +24,8 @@ public class SplinePickerData : ScriptableObject
         None = -1,
         MoveX = 0, MoveY = 1, MoveZ = 2,
         PlanarX = 3, PlanarY = 4, PlanarZ = 5,
-        RotateX = 6, RotateY = 7, RotateZ = 8
+        RotateX = 6, RotateY = 7, RotateZ = 8,
+        ScaleX = 9, ScaleY = 10, ScaleZ = 11 // <--- ADD THESE
     }
     public int activeGizmoAxis = (int)GizmoType.None; // 0=X, 1=Y, 2=Z. -1 means not currently dragging
 

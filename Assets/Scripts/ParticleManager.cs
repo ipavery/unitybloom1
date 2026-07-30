@@ -525,6 +525,15 @@ public class ParticleManager : MonoBehaviour
 
     }
 
+    //helper method to allow other scripts to clear particles
+    public void ClearAllParticles()
+    {
+        if (ps != null)
+        {
+            ps.Clear();
+        }
+    }
+
     void Update()
     {
         if (spawnMode == ParticleSpawnMode.Instant)

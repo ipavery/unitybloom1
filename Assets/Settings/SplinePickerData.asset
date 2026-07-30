@@ -52,8 +52,44 @@ MonoBehaviour:
   - sphereObject: {fileID: 0}
     isSelected: 0
     index: 3
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 0
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 1
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 2
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 3
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 0
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 1
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 2
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 3
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 0
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 1
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 2
+  - sphereObject: {fileID: 0}
+    isSelected: 0
+    index: 3
   unselectedOriginalColor: {r: 1, g: 1, b: 1, a: 1}
-  controlPointScale: 3
+  controlPointScale: 2
   highlightColor: {r: 1, g: 0.92759216, b: 0, a: 1}
   gizmoEmissionIntensity: 0.5
   activeGizmoAxis: -1

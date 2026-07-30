@@ -12,6 +12,7 @@ public class SplineData
     public int frequency;
     public float lifetimeOffset;
     public float lerpLifetimeOffset;
+    public float startTimeOffset;
     public int lerpTimes;
     public Color lerpColor1;
     public Color lerpColor2;

@@ -46,6 +46,9 @@ public class SaveLoadUI : MonoBehaviour
     [Header("Prepopulated Saves")]
     public bool importPrepopulatedSaves_FromResources = false;
 
+    [Header("Cinematic Intro")]
+    public bool playCinematicIntro = true;
+
     [Header("Pagination UI")]
     public ResponsiveGrid responsiveGrid; // ADD THIS LINE
     public Button nextPageButton;
@@ -120,8 +123,11 @@ public class SaveLoadUI : MonoBehaviour
         if (renameConfirmButton != null) renameConfirmButton.onClick.RemoveAllListeners();
         if (confirmDeleteButton != null) confirmDeleteButton.onClick.RemoveAllListeners();
 
-        // Auto-load the most recent save on startup
-        AutoLoadMostRecentSave();
+        //load most recent save
+        if (!playCinematicIntro)
+        {
+            AutoLoadMostRecentSave();
+        }
 
         //uncomment this if you want to import prepopulated saves from Resources/PrepopulatedHistory on start (make sure to add .json files there first, and that they match your SaveData structure)
         if (importPrepopulatedSaves_FromResources == true) ImportPrepopulatedSaves_FromResources();
@@ -249,7 +255,7 @@ public class SaveLoadUI : MonoBehaviour
     /// Automatically loads the most recent save on startup.
     /// If no saves exist, creates and loads a blank save.
     /// </summary>
-    private void AutoLoadMostRecentSave()
+    public void AutoLoadMostRecentSave()
     {
         currentIndex = SaveSystem.LoadIndex() ?? new List<SaveMeta>();
         
@@ -416,6 +422,7 @@ public class SaveLoadUI : MonoBehaviour
             s.lifetimeOffset = bs.lifetimeOffset;
             s.lerpLifetimeOffset = bs.lerpLifetimeOffset;
             s.lerpTimes = bs.lerpTimes;
+            s.startTimeOffset = bs.startTimeOffset;
             s.lerpColor1 = bs.lerpColor1;
             s.lerpColor2 = bs.lerpColor2;
             s.musicChannel = bs.musicChannel;
@@ -618,6 +625,7 @@ public class SaveLoadUI : MonoBehaviour
                 bs.lifetimeOffset = sd.lifetimeOffset;
                 bs.lerpLifetimeOffset = sd.lerpLifetimeOffset;
                 bs.lerpTimes = sd.lerpTimes;
+                bs.startTimeOffset = sd.startTimeOffset;
                 bs.lerpColor1 = sd.lerpColor1;
                 bs.lerpColor2 = sd.lerpColor2;
                 bs.musicChannel = sd.musicChannel;

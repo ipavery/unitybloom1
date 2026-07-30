@@ -99,6 +99,7 @@ public class SavePreviewManager : MonoBehaviour
                 bs.lifetimeOffset = sd.lifetimeOffset;
                 bs.lerpLifetimeOffset = sd.lerpLifetimeOffset;
                 bs.lerpTimes = sd.lerpTimes;
+                bs.startTimeOffset = sd.startTimeOffset;
                 bs.lerpColor1 = sd.lerpColor1;
                 bs.lerpColor2 = sd.lerpColor2;
                 bs.isActive = sd.isActive;

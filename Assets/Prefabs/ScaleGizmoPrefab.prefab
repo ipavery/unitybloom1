@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 269746374564570797}
   - component: {fileID: 6810044114180848890}
   m_Layer: 0
-  m_Name: RotateGizmoPrefab
+  m_Name: ScaleGizmoPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
