@@ -191,9 +191,9 @@ public class CurveEditorUI : MonoBehaviour
         // Generate UI
         foreach (var f in fields)
         {
-            var go = Instantiate(fieldPrefab, fieldContainer);
-            go.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-            go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
+            var go = Instantiate(fieldPrefab, fieldContainer,false);
+            // go.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
+            // go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
 
             var slider = go.GetComponentInChildren<Slider>();
             var input = go.GetComponentInChildren<TMP_InputField>();

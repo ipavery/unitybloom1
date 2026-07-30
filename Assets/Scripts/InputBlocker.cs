@@ -21,7 +21,7 @@ public static class InputBlocker
 
         PointerEventData pointerData = new PointerEventData(EventSystem.current)
         {
-            position = Mouse.current.position.ReadValue()
+            position = Pointer.current.position.ReadValue()
         };
 
         List<RaycastResult> raycastResults = new List<RaycastResult>();

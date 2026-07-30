@@ -1,14 +1,22 @@
 using UnityEngine;
 using System.Collections;
+using System.Drawing;
+using UnityEngine.UI;
+using Image = UnityEngine.UI.Image;
 
 public class SaveIconFader : MonoBehaviour
 {
     [Header("UI Reference")]
     public CanvasGroup saveCanvasGroup;
+    public Image saveButtonFaceImage;
 
     [Header("Timing Settings")]
     public float displayTime = 1.5f; // How long it stays fully visible
     public float fadeDuration = 1.5f; // How long the fade-out takes
+
+    [Header("Colors")]
+    public UnityEngine.Color saveConfirmationColor;
+    public UnityEngine.Color grayColor;
 
     private Coroutine activeFade;
 
@@ -30,7 +38,9 @@ public class SaveIconFader : MonoBehaviour
     private IEnumerator FadeRoutine()
     {
         // 1. Instantly appear and ensure the GameObject is active
-        saveCanvasGroup.alpha = 1f;
+        saveCanvasGroup.alpha = 0f;
+
+        saveButtonFaceImage.color = saveConfirmationColor;
 
         // 2. Wait for the display period
         yield return new WaitForSeconds(displayTime);
@@ -40,12 +50,13 @@ public class SaveIconFader : MonoBehaviour
         while (elapsedTime < fadeDuration)
         {
             elapsedTime += Time.deltaTime;
-            saveCanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsedTime / fadeDuration);
+            //saveCanvasGroup.alpha = Mathf.Lerp(1f, 0f, elapsedTime / fadeDuration);
+            saveButtonFaceImage.color = UnityEngine.Color.Lerp(saveConfirmationColor,grayColor,elapsedTime / fadeDuration);
             yield return null; // Wait for the next frame
         }
 
         // 4. Lock alpha to exactly 0 and disable to save rendering power
-        saveCanvasGroup.alpha = 0f;
+        //saveCanvasGroup.alpha = 0f;
         saveCanvasGroup.gameObject.SetActive(false);
     }
 }

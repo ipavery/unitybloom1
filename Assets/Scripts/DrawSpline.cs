@@ -175,13 +175,14 @@ public class DrawSpline : MonoBehaviour
     void OnSelectStart(InputAction.CallbackContext ctx)
     {
         if (InputBlocker.inputBlockOverride)
-        {            
+        {                        
             drawingSpline = true;
             rawPoints.Clear();
             lineRenderer.positionCount = 0;
-            
-            Vector2 mousePos2D = mousePosition.ReadValue<Vector2>();
-            AddRawPoint(ProjectToPlane(mousePos2D));
+                         
+            // FIX: Read from the unified Pointer to support both Mouse and Touch
+            Vector2 pointerPos2D = Pointer.current.position.ReadValue();
+            AddRawPoint(ProjectToPlane(pointerPos2D));
         }
     }
 
@@ -204,9 +205,10 @@ public class DrawSpline : MonoBehaviour
 
     void ContinueDrawing()
     {
-        Vector2 mousePos2D = mousePosition.ReadValue<Vector2>();
-        Vector3 currentPos3D = ProjectToPlane(mousePos2D);
-
+        // FIX: Read from the unified Pointer to support both Mouse and Touch
+        Vector2 pointerPos2D = Pointer.current.position.ReadValue();
+        Vector3 currentPos3D = ProjectToPlane(pointerPos2D);
+        
         if (rawPoints.Count == 0 || Vector3.Distance(currentPos3D, rawPoints[rawPoints.Count - 1]) > pointCaptureDistance)
         {
             AddRawPoint(currentPos3D);

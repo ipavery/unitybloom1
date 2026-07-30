@@ -94,7 +94,7 @@ public class LerpManager : MonoBehaviour
             Vector3 sourcePos = connectingSource.transform.position+connectingSource.points[0];
             
             // Cast a ray from the mouse to a mathematical plane facing the camera at the source's depth
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            Ray ray = Camera.main.ScreenPointToRay(Pointer.current.position.ReadValue());
             Plane plane = new Plane(Camera.main.transform.forward, sourcePos);
             
             if (plane.Raycast(ray, out float enter))

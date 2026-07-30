@@ -120,7 +120,7 @@ public class GizmoController : MonoBehaviour
         // ---------------------------------------------------------------------
         if (activeGizmoAxis != -1 && SPD.lastHighlighted != null)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            Ray ray = Camera.main.ScreenPointToRay(Pointer.current.position.ReadValue());
             
             // STRICTLY USE CACHED PIVOT. This stops the infinity feedback loop.
             Vector3 pivot = cachedDragPivot; 
@@ -270,7 +270,7 @@ public class GizmoController : MonoBehaviour
         // Setup for Rotation & Scale: Cache starting vectors and distances
         if (activeGizmoAxis >= (int)SplinePickerData.GizmoType.RotateX)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+            Ray ray = Camera.main.ScreenPointToRay(Pointer.current.position.ReadValue());
             SetDragPlane(pivot);
             if (dragPlane.Raycast(ray, out float enter))
             {

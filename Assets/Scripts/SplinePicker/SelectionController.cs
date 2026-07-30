@@ -141,6 +141,47 @@ public class SelectionController : MonoBehaviour
     {
         SPD.isInputBlocked = InputBlocker.IsInputBlocked("Unblocked UI Layer");
 
+        // 1. Check for panning to abort the selection box
+        if (SPD.isSelecting)
+        {
+            bool isPanning = false;
+
+            // Check for Desktop panning (Right Click)
+            if (Mouse.current != null && Mouse.current.rightButton.isPressed)
+            {
+                isPanning = true;
+            }
+
+            // Check for Mobile panning (2 or more active touches)
+            if (Touchscreen.current != null)
+            {
+                int activeTouches = 0;
+                foreach (var touch in Touchscreen.current.touches)
+                {
+                    var phase = touch.phase.ReadValue();
+                    if (phase == UnityEngine.InputSystem.TouchPhase.Began || 
+                        phase == UnityEngine.InputSystem.TouchPhase.Moved || 
+                        phase == UnityEngine.InputSystem.TouchPhase.Stationary)
+                    {
+                        activeTouches++;
+                    }
+                }
+                if (activeTouches >= 2) isPanning = true;
+            }
+
+            // Abort the selection if panning is detected
+            if (isPanning)
+            {
+                SPD.isSelecting = false;
+                selectionBoxUI.GetComponent<SelectionBoxUI>().EndSelection();
+                
+                // Spoof a raycast hit so OnSelectEnd doesn't accidentally clear the user's 
+                // selected splines when they lift their fingers after panning.
+                raycastHit = true; 
+            }
+        }
+
+        // 2. Normal selection box update logic
         if (SPD.isSelecting && SPD.activeGizmoAxis == -1 && !isConnectMode) // Don't allow selection box while in connect mode
         {
             Vector2 currentMousePos = mousePosition.ReadValue<Vector2>();

@@ -1,20 +1,17 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Using New Input System
+using UnityEngine.InputSystem; 
 using UnityEngine.UI;
 
 public class HideUI : MonoBehaviour
 {
     [Header("Either set uiRootCanvasGroup OR uiRootGameObject")]
-    public CanvasGroup uiRootCanvasGroup; // Preferred: keeps objects alive
+    public CanvasGroup uiRootCanvasGroup; 
+    public GameObject hideUIContainer;    
+    public RectTransform hotZone;         
+    public Button hideUIButton;           
 
-    public GameObject hideUIContainer;    // MUST be outside uiRoot
-    public RectTransform hotZone;         // MUST be outside uiRoot or assigned to active object
-    public Button hideUIButton;           // MUST be outside uiRoot (or inside but manager outside)
-
-    private bool isUIHidden = false;
-    
-    // Flag to prevent the Update loop from overriding external scripts
-    private bool isForcedHidden = false; 
+    private bool isUIHidden = false;      
+    private bool isForcedHidden = false;  
 
     void Start()
     {
@@ -25,10 +22,6 @@ public class HideUI : MonoBehaviour
             Debug.LogWarning("HideUI: hideUIButton not assigned.");
     }
 
-    /// <summary>
-    /// Allows external scripts to forcefully hide or unhide the button, 
-    /// overriding the normal mouse-tracking logic.
-    /// </summary>
     public void SetButtonForcedHidden(bool forceHide)
     {
         isForcedHidden = forceHide;
@@ -41,9 +34,8 @@ public class HideUI : MonoBehaviour
             }
             else
             {
-                // If we un-force it, turn it back on immediately if the main UI is showing.
-                // Otherwise, let the Update loop handle turning it on based on mouse position.
-                if (!isUIHidden) 
+                // Un-force it: turn it back on if the main UI is showing OR if we are on mobile
+                if (!isUIHidden || Application.isMobilePlatform) 
                 {
                     hideUIContainer.SetActive(true);
                 }
@@ -68,7 +60,6 @@ public class HideUI : MonoBehaviour
     void HideEverything()
     {
         isUIHidden = true;
-
         if (uiRootCanvasGroup != null)
         {
             uiRootCanvasGroup.alpha = 0f;
@@ -80,7 +71,6 @@ public class HideUI : MonoBehaviour
     void ShowEverything()
     {
         isUIHidden = false;
-
         if (uiRootCanvasGroup != null)
         {
             uiRootCanvasGroup.alpha = 1f;
@@ -91,42 +81,33 @@ public class HideUI : MonoBehaviour
 
     void Update()
     {
-        // Make sure this script and hotZone are on an always-active object
         if (hotZone == null || hideUIContainer == null) return;
-
-        // Skip all automatic logic if an external script has forced the button to hide
         if (isForcedHidden) return;
 
-        // 1. If the UI is currently visible (toggle not active), keep the button visible always.
+        // 1. If the UI is currently visible, keep the button visible always.
         if (!isUIHidden)
         {
-            if (!hideUIContainer.activeSelf) 
-            {
-                hideUIContainer.SetActive(true);
-            }
-            return; // Skip the mouse tracking entirely while the UI is showing
+            if (!hideUIContainer.activeSelf) hideUIContainer.SetActive(true);
+            return;
         }
 
-        // 2. If the UI is hidden, check the mouse position using ONLY the New Input System.
+        // 2. MOBILE LOGIC: No hover states exist, so always keep the button visible.
+        if (Application.isMobilePlatform)
+        {
+            if (!hideUIContainer.activeSelf) hideUIContainer.SetActive(true);
+            return;
+        }
+
+        // 3. DESKTOP LOGIC: Track the mouse and show/hide based on the hot zone.
         if (Mouse.current != null)
         {
             Vector2 mousePos = Mouse.current.position.ReadValue();
             
-            // If your Canvas is Screen Space - Camera, you may need to pass the canvas camera as the 3rd argument.
             bool inZone = RectTransformUtility.RectangleContainsScreenPoint(hotZone, mousePos, null);
             
-            // Only update the active state if it has changed to prevent doing it every frame
             if (hideUIContainer.activeSelf != inZone)
             {
                 hideUIContainer.SetActive(inZone);
-            }
-        }
-        else 
-        {
-            // Fallback if no mouse is connected (e.g., touch or gamepad without virtual mouse)
-            if (hideUIContainer.activeSelf)
-            {
-                hideUIContainer.SetActive(false);
             }
         }
     }
