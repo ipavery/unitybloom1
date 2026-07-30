@@ -8,8 +8,9 @@ public class CinematicIntro : MonoBehaviour
     [Header("UI & Dependencies")]
     public Image fadeScreen; 
     public SaveLoadUI saveLoadUI;
-    public MouseLook mouseLook; 
-    public CanvasGroup mainUIGroup; 
+    public MouseLook mouseLook;
+    public CanvasGroup mainUIGroup;
+    public GameObject hideUIContainer;
 
     [Header("Intro Settings")]
     public float fadeDuration = 1.0f;
@@ -63,11 +64,12 @@ public class CinematicIntro : MonoBehaviour
 
         // 1. Lock player controls and hide editor UI
         if (mouseLook != null) mouseLook.enabled = false;
-        if (mainUIGroup != null) 
+        if (mainUIGroup != null)
         {
             mainUIGroup.alpha = 0f;
             mainUIGroup.blocksRaycasts = false;
         }
+        hideUIContainer.SetActive(false);
 
         int lastSaveIndex = -1; // Keep track of the last played save
 
@@ -181,11 +183,13 @@ public class CinematicIntro : MonoBehaviour
 
         // 3. Restore player controls, UI, and 3D Gizmos
         if (mouseLook != null) mouseLook.enabled = true;
-        if (mainUIGroup != null) 
+        if (mainUIGroup != null)
         {
             mainUIGroup.alpha = 1f;
             mainUIGroup.blocksRaycasts = true;
         }
+        
+        hideUIContainer.SetActive(true);
 
         // Bring the control points and gizmos back
         EventHub.Publish(new HideShow3DUI(false));

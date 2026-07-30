@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using UnityEngine.InputSystem; // Using New Input System
 using UnityEngine.UI;
 
 public class HideUI : MonoBehaviour
@@ -29,13 +29,11 @@ public class HideUI : MonoBehaviour
             HideEverything();
             EventHub.Publish(new HideShow3DUI(true));
         }
-
         else
         {
             EventHub.Publish(new HideShow3DUI(false));
             ShowEverything();
         }
-
     }
 
     void HideEverything()
@@ -48,7 +46,6 @@ public class HideUI : MonoBehaviour
             uiRootCanvasGroup.interactable = false;
             uiRootCanvasGroup.blocksRaycasts = false;
         }
-
     }
 
     void ShowEverything()
@@ -61,7 +58,6 @@ public class HideUI : MonoBehaviour
             uiRootCanvasGroup.interactable = true;
             uiRootCanvasGroup.blocksRaycasts = true;
         }
-
     }
 
     void Update()
@@ -69,9 +65,37 @@ public class HideUI : MonoBehaviour
         // Make sure this script and hotZone are on an always-active object
         if (hotZone == null || hideUIContainer == null) return;
 
-        var mousePos = Mouse.current != null ? Mouse.current.position.ReadValue() : (Vector2)Input.mousePosition;
-        // If your Canvas is Screen Space - Camera, you may need to pass the canvas camera as the 3rd argument.
-        bool inZone = RectTransformUtility.RectangleContainsScreenPoint(hotZone, mousePos, null);
-        hideUIContainer.SetActive(inZone);
+        // 1. If the UI is currently visible (toggle not active), keep the button visible always.
+        if (!isUIHidden)
+        {
+            if (!hideUIContainer.activeSelf) 
+            {
+                hideUIContainer.SetActive(true);
+            }
+            return; // Skip the mouse tracking entirely while the UI is showing
+        }
+
+        // 2. If the UI is hidden, check the mouse position using ONLY the New Input System.
+        if (Mouse.current != null)
+        {
+            Vector2 mousePos = Mouse.current.position.ReadValue();
+            
+            // If your Canvas is Screen Space - Camera, you may need to pass the canvas camera as the 3rd argument.
+            bool inZone = RectTransformUtility.RectangleContainsScreenPoint(hotZone, mousePos, null);
+            
+            // Only update the active state if it has changed to prevent doing it every frame
+            if (hideUIContainer.activeSelf != inZone)
+            {
+                hideUIContainer.SetActive(inZone);
+            }
+        }
+        else 
+        {
+            // Fallback if no mouse is connected (e.g., touch or gamepad without virtual mouse)
+            if (hideUIContainer.activeSelf)
+            {
+                hideUIContainer.SetActive(false);
+            }
+        }
     }
 }

@@ -7298,6 +7298,7 @@ GameObject:
   - component: {fileID: 250024006}
   - component: {fileID: 250024005}
   - component: {fileID: 250024008}
+  - component: {fileID: 250024009}
   m_Layer: 5
   m_Name: DeleteButton
   m_TagString: Untagged
@@ -7421,6 +7422,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 770935938}
   clickOffset: 3
+--- !u!114 &250024009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 250024003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Delete this curve
 --- !u!1 &276460931
 GameObject:
   m_ObjectHideFlags: 0
@@ -8906,8 +8920,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 5, y: -5}
+  m_SizeDelta: {x: -10, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &455690998
 MonoBehaviour:
@@ -9771,6 +9785,7 @@ GameObject:
   - component: {fileID: 516817012}
   - component: {fileID: 516817011}
   - component: {fileID: 516817014}
+  - component: {fileID: 516817015}
   m_Layer: 5
   m_Name: ColorPickerButton2
   m_TagString: Untagged
@@ -9894,6 +9909,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 1507298608}
   clickOffset: 3
+--- !u!114 &516817015
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 516817009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Select the second color of the curve
 --- !u!1 &527990699
 GameObject:
   m_ObjectHideFlags: 0
@@ -10240,7 +10268,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: -26.55, y: 0}
-  m_SizeDelta: {x: 285, y: 20}
+  m_SizeDelta: {x: 229.1, y: 20}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &545053061
 MonoBehaviour:
@@ -10695,7 +10723,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
-  message: Toggle curve drawing mode.
+  message: Toggle curve drawing mode
 --- !u!1 &573137921
 GameObject:
   m_ObjectHideFlags: 0
@@ -16586,6 +16614,7 @@ GameObject:
   - component: {fileID: 646807848}
   - component: {fileID: 646807847}
   - component: {fileID: 646807850}
+  - component: {fileID: 646807851}
   m_Layer: 5
   m_Name: ActivateButton
   m_TagString: Untagged
@@ -16709,6 +16738,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 1032622594}
   clickOffset: 3
+--- !u!114 &646807851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 646807845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Toggle whether this curve will generate particles
 --- !u!1 &660044221
 GameObject:
   m_ObjectHideFlags: 0
@@ -17613,9 +17655,10 @@ MonoBehaviour:
   moveGizmoPrefab: {fileID: 8471987075741126960, guid: 917c8a2c60019844ba11f8730a948f7a, type: 3}
   planarGizmoPrefab: {fileID: 5661324351575738629, guid: a2cb2c9e19bf5e843acfdfdc350a1c2d, type: 3}
   rotateGizmoPrefab: {fileID: 1689114286373329337, guid: df4fdff8867b66a4d97a56c44b6af8e7, type: 3}
-  scaleGizmoPrefab: {fileID: 5585790955548796127, guid: 59ea314d29d9e9b4cab25266530cf98c, type: 3}
+  scaleGizmoPrefab: {fileID: 5226196431980889662, guid: 844f90834966a984794ced4f7c01dee7, type: 3}
   gizmoScale: 0.1
   rotateGizmoPrefabScale: 3
+  scaleGizmoPrefabScale: 0.4
 --- !u!4 &735388309
 Transform:
   m_ObjectHideFlags: 0
@@ -18224,6 +18267,7 @@ GameObject:
   - component: {fileID: 777390111}
   - component: {fileID: 777390110}
   - component: {fileID: 777390113}
+  - component: {fileID: 777390114}
   m_Layer: 5
   m_Name: ConnectButton
   m_TagString: Untagged
@@ -18347,6 +18391,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 1611686680}
   clickOffset: 3
+--- !u!114 &777390114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 777390108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Links this curve to another curve to create a fill effect. Create a link
+    by clicking a point on another curve with the same number of points
 --- !u!1 &822530119
 GameObject:
   m_ObjectHideFlags: 0
@@ -18360,6 +18418,7 @@ GameObject:
   - component: {fileID: 822530122}
   - component: {fileID: 822530121}
   - component: {fileID: 822530124}
+  - component: {fileID: 822530125}
   m_Layer: 5
   m_Name: ColorPickerButton1
   m_TagString: Untagged
@@ -18483,6 +18542,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 737006669}
   clickOffset: 3
+--- !u!114 &822530125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822530119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Select the first color of the curve
 --- !u!1 &823556716
 GameObject:
   m_ObjectHideFlags: 0
@@ -18865,6 +18937,7 @@ MonoBehaviour:
   saveLoadUI: {fileID: 1974333482}
   mouseLook: {fileID: 1654640259}
   mainUIGroup: {fileID: 328935116}
+  hideUIContainer: {fileID: 2135927914}
   fadeDuration: 1.5
   displayDuration: 4
   examplesFolder: Examples
@@ -19362,6 +19435,7 @@ GameObject:
   - component: {fileID: 903732963}
   - component: {fileID: 903732965}
   - component: {fileID: 903732964}
+  - component: {fileID: 903732966}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -19387,7 +19461,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 150, y: 32.51}
+  m_SizeDelta: {x: 207.2, y: 32.51}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &903732964
 MonoBehaviour:
@@ -19409,7 +19483,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Draw Point Freq
+  m_text: Draw Point Frequency
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -19489,6 +19563,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 903732962}
   m_CullTransparentMesh: 1
+--- !u!114 &903732966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 903732962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: A higher value means fewer points will be created when drawing curves
 --- !u!1 &907228232
 GameObject:
   m_ObjectHideFlags: 0
@@ -20609,7 +20696,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1024, y: 1024}
+  m_SizeDelta: {x: 200, y: 30}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &995293993
 MonoBehaviour:
@@ -20632,7 +20719,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 3625618f1d2f3094fbc7b9f2ba6e972e, type: 3}
-  m_Type: 0
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -20640,7 +20727,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 11
 --- !u!222 &995293994
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -22020,6 +22107,7 @@ GameObject:
   - component: {fileID: 1168739642}
   - component: {fileID: 1168739641}
   - component: {fileID: 1168739640}
+  - component: {fileID: 1168739644}
   m_Layer: 5
   m_Name: ResetViewButton
   m_TagString: Untagged
@@ -22143,6 +22231,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1168739638}
   m_CullTransparentMesh: 1
+--- !u!114 &1168739644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1168739638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Reset camera position
 --- !u!1 &1178154168
 GameObject:
   m_ObjectHideFlags: 0
@@ -22507,6 +22608,7 @@ GameObject:
   - component: {fileID: 1189794203}
   - component: {fileID: 1189794202}
   - component: {fileID: 1189794205}
+  - component: {fileID: 1189794206}
   m_Layer: 5
   m_Name: ClearHistoryButton
   m_TagString: Untagged
@@ -22631,6 +22733,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 1178154169}
   clickOffset: 3
+--- !u!114 &1189794206
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1189794200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Clear all saves
 --- !u!1 &1193914574
 GameObject:
   m_ObjectHideFlags: 0
@@ -23044,7 +23159,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1233993817}
   - component: {fileID: 1233993819}
-  - component: {fileID: 1233993818}
   m_Layer: 5
   m_Name: DrawSplineCaptureFreq
   m_TagString: Untagged
@@ -23073,36 +23187,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 517.5873, y: 36.62}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &1233993818
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1233993816}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.2, g: 0.2, b: 0.2, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 231f5a7228b13384eaa453cc48cbaf60, type: 3}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 10.3
 --- !u!222 &1233993819
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -24102,6 +24186,7 @@ GameObject:
   - component: {fileID: 1357555545}
   - component: {fileID: 1357555544}
   - component: {fileID: 1357555547}
+  - component: {fileID: 1357555548}
   m_Layer: 5
   m_Name: DeleteButton
   m_TagString: Untagged
@@ -24225,6 +24310,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 1801123787}
   clickOffset: 3
+--- !u!114 &1357555548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1357555542}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Delete selected curve points
 --- !u!1 &1371907799
 GameObject:
   m_ObjectHideFlags: 0
@@ -28318,7 +28416,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 0
+    m_Left: 10
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
@@ -28682,6 +28780,7 @@ GameObject:
   - component: {fileID: 1798102096}
   - component: {fileID: 1798102095}
   - component: {fileID: 1798102098}
+  - component: {fileID: 1798102099}
   m_Layer: 5
   m_Name: duplicatebutton
   m_TagString: Untagged
@@ -28805,6 +28904,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 579277667}
   clickOffset: 3
+--- !u!114 &1798102099
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798102093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Copy this curve
 --- !u!1 &1801123786
 GameObject:
   m_ObjectHideFlags: 0
@@ -29032,7 +29144,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
-  message: Create a new blank drawing.
+  message: Create a new blank drawing
 --- !u!1 &1814392460
 GameObject:
   m_ObjectHideFlags: 0
@@ -29735,7 +29847,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.1, g: 0.1, b: 0.1, a: 1}
+  m_Color: {r: 0.22352943, g: 0.23137257, b: 0.2392157, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -30282,6 +30394,7 @@ GameObject:
   - component: {fileID: 1927305301}
   - component: {fileID: 1927305300}
   - component: {fileID: 1927305303}
+  - component: {fileID: 1927305304}
   m_Layer: 5
   m_Name: SelectButton
   m_TagString: Untagged
@@ -30405,6 +30518,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIButton3D
   buttonFace: {fileID: 1312201452}
   clickOffset: 3
+--- !u!114 &1927305304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1927305298}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ebec621caa29814a8f418492955fc48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TooltipTrigger
+  message: Add all points on this curve to selection
 --- !u!1 &1931302015
 GameObject:
   m_ObjectHideFlags: 0
@@ -37734,7 +37860,7 @@ GameObject:
   - component: {fileID: 2135927917}
   - component: {fileID: 2135927916}
   m_Layer: 5
-  m_Name: HIdeUIContainer
+  m_Name: HideUIContainer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

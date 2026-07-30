@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using TMPro;
-using System.Runtime.InteropServices;
 
 [Serializable]
 public class InspectorField
@@ -15,6 +13,7 @@ public class InspectorField
     public Action<float> setter;
     public Vector2 minMax;
     public bool wholeNumbers = true;
+    public string tooltipMessage = ""; // Added to control tooltip text
 }
 
 public class CurveEditorUI : MonoBehaviour
@@ -68,7 +67,6 @@ public class CurveEditorUI : MonoBehaviour
         ReloadParticles();
     }
 
-
     void ReloadParticles()
     {
         EventHub.Publish(new ReloadParticles(true));
@@ -77,7 +75,6 @@ public class CurveEditorUI : MonoBehaviour
     void Start()
     {
         inspectorPanel.SetActive(false);
-
         colorPickerButton.onClick.AddListener(ColorButton1);
         colorPickerButton2.onClick.AddListener(ColorButton2);
 
@@ -101,6 +98,7 @@ public class CurveEditorUI : MonoBehaviour
         ColorPickerManager.Instance.Show(selectedObject.lerpColor1, OnColorPicked, inspectorPanel);
         pickingColor = 1;
     }
+
     void ColorButton2()
     {
         ColorPickerManager.Instance.Show(selectedObject.lerpColor2, OnColorPicked, inspectorPanel);
@@ -138,12 +136,14 @@ public class CurveEditorUI : MonoBehaviour
             Debug.LogWarning("No spline selected to copy.");
             return;
         }
+
         UndoManager.Instance.RecordState(); // Record the state before copying for undo functionality
 
         BezierSpline newSpline = Instantiate(splinePrefab, selectedObject.transform.position + Vector3.down * 2, Quaternion.identity); //blank prefab
         newSpline.CopyFrom(selectedObject); //copy spline settings
         newSpline.points = (Vector3[])selectedObject.points.Clone(); // Copy the points array (make a new one so the points aren't linked)
         newSpline.name += "_Copy";
+
         EventHub.Publish(new NewSplineCreated(newSpline));
         
         SaveLoadUI.Instance.NotifyActionPerformed(); //autosave
@@ -161,21 +161,34 @@ public class CurveEditorUI : MonoBehaviour
             var go = Instantiate(fieldPrefab, fieldContainer);
             go.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
             go.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
+
             var slider = go.GetComponentInChildren<Slider>();
             var input = go.GetComponentInChildren<TMP_InputField>();
             var label = go.GetComponentInChildren<TextMeshProUGUI>();
 
             label.text = f.fieldName;
+
+            // --- ATTACH TOOLTIP IF MESSAGE EXISTS ---
+            if (!string.IsNullOrEmpty(f.tooltipMessage))
+            {
+                // Ensure raycasts hit the text so pointer events trigger
+                label.raycastTarget = true; 
+                
+                TooltipTrigger trigger = label.gameObject.AddComponent<TooltipTrigger>();
+                trigger.message = f.tooltipMessage;
+            }
+
             slider.minValue = f.minMax.x;
             slider.maxValue = f.minMax.y;
             slider.wholeNumbers = f.wholeNumbers;
             slider.value = f.getter();
+
             input.contentType = TMP_InputField.ContentType.EmailAddress;
             input.text = f.getter().ToString("0.##");
 
             // --- UNDO & AUTOSAVE SYSTEM: Event Triggers ---
-            EventTrigger trigger = slider.gameObject.GetComponent<EventTrigger>();
-            if (trigger == null) trigger = slider.gameObject.AddComponent<EventTrigger>();
+            EventTrigger triggerEvents = slider.gameObject.GetComponent<EventTrigger>();
+            if (triggerEvents == null) triggerEvents = slider.gameObject.AddComponent<EventTrigger>();
 
             // 1. Record state on Slider click (PointerDown)
             EventTrigger.Entry pointerDownEntry = new EventTrigger.Entry();
@@ -184,7 +197,7 @@ public class CurveEditorUI : MonoBehaviour
             {
                 UndoManager.Instance.RecordState();
             });
-            trigger.triggers.Add(pointerDownEntry);
+            triggerEvents.triggers.Add(pointerDownEntry);
 
             // 2. Trigger autosave on Slider release (PointerUp)
             EventTrigger.Entry pointerUpEntry = new EventTrigger.Entry();
@@ -196,9 +209,9 @@ public class CurveEditorUI : MonoBehaviour
                     SaveLoadUI.Instance.NotifyActionPerformed();
                 }
             });
-            trigger.triggers.Add(pointerUpEntry);
-            // ---------------------------------------------------------------
+            triggerEvents.triggers.Add(pointerUpEntry);
 
+            // ---------------------------------------------------------------
             // Sync slider -> input -> property
             slider.onValueChanged.AddListener(val =>
             {
@@ -235,7 +248,6 @@ public class CurveEditorUI : MonoBehaviour
             Vector2 uv = new Vector2(originalColor.r, originalColor.g); // simplistic example
 
             // Example fields: position X/Y/Z
-
             var fields = new List<InspectorField>
             {
                 new InspectorField
@@ -243,14 +255,14 @@ public class CurveEditorUI : MonoBehaviour
                     fieldName = "Symmetry",
                     getter = () => selectedObject.splineSymmetry,
                     setter = v => { var p = selectedObject.splineSymmetry; p = (int)v; selectedObject.splineSymmetry = p; },
-                    minMax = new(1,70)
+                    minMax = new(1,70),
                 },
                 new InspectorField
                 {
                     fieldName = "Quantity",
                     getter = () => selectedObject.frequency,
                     setter = v => { var p = selectedObject.frequency; p = (int)v; selectedObject.frequency = p; },
-                    minMax = new(2,100)
+                    minMax = new(2,100),
                 },
                 new InspectorField
                 {
@@ -258,7 +270,8 @@ public class CurveEditorUI : MonoBehaviour
                     getter = () => selectedObject.s_life,
                     setter = v => { var p = selectedObject.s_life; p = v; selectedObject.s_life = p; },
                     minMax = new(.2f,4),
-                    wholeNumbers = false
+                    wholeNumbers = false,
+                    tooltipMessage = "How long each particle stays alive in seconds"
                 },
                 new InspectorField
                 {
@@ -266,22 +279,25 @@ public class CurveEditorUI : MonoBehaviour
                     getter = () => selectedObject.lifetimeOffset,
                     setter = v => { var p = selectedObject.lifetimeOffset; p = v; selectedObject.lifetimeOffset = p; },
                     minMax = new(0,.5f),
-                    wholeNumbers = false
+                    wholeNumbers = false,
+                    tooltipMessage = "The time offset between each created particle along the curve"
                 },
                 new InspectorField
                 {
                     fieldName = "Start Offset",
                     getter = () => selectedObject.startTimeOffset,
                     setter = v => { var p = selectedObject.startTimeOffset; p = v; selectedObject.startTimeOffset = p; },
-                    minMax = new(0,1f),
-                    wholeNumbers = false
+                    minMax = new(0,2f),
+                    wholeNumbers = false,
+                    tooltipMessage = "The initial delay before this curve's sequence begins"
                 },
                 new InspectorField
                 {
                     fieldName = "Repeats",
                     getter = () => selectedObject.lerpTimes,
                     setter = v => { var p = selectedObject.lerpTimes; p = (int)v; selectedObject.lerpTimes = p; },
-                    minMax = new(1,30)
+                    minMax = new(1,30),
+                    tooltipMessage = "How many copies of this curve's particles are created. Used with linked curves"
                 },
                 new InspectorField
                 {
@@ -289,9 +305,11 @@ public class CurveEditorUI : MonoBehaviour
                     getter = () => selectedObject.lerpLifetimeOffset,
                     setter = v => { var p = selectedObject.lerpLifetimeOffset; p = v; selectedObject.lerpLifetimeOffset = p; },
                     minMax = new(0,.5f),
-                    wholeNumbers = false
+                    wholeNumbers = false,
+                    tooltipMessage = "The time offset before the next repeated sequence begins"
                 }
             };
+
             if (particleManager.spawnMode == ParticleSpawnMode.Music)
             {
                 fields.Add(new InspectorField
@@ -300,16 +318,20 @@ public class CurveEditorUI : MonoBehaviour
                     getter = () => selectedObject.activationThreshhold,
                     setter = v => { var p = selectedObject.activationThreshhold; p = v; selectedObject.activationThreshhold = p; },
                     minMax = new(0, 200),
-                    wholeNumbers = false
+                    wholeNumbers = false,
+                    tooltipMessage = "The volume threshold required on the chosen channel to trigger this spline."
                 });
+
                 fields.Add(new InspectorField
                 {
                     fieldName = "Music Channel",
                     getter = () => selectedObject.musicChannel,
                     setter = v => { var p = selectedObject.musicChannel; p = (int)v; selectedObject.musicChannel = p; },
                     minMax = new(0, 7),
+                    tooltipMessage = "The audio frequency band (0 to 7) mapped to trigger this sequence."
                 });
             }
+
             InitializeFields(fields);
             inspectorPanel.SetActive(true);
         }
@@ -328,6 +350,7 @@ public class CurveEditorUI : MonoBehaviour
     }
 
     void OnSelectClicked() => EventHub.Publish(new SelectSpline(selectedObject));
+
     void OnDeleteClicked()
     {
         UndoManager.Instance.RecordState(); // Record the state before deletion for undo functionality

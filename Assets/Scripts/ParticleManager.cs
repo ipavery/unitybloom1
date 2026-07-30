@@ -442,20 +442,24 @@ public class ParticleManager : MonoBehaviour
     IEnumerator SplineLoop(BezierSpline currentSpline, float startTimeOffset, int currentFrequency, int splineParticleCount, float stepSize, float l, float k, float particleTimeOffset)
     {
         //loop along spline, placing particles along the way. This loop controls particles, the z loop controls symmetry
-        yield return new WaitForSeconds(startTimeOffset);
+        
+        if (startTimeOffset > 0f) 
+        {
+            yield return new WaitForSeconds(startTimeOffset);
+        }
+
         for (int i = 0; i <= currentFrequency; i++)
         {
             if (currentSpline == null) yield break; // exit the coroutine if the spline has been deleted
             
             //the row coroutine should start here
             Vector3 newParticlePosition = currentSpline.GetLerpPoint(i * stepSize, l);
-
             float t = (k * (currentFrequency + 1) + i + 1) / splineParticleCount;
             Color particleColor = Color.Lerp(currentSpline.lerpColor1, currentSpline.lerpColor2, t);
 
             //life offset by distance along spline and lerp position
-
             float angleStep = 360f / currentSpline.splineSymmetry;
+
             // set position and life with radial symmetry
             for (int z = 0; z < currentSpline.splineSymmetry; z++)
             {
@@ -476,7 +480,12 @@ public class ParticleManager : MonoBehaviour
                 
                 ps.Emit(emitParams, 1);
             }
-            yield return new WaitForSeconds(particleTimeOffset);
+
+            // ONLY wait if there is an actual offset time
+            if (particleTimeOffset > 0f)
+            {
+                yield return new WaitForSeconds(particleTimeOffset);
+            }
         }
     }
 

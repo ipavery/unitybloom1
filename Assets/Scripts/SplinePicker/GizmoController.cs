@@ -25,7 +25,7 @@ public class GizmoController : MonoBehaviour
     private Vector3 gizmoPrefabScale;
     private Vector3 planarGizmoPrefabScale;
     public float rotateGizmoPrefabScale;
-    private Vector3 scaleGizmoPrefabScale;
+    public float scaleGizmoPrefabScale;
 
     // We use a fixed 12-slot array corresponding exactly to the SplinePickerData.GizmoType enum (3 axes * 4 types)
     private GameObject[] gizmoList;
@@ -34,7 +34,9 @@ public class GizmoController : MonoBehaviour
     private int activeGizmoAxis = -1; // -1 means nothing is currently being dragged
     private Plane dragPlane;          // The invisible mathematical plane we cast our mouse ray against
     private float distanceToCamera;   // Used to keep gizmos the same visual size on screen regardless of zoom
+    
     private Vector3 initialOffset;    // Distance from the exact mouse click point to the gizmo's origin
+    private Vector3 cachedDragPivot;  // <--- THE FIX: A frozen anchor point so scaling doesn't feedback loop
 
     // --- State Tracking to Prevent Jitter ---
     private Vector3 initialHitVector; // Rotation: The exact directional vector from pivot to mouse when the drag started
@@ -64,7 +66,6 @@ public class GizmoController : MonoBehaviour
         // Cache original prefab scales so dynamic scaling doesn't distort them
         gizmoPrefabScale = moveGizmoPrefab.transform.localScale;
         planarGizmoPrefabScale = planarGizmoPrefab.transform.localScale;
-        if (scaleGizmoPrefab != null) scaleGizmoPrefabScale = scaleGizmoPrefab.transform.localScale;
 
         // Initialize array to exact size of the GizmoType enum (12 handles total)
         gizmoList = new GameObject[12];
@@ -107,9 +108,9 @@ public class GizmoController : MonoBehaviour
                 }
                 else if (gizmo.name.Contains("ScaleGizmoPrefab"))
                 {
-                    gizmo.transform.localScale = distanceToCamera * gizmoScale * scaleGizmoPrefabScale;
+                    gizmo.transform.localScale = distanceToCamera * gizmoScale * scaleGizmoPrefabScale * Vector3.one;
                     // Push scale gizmo slightly further out than planar so they don't overlap
-                    gizmo.transform.position = SPD.lastHighlighted.transform.position + distanceToCamera * gizmoOffsetDistance * (gizmo.transform.up + gizmo.transform.right * 0.5f) * 1.5f; 
+                    gizmo.transform.position = SPD.lastHighlighted.transform.position + distanceToCamera * gizmoOffsetDistance *1.2f* gizmo.transform.up;
                 }
             }
         }
@@ -120,9 +121,11 @@ public class GizmoController : MonoBehaviour
         if (activeGizmoAxis != -1 && SPD.lastHighlighted != null)
         {
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            SetDragPlane();
+            
+            // STRICTLY USE CACHED PIVOT. This stops the infinity feedback loop.
+            Vector3 pivot = cachedDragPivot; 
+            SetDragPlane(pivot); 
 
-            Vector3 pivot = SPD.lastHighlighted.transform.position;
             SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis;
 
             // --- CONFLICT RESOLUTION PREP (For Translation Only) ---
@@ -146,15 +149,16 @@ public class GizmoController : MonoBehaviour
             if (activeGizmoAxis < (int)SplinePickerData.GizmoType.RotateX)
             {
                 FindGizmoAxisHitPoint(out Vector3 newControlPos, ray, dragPlane, activeGizmoAxis, pivot);
-                Vector3 lastHighlightedPos = SPD.lastHighlighted.transform.position; 
                 
+                // Calculate absolute offset based entirely on the frozen start points
+                Vector3 offset = newControlPos - pivot - initialOffset;
+
                 foreach (var sphereGroup in SPD.controlSphereGroup)
                 {
                     if (!sphereGroup.isSelected) continue;
-
                     var sphere = sphereGroup.sphereObject;
                     var spline = sphere.transform.parent.parent.GetComponent<BezierSpline>();
-
+                    
                     if (sphereGroup.index % 3 != 0)
                     {
                         int parentKnotIndex = (sphereGroup.index % 3 == 1) ? sphereGroup.index - 1 : sphereGroup.index + 1;
@@ -162,10 +166,9 @@ public class GizmoController : MonoBehaviour
                             continue; 
                     }
 
-                    Vector3 diff = sphere.transform.position - lastHighlightedPos;
-                    Vector3 offset = newControlPos - lastHighlightedPos - initialOffset;
-                    
-                    Vector3 newWorldPos = lastHighlightedPos + diff + offset;
+                    // Use the exact starting location of each sphere to prevent drift
+                    Vector3 initialPos = initialPointPositions[sphere];
+                    Vector3 newWorldPos = initialPos + offset;
                     Vector3 localPosition = spline.transform.InverseTransformPoint(newWorldPos);
                     spline.SetControlPoint(sphereGroup.index, localPosition);
                 }
@@ -178,12 +181,12 @@ public class GizmoController : MonoBehaviour
                 {
                     Vector3 currentHitPoint = ray.GetPoint(enter);
                     Vector3 currentVector = (currentHitPoint - pivot).normalized;
-
                     Vector3 rotAxis = Vector3.zero;
-                    if (axis == SplinePickerData.GizmoType.RotateX) rotAxis = Vector3.forward;    
-                    else if (axis == SplinePickerData.GizmoType.RotateY) rotAxis = Vector3.right; 
-                    else if (axis == SplinePickerData.GizmoType.RotateZ) rotAxis = Vector3.up;    
 
+                    if (axis == SplinePickerData.GizmoType.RotateX) rotAxis = Vector3.forward;
+                    else if (axis == SplinePickerData.GizmoType.RotateY) rotAxis = Vector3.right; 
+                    else if (axis == SplinePickerData.GizmoType.RotateZ) rotAxis = Vector3.up;
+                    
                     float angle = Vector3.SignedAngle(initialHitVector, currentVector, rotAxis);
                     Quaternion rotationDelta = Quaternion.AngleAxis(angle, rotAxis);
 
@@ -200,6 +203,7 @@ public class GizmoController : MonoBehaviour
                         if (!sphereGroup.isSelected || sphereGroup.index % 3 == 0) continue;
                         ApplyRotationToPoint(sphereGroup, pivot, rotationDelta);
                     }
+
                     SyncSpherePositions();
                 }
             }
@@ -227,6 +231,7 @@ public class GizmoController : MonoBehaviour
                         if (!sphereGroup.isSelected || sphereGroup.index % 3 == 0) continue;
                         ApplyScaleToPoint(sphereGroup, pivot, scaleFactor, axis);
                     }
+
                     SyncSpherePositions();
                 }
             }
@@ -242,11 +247,14 @@ public class GizmoController : MonoBehaviour
     void OnGizmoDragStarted(GizmoDragStarted e)
     {
         UndoManager.Instance.RecordState();
-
         if (SPD.lastHighlighted == null) return;
 
         activeGizmoAxis = SPD.activeGizmoAxis;
-        Vector3 pivot = SPD.lastHighlighted.transform.position;
+        
+        // --- THE FIX ---
+        // Lock the pivot position when the click starts. This never changes until the click is released.
+        cachedDragPivot = SPD.lastHighlighted.transform.position; 
+        Vector3 pivot = cachedDragPivot;
 
         initialOffset = e.position - pivot;
 
@@ -263,8 +271,7 @@ public class GizmoController : MonoBehaviour
         if (activeGizmoAxis >= (int)SplinePickerData.GizmoType.RotateX)
         {
             Ray ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
-            SetDragPlane();
-
+            SetDragPlane(pivot);
             if (dragPlane.Raycast(ray, out float enter))
             {
                 Vector3 hitPoint = ray.GetPoint(enter);
@@ -280,6 +287,7 @@ public class GizmoController : MonoBehaviour
         SPD.activeGizmoAxis = -1;
         initialOffset = Vector3.zero;
         initialPointPositions.Clear();
+
         SaveLoadUI.Instance.NotifyActionPerformed(); 
     }
 
@@ -294,6 +302,7 @@ public class GizmoController : MonoBehaviour
     #endregion
 
     #region Helper Methods
+
     void ApplyRotationToPoint(ControlPointGroup sphereGroup, Vector3 pivot, Quaternion rotationDelta)
     {
         var sphere = sphereGroup.sphereObject;
@@ -301,8 +310,8 @@ public class GizmoController : MonoBehaviour
 
         Vector3 initialPos = initialPointPositions[sphereGroup.sphereObject];
         Vector3 dirFromPivot = initialPos - pivot;
-        Vector3 newWorldPos = pivot + (rotationDelta * dirFromPivot);
 
+        Vector3 newWorldPos = pivot + (rotationDelta * dirFromPivot);
         Vector3 localPosition = spline.transform.InverseTransformPoint(newWorldPos);
         spline.SetControlPoint(sphereGroup.index, localPosition);
     }
@@ -388,7 +397,7 @@ public class GizmoController : MonoBehaviour
                 rotateGizmo.transform.localRotation = Quaternion.Euler(0, 0, 90);
                 var rr = rotateGizmo.GetComponent<Renderer>(); rr.material.color = Color.green; rr.material.SetColor("_EmissionColor", Color.green * SPD.gizmoEmissionIntensity);
                 rotateGizmo.name = "RotateGizmoPrefab_YZ"; gizmoList[(int)SplinePickerData.GizmoType.RotateY] = rotateGizmo;
-
+                
                 if (scaleGizmo)
                 {
                     scaleGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
@@ -440,9 +449,8 @@ public class GizmoController : MonoBehaviour
         else if (axis == SplinePickerData.GizmoType.PlanarZ) { intersection.y = controlPointPosition.y; }
     }
 
-    void SetDragPlane()
+    void SetDragPlane(Vector3 pivot)
     {
-        Vector3 pivot = SPD.lastHighlighted.transform.position;
         SplinePickerData.GizmoType axis = (SplinePickerData.GizmoType)activeGizmoAxis;
         Vector3 camForward = Camera.main.transform.forward;
 
@@ -460,19 +468,16 @@ public class GizmoController : MonoBehaviour
                 Vector3 crossZ = Vector3.Cross(Vector3.forward, camForward);
                 dragPlane = new Plane(Vector3.Cross(crossZ, Vector3.forward).normalized, pivot);
                 break;
-
             case SplinePickerData.GizmoType.PlanarX:
             case SplinePickerData.GizmoType.RotateX:
             case SplinePickerData.GizmoType.ScaleX:
                 dragPlane = new Plane(Vector3.forward, pivot); // XY plane
                 break;
-
             case SplinePickerData.GizmoType.PlanarY:
             case SplinePickerData.GizmoType.RotateY:
             case SplinePickerData.GizmoType.ScaleY:
                 dragPlane = new Plane(Vector3.right, pivot); // YZ plane
                 break;
-
             case SplinePickerData.GizmoType.PlanarZ:
             case SplinePickerData.GizmoType.RotateZ:
             case SplinePickerData.GizmoType.ScaleZ:
