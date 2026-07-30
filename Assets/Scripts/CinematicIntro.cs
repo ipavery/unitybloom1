@@ -10,7 +10,7 @@ public class CinematicIntro : MonoBehaviour
     public SaveLoadUI saveLoadUI;
     public MouseLook mouseLook;
     public CanvasGroup mainUIGroup;
-    public GameObject hideUIContainer;
+    public HideUI hideUI;
 
     [Header("Intro Settings")]
     public float fadeDuration = 1.0f;
@@ -69,7 +69,7 @@ public class CinematicIntro : MonoBehaviour
             mainUIGroup.alpha = 0f;
             mainUIGroup.blocksRaycasts = false;
         }
-        hideUIContainer.SetActive(false);
+        hideUI.SetButtonForcedHidden(true);
 
         int lastSaveIndex = -1; // Keep track of the last played save
 
@@ -189,7 +189,7 @@ public class CinematicIntro : MonoBehaviour
             mainUIGroup.blocksRaycasts = true;
         }
         
-        hideUIContainer.SetActive(true);
+        hideUI.SetButtonForcedHidden(false);
 
         // Bring the control points and gizmos back
         EventHub.Publish(new HideShow3DUI(false));

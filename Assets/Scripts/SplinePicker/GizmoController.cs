@@ -361,25 +361,25 @@ public class GizmoController : MonoBehaviour
                 if (moveGizmo)
                 {
                     moveGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
-                    var r = moveGizmo.GetComponent<Renderer>(); r.material.color = Color.red; r.material.SetColor("_EmissionColor", Color.red * SPD.gizmoEmissionIntensity);
+                    var r = moveGizmo.GetComponent<Renderer>(); r.material.color = Color.red; r.material.SetColor("_EmissionColor", new Color(.47f,.11f,.12f));
                     moveGizmo.name = "MoveGizmoPrefab_X"; gizmoList[(int)SplinePickerData.GizmoType.MoveX] = moveGizmo;
                 }
                 if (planarGizmo)
                 {
                     planarGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
-                    var r = planarGizmo.GetComponent<Renderer>(); r.material.color = Color.red; r.material.SetColor("_EmissionColor", Color.red * SPD.gizmoEmissionIntensity);
+                    var r = planarGizmo.GetComponent<Renderer>(); r.material.color = Color.red; r.material.SetColor("_EmissionColor", new Color(.47f,.11f,.12f));
                     planarGizmo.name = "PlanarGizmoPrefab_XY"; gizmoList[(int)SplinePickerData.GizmoType.PlanarX] = planarGizmo;
                 }
                 if (rotateGizmo)
                 {
                     rotateGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
-                    var r = rotateGizmo.GetComponent<Renderer>(); r.material.color = Color.red; r.material.SetColor("_EmissionColor", Color.red * SPD.gizmoEmissionIntensity);
+                    var r = rotateGizmo.GetComponent<Renderer>(); r.material.color = Color.red; r.material.SetColor("_EmissionColor", new Color(.47f,.11f,.12f));
                     rotateGizmo.name = "RotateGizmoPrefab_XY"; gizmoList[(int)SplinePickerData.GizmoType.RotateX] = rotateGizmo;
                 }
                 if (scaleGizmo)
                 {
                     scaleGizmo.transform.localRotation = Quaternion.Euler(0, 0, -90);
-                    var r = scaleGizmo.GetComponent<Renderer>(); r.material.color = Color.red; r.material.SetColor("_EmissionColor", Color.red * SPD.gizmoEmissionIntensity);
+                    var r = scaleGizmo.GetComponent<Renderer>(); r.material.color = Color.red; r.material.SetColor("_EmissionColor", new Color(.47f,.11f,.12f));
                     scaleGizmo.name = "ScaleGizmoPrefab_XY"; gizmoList[(int)SplinePickerData.GizmoType.ScaleX] = scaleGizmo;
                 }
             }
@@ -387,21 +387,21 @@ public class GizmoController : MonoBehaviour
             else if (i == 1 && isClassic)
             {
                 moveGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
-                var mr = moveGizmo.GetComponent<Renderer>(); mr.material.color = Color.green; mr.material.SetColor("_EmissionColor", Color.green * SPD.gizmoEmissionIntensity);
+                var mr = moveGizmo.GetComponent<Renderer>(); mr.material.color = Color.green; mr.material.SetColor("_EmissionColor", new Color(.12f,.47f,.12f));
                 moveGizmo.name = "MoveGizmoPrefab_Y"; gizmoList[(int)SplinePickerData.GizmoType.MoveY] = moveGizmo;
 
                 planarGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
-                var pr = planarGizmo.GetComponent<Renderer>(); pr.material.color = Color.green; pr.material.SetColor("_EmissionColor", Color.green * SPD.gizmoEmissionIntensity);
+                var pr = planarGizmo.GetComponent<Renderer>(); pr.material.color = Color.green; pr.material.SetColor("_EmissionColor", new Color(.12f,.47f,.12f));
                 planarGizmo.name = "PlanarGizmoPrefab_YZ"; gizmoList[(int)SplinePickerData.GizmoType.PlanarY] = planarGizmo;
 
                 rotateGizmo.transform.localRotation = Quaternion.Euler(0, 0, 90);
-                var rr = rotateGizmo.GetComponent<Renderer>(); rr.material.color = Color.green; rr.material.SetColor("_EmissionColor", Color.green * SPD.gizmoEmissionIntensity);
+                var rr = rotateGizmo.GetComponent<Renderer>(); rr.material.color = Color.green; rr.material.SetColor("_EmissionColor", new Color(.12f,.47f,.12f));
                 rotateGizmo.name = "RotateGizmoPrefab_YZ"; gizmoList[(int)SplinePickerData.GizmoType.RotateY] = rotateGizmo;
                 
                 if (scaleGizmo)
                 {
                     scaleGizmo.transform.localRotation = Quaternion.Euler(0, 90, 0);
-                    var sr = scaleGizmo.GetComponent<Renderer>(); sr.material.color = Color.green; sr.material.SetColor("_EmissionColor", Color.green * SPD.gizmoEmissionIntensity);
+                    var sr = scaleGizmo.GetComponent<Renderer>(); sr.material.color = Color.green; sr.material.SetColor("_EmissionColor", new Color(.12f,.47f,.12f));
                     scaleGizmo.name = "ScaleGizmoPrefab_YZ"; gizmoList[(int)SplinePickerData.GizmoType.ScaleY] = scaleGizmo;
                 }
             }
@@ -409,21 +409,21 @@ public class GizmoController : MonoBehaviour
             else if (i == 2 && isClassic)
             {
                 moveGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
-                var mr = moveGizmo.GetComponent<Renderer>(); mr.material.color = Color.blue; mr.material.SetColor("_EmissionColor", Color.blue * SPD.gizmoEmissionIntensity);
+                var mr = moveGizmo.GetComponent<Renderer>(); mr.material.color = Color.blue; mr.material.SetColor("_EmissionColor", new Color(.12f,.12f,.47f));
                 moveGizmo.name = "MoveGizmoPrefab_Z"; gizmoList[(int)SplinePickerData.GizmoType.MoveZ] = moveGizmo;
 
                 planarGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
-                var pr = planarGizmo.GetComponent<Renderer>(); pr.material.color = Color.blue; pr.material.SetColor("_EmissionColor", Color.blue * SPD.gizmoEmissionIntensity);
+                var pr = planarGizmo.GetComponent<Renderer>(); pr.material.color = Color.blue; pr.material.SetColor("_EmissionColor", new Color(.12f,.12f,.47f));
                 planarGizmo.name = "PlanarGizmoPrefab_ZX"; gizmoList[(int)SplinePickerData.GizmoType.PlanarZ] = planarGizmo;
 
                 rotateGizmo.transform.localRotation = Quaternion.Euler(0, 0, 0);
-                var rr = rotateGizmo.GetComponent<Renderer>(); rr.material.color = Color.blue; rr.material.SetColor("_EmissionColor", Color.blue * SPD.gizmoEmissionIntensity);
+                var rr = rotateGizmo.GetComponent<Renderer>(); rr.material.color = Color.blue; rr.material.SetColor("_EmissionColor", new Color(.12f,.12f,.47f));
                 rotateGizmo.name = "RotateGizmoPrefab_ZX"; gizmoList[(int)SplinePickerData.GizmoType.RotateZ] = rotateGizmo;
 
                 if (scaleGizmo)
                 {
                     scaleGizmo.transform.localRotation = Quaternion.Euler(90, 0, 0);
-                    var sr = scaleGizmo.GetComponent<Renderer>(); sr.material.color = Color.blue; sr.material.SetColor("_EmissionColor", Color.blue * SPD.gizmoEmissionIntensity);
+                    var sr = scaleGizmo.GetComponent<Renderer>(); sr.material.color = Color.blue; sr.material.SetColor("_EmissionColor", new Color(.12f,.12f,.47f));
                     scaleGizmo.name = "ScaleGizmoPrefab_ZX"; gizmoList[(int)SplinePickerData.GizmoType.ScaleZ] = scaleGizmo;
                 }
             }

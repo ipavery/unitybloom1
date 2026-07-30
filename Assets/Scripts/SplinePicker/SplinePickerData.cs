@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Drawing.Text;
 using System.Linq;
-using UnityEditor.Recorder;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SplinePickerData", menuName = "Scriptable Objects/SplinePickerData")]

@@ -12,6 +12,9 @@ public class HideUI : MonoBehaviour
     public Button hideUIButton;           // MUST be outside uiRoot (or inside but manager outside)
 
     private bool isUIHidden = false;
+    
+    // Flag to prevent the Update loop from overriding external scripts
+    private bool isForcedHidden = false; 
 
     void Start()
     {
@@ -20,6 +23,32 @@ public class HideUI : MonoBehaviour
             hideUIButton.onClick.AddListener(ShowHideUI);
         else
             Debug.LogWarning("HideUI: hideUIButton not assigned.");
+    }
+
+    /// <summary>
+    /// Allows external scripts to forcefully hide or unhide the button, 
+    /// overriding the normal mouse-tracking logic.
+    /// </summary>
+    public void SetButtonForcedHidden(bool forceHide)
+    {
+        isForcedHidden = forceHide;
+        
+        if (hideUIContainer != null)
+        {
+            if (isForcedHidden)
+            {
+                hideUIContainer.SetActive(false);
+            }
+            else
+            {
+                // If we un-force it, turn it back on immediately if the main UI is showing.
+                // Otherwise, let the Update loop handle turning it on based on mouse position.
+                if (!isUIHidden) 
+                {
+                    hideUIContainer.SetActive(true);
+                }
+            }
+        }
     }
 
     void ShowHideUI()
@@ -64,6 +93,9 @@ public class HideUI : MonoBehaviour
     {
         // Make sure this script and hotZone are on an always-active object
         if (hotZone == null || hideUIContainer == null) return;
+
+        // Skip all automatic logic if an external script has forced the button to hide
+        if (isForcedHidden) return;
 
         // 1. If the UI is currently visible (toggle not active), keep the button visible always.
         if (!isUIHidden)

@@ -353,6 +353,8 @@ public class SaveLoadUI : MonoBehaviour
         {
             PopulateSaveList();
         }
+
+        PlayerPrefs.Save();
     }
 
     // Build SaveData from savableRoot by scanning for BezierSpline components
