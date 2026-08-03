@@ -43,13 +43,16 @@ public class SplineRenderer : MonoBehaviour
 
     void Update()
     {
+        // Calculate the camera scale multiplier once per frame
+        float scaleMultiplier = GetCameraScaleMultiplier();
+
         // this could be made more efficient by only updating the spline that is being updated, 
-        // but for now it will update all splines every frame
+        // but for now it will update all splines every frame[cite: 3]
         foreach (var group in particleManager.splineParticleGroup)
         {
             if (group.spline != null)
             {
-                UpdateSplineVisuals(group.spline);
+                UpdateSplineVisuals(group.spline, scaleMultiplier);
             }
         }
     }
@@ -58,7 +61,7 @@ public class SplineRenderer : MonoBehaviour
     {
         if (e.spline != null)
         {
-            UpdateSplineVisuals(e.spline);
+            UpdateSplineVisuals(e.spline, GetCameraScaleMultiplier());
         }
     }
 
@@ -95,65 +98,82 @@ public class SplineRenderer : MonoBehaviour
     
     void OnSplineSelectionChange(SplineSelectionChange e)
     {
+        // Only handle material swapping here; the Update loop handles the dynamic width scaling.
         if (e.isSelected == true)
         {
             var lr = e.spline.GetComponentInChildren<LineRenderer>();
-            lr.material = highlightedLineMaterial;
-            lr.widthMultiplier = lineWidth * 1.1f; // make it thicker when selected
-        } else
+            lr.sharedMaterial = highlightedLineMaterial; 
+        } 
+        else
         {
             foreach (var spline in particleManager.splineParticleGroup.Select(g => g.spline).Where(s => s != null))
             {
                 var lr = spline.GetComponentInChildren<LineRenderer>();
-                lr.material = lineMaterial;
-                lr.widthMultiplier = lineWidth;
+                lr.sharedMaterial = lineMaterial;
             }
         }
     }
 
     void InitializeSpline(BezierSpline spline)
     {
-        // Create the main curve line
+        // Create the main curve line[cite: 3]
         GameObject lineObj = new GameObject("SplineLine");
         lineObj.transform.SetParent(spline.transform, false);
 
         LineRenderer lr = lineObj.AddComponent<LineRenderer>();
         lr.positionCount = pointsPerSpline + 1;
         lr.material = lineMaterial;
-        lr.widthMultiplier = lineWidth;
+        
+        // Initial width calculation using camera distance
+        lr.widthMultiplier = lineWidth * GetCameraScaleMultiplier(); 
         lr.useWorldSpace = true;
 
         // Note: Tangent lines aren't initialized here because UpdateSplineVisuals 
-        // will dynamically generate them based on the number of knots.
+        // will dynamically generate them based on the number of knots.[cite: 3]
         lr.enabled = !isHidden;
     }
 
     /// <summary>
-    /// Centralized method to update both the main curve and the tangent handle lines.
+    /// Calculates the scaling multiplier based on the camera's Z distance.
     /// </summary>
-    void UpdateSplineVisuals(BezierSpline spline)
+    private float GetCameraScaleMultiplier()
     {
-        // --- 1. Update the Main Curve ---
+        if (Camera.main == null) return 1f;
+
+        float cameraDistanceToZ = Mathf.Abs(Camera.main.transform.position.z);
+        return Mathf.Max(0.01f, cameraDistanceToZ);
+    }
+
+    /// <summary>
+    /// Centralized method to update both the main curve and the tangent handle lines.[cite: 3]
+    /// </summary>
+    void UpdateSplineVisuals(BezierSpline spline, float scaleMultiplier)
+    {
+        // --- 1. Update the Main Curve ---[cite: 3]
         Transform mainLineTransform = spline.transform.Find("SplineLine");
         if (mainLineTransform != null && mainLineTransform.TryGetComponent<LineRenderer>(out var mainLr))
         {
             // Note: points.Length * 20 is heavily unoptimized if points array gets large,
-            // but preserving your original sampling logic here.
+            // but preserving your original sampling logic here.[cite: 3]
             mainLr.positionCount = spline.points.Length * 20; 
             for (int i = 0; i < mainLr.positionCount; i++)
             {
                 float t = i / (float)mainLr.positionCount;
                 mainLr.SetPosition(i, spline.GetPoint(t));
             }
+
+            // Apply dynamic width based on whether the line is highlighted or not
+            float currentBaseWidth = (mainLr.sharedMaterial == highlightedLineMaterial) ? (lineWidth * 1.1f) : lineWidth;
+            mainLr.widthMultiplier = currentBaseWidth * scaleMultiplier;
         }
 
-        // --- 2. Update the Tangent Lines ---
-        UpdateTangentLines(spline);
+        // --- 2. Update the Tangent Lines ---[cite: 3]
+        UpdateTangentLines(spline, scaleMultiplier);
     }
 
-    void UpdateTangentLines(BezierSpline spline)
+    void UpdateTangentLines(BezierSpline spline, float scaleMultiplier)
     {
-        // Find or create a container to keep the hierarchy clean
+        // Find or create a container to keep the hierarchy clean[cite: 3]
         Transform tangentContainer = spline.transform.Find("TangentLines");
         if (tangentContainer == null)
         {
@@ -162,10 +182,10 @@ public class SplineRenderer : MonoBehaviour
             tangentContainer = containerObj.transform;
         }
 
-        // Calculate how many anchors (knots) exist in this spline
+        // Calculate how many anchors (knots) exist in this spline[cite: 3]
         int knotCount = (spline.points.Length - 1) / 3 + 1;
 
-        // Add new LineRenderers if the user added curves
+        // Add new LineRenderers if the user added curves[cite: 3]
         while (tangentContainer.childCount < knotCount)
         {
             GameObject tlObj = new GameObject("TangentLine_" + tangentContainer.childCount);
@@ -173,46 +193,47 @@ public class SplineRenderer : MonoBehaviour
             
             LineRenderer tl = tlObj.AddComponent<LineRenderer>();
             tl.material = tangentMaterial;
-            tl.widthMultiplier = tangentLineWidth;
             tl.useWorldSpace = true;
-
             tl.enabled = !isHidden;
         }
 
-        // Remove excess LineRenderers if the user deleted curves
+        // Remove excess LineRenderers if the user deleted curves[cite: 3]
         while (tangentContainer.childCount > knotCount)
         {
-            // Detach it from the parent so childCount updates instantly in this frame
+            // Detach it from the parent so childCount updates instantly in this frame[cite: 3]
             Transform excessLine = tangentContainer.GetChild(tangentContainer.childCount - 1);
             excessLine.SetParent(null); 
             
             Destroy(excessLine.gameObject);
         }
 
-        // Position the lines
+        // Position and scale the lines
         for (int i = 0; i < knotCount; i++)
         {
             LineRenderer tl = tangentContainer.GetChild(i).GetComponent<LineRenderer>();
             int knotIndex = i * 3;
 
-            // Convert local math points to world space for the LineRenderer
+            // Apply dynamic scaling to tangent width
+            tl.widthMultiplier = tangentLineWidth * scaleMultiplier;
+
+            // Convert local math points to world space for the LineRenderer[cite: 3]
             if (i == 0)
             {
-                // First knot: [Anchor -> Forward Tangent]
+                // First knot: [Anchor -> Forward Tangent][cite: 3]
                 tl.positionCount = 2;
                 tl.SetPosition(0, spline.transform.TransformPoint(spline.points[0]));
                 tl.SetPosition(1, spline.transform.TransformPoint(spline.points[1]));
             }
             else if (i == knotCount - 1)
             {
-                // Last knot: [Backward Tangent -> Anchor]
+                // Last knot: [Backward Tangent -> Anchor][cite: 3]
                 tl.positionCount = 2;
                 tl.SetPosition(0, spline.transform.TransformPoint(spline.points[knotIndex - 1]));
                 tl.SetPosition(1, spline.transform.TransformPoint(spline.points[knotIndex]));
             }
             else
             {
-                // Middle knots: [Backward Tangent -> Anchor -> Forward Tangent]
+                // Middle knots: [Backward Tangent -> Anchor -> Forward Tangent][cite: 3]
                 tl.positionCount = 3;
                 tl.SetPosition(0, spline.transform.TransformPoint(spline.points[knotIndex - 1]));
                 tl.SetPosition(1, spline.transform.TransformPoint(spline.points[knotIndex]));

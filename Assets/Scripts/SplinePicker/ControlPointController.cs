@@ -42,7 +42,33 @@ public class ControlPointController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Camera.main == null) return;
 
+        // Calculate the camera's absolute distance to the Z-plane (Z = 0)
+        float cameraDistanceToZ = Mathf.Abs(Camera.main.transform.position.z);
+
+        // Prevent the scale from becoming 0 if the camera passes exactly through the Z-plane
+        float scaleMultiplier = Mathf.Max(0.01f, cameraDistanceToZ);
+        
+        // Calculate the uniform scale for all points based on the scriptable object's base scale
+        float finalScale = SPD.controlPointScale * scaleMultiplier;
+        Vector3 newScale = new Vector3(finalScale, finalScale, finalScale);
+
+        // Iterate backwards to safely handle and remove missing objects
+        for (int i = SPD.controlSphereGroup.Count - 1; i >= 0; i--)
+        {
+            var group = SPD.controlSphereGroup[i];
+
+            // Remove bad entries from the list
+            if (group == null || group.sphereObject == null) 
+            {
+                SPD.controlSphereGroup.RemoveAt(i);
+                continue;
+            }
+
+            // Apply the uniform scale to the control point[cite: 1]
+            group.sphereObject.transform.localScale = newScale;
+        }
     }
 
     void OnNewSplineCreated(NewSplineCreated e)
@@ -77,7 +103,7 @@ public class ControlPointController : MonoBehaviour
             SPD.lastHighlighted = sphereGroup.sphereObject;
             sphereGroup.isSelected = true; // Mark the control point as selected
             rendNew.material.color = SPD.highlightColor;
-            rendNew.material.SetColor("_EmissionColor", SPD.highlightColor * SPD.gizmoEmissionIntensity);
+            rendNew.material.SetColor("_EmissionColor", SPD.highlightColor);
         }
     }
 

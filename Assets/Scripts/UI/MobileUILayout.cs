@@ -86,7 +86,7 @@ public class MobileUILayout : MonoBehaviour
             ApplyLayout(mobileLayout);
             ApplyChildOverrides(true);
             onMobileLayout?.Invoke();
-            SPD.controlPointScale = 5;
+            //SPD.controlPointScale = 5;
         }
         else
         {

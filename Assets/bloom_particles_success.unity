@@ -5711,8 +5711,8 @@ RectTransform:
   m_GameObject: {fileID: 51726704}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.4999999, y: 1.4999999, z: 1.4999999}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 982482330}
   - {fileID: 2027843223}
@@ -17938,7 +17938,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 16, y: -4}
+  m_SizeDelta: {x: 40, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &692745537
 MonoBehaviour:
@@ -18464,9 +18464,9 @@ MonoBehaviour:
   pointsPerSpline: 20
   lineMaterial: {fileID: 2100000, guid: 4dabd2e1c280f5543943c9a8d6a50aea, type: 2}
   highlightedLineMaterial: {fileID: 2100000, guid: c69cf62f91128a54db3ab0130fb24c84, type: 2}
-  lineWidth: 0.13
+  lineWidth: 0.007
   tangentMaterial: {fileID: 2100000, guid: 6920b5caf4b62a743ab27c0ad85affb8, type: 2}
-  tangentLineWidth: 0.1
+  tangentLineWidth: 0.005
   particleManager: {fileID: 527990700}
 --- !u!114 &735388312
 MonoBehaviour:
@@ -19701,6 +19701,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 834919824}
   m_CullTransparentMesh: 1
+--- !u!1 &853688363
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 853688364}
+  m_Layer: 0
+  m_Name: DefaultCameraPosition
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &853688364
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 853688363}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: -140}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &856142304
 GameObject:
   m_ObjectHideFlags: 0
@@ -20825,7 +20856,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: f6d49ca1b55ee8341a0230707a38525c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 586995543777b8d438fcb598b7c972d7, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -25940,7 +25971,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 566132203}
   - {fileID: 1357555543}
@@ -26032,10 +26063,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   drawSplineButton: {fileID: 566132204}
   lineMaterial: {fileID: 2100000, guid: c69cf62f91128a54db3ab0130fb24c84, type: 2}
-  lineWidth: 0.2
+  lineWidth: 1.5
   splinePrefab: {fileID: 8200230412672707328, guid: d1a26f5203687aa458577dce006aacf0, type: 3}
   pointCaptureDistance: 0.1
-  errorThreshold: 2
+  errorThreshold: 7
   cursorTexture: {fileID: 2800000, guid: 97f4639f6d1df9047a622fa0df196aa4, type: 3}
   cursorHotspot: {x: 0, y: 24}
 --- !u!114 &1423381413
@@ -26207,6 +26238,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   resetViewButton: {fileID: 1168739641}
+  defaultCamPos: {fileID: 853688364}
+  mobileUILayout: {fileID: 1729293122}
+  rootRectTransform: {fileID: 1423381408}
 --- !u!1 &1439423574
 GameObject:
   m_ObjectHideFlags: 0
@@ -29251,7 +29285,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 28.68}
+  m_AnchoredPosition: {x: 0, y: 28.679932}
   m_SizeDelta: {x: 500, y: 400}
   m_Pivot: {x: 1, y: 0}
 --- !u!114 &1729293120
@@ -29331,7 +29365,7 @@ MonoBehaviour:
     mobilePreferredHeight: 0
     desktopSizeDelta: {x: 10, y: 90}
     mobileSizeDelta: {x: 10, y: 180}
-  forceMobileInEditor: 1
+  forceMobileInEditor: 0
   onDesktopLayout:
     m_PersistentCalls:
       m_Calls: []
@@ -31766,7 +31800,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 16, y: -4}
+  m_SizeDelta: {x: 40, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1919793500
 MonoBehaviour:
@@ -32574,7 +32608,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1677817015}
   - {fileID: 2077173999}
@@ -32664,6 +32698,8 @@ MonoBehaviour:
   pageText: {fileID: 1863762519}
   enableAutosave: 1
   debounceTime: 1
+  mobileUILayout: {fileID: 1729293122}
+  rootRectTransform: {fileID: 1974333479}
 --- !u!114 &1974333483
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32713,8 +32749,8 @@ MonoBehaviour:
   drawSpline: {fileID: 1423381412}
   controlPointSlider: {fileID: 504368145}
   controlPointInput: {fileID: 413550518}
-  controlPointMin: 0.1
-  controlPointMax: 10
+  controlPointMin: 0
+  controlPointMax: 0.3
   controlPointController: {fileID: 735388312}
   mouseLook: {fileID: 1654640259}
   lookModeDropdown: {fileID: 1592623152}
@@ -40606,3 +40642,4 @@ SceneRoots:
   - {fileID: 1127330573}
   - {fileID: 865926078}
   - {fileID: 827717978}
+  - {fileID: 853688364}

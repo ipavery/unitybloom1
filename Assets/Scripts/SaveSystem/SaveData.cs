@@ -34,7 +34,7 @@ public class SaveData
     // Camera state
     public float camPosX = 0f;
     public float camPosY = 0f;
-    public float camPosZ = -30f; // Set default Z position
+    public float camPosZ = -140f; // Set default Z position
     public float camRotX = 0f;
     public float camRotY = 0f;
     public float camRotZ = 0f;

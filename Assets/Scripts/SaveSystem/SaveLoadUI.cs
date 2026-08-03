@@ -60,9 +60,12 @@ public class SaveLoadUI : MonoBehaviour
     [Header("Autosave Settings")]
     public bool enableAutosave = true;
     [Tooltip("How long to wait after the last user action before saving to disk.")]
-    public float debounceTime = 1f; 
+    public float debounceTime = 1f;
     private Coroutine pendingAutosave;
-    
+
+    [Header("Mobile Layout")]
+    [SerializeField] private MobileUILayout mobileUILayout;
+    public RectTransform rootRectTransform;
 
     // Internal state
     private List<SaveMeta> currentIndex = new();
@@ -80,6 +83,37 @@ public class SaveLoadUI : MonoBehaviour
             return;
         }
         Instance = this;
+    }
+
+    void OnEnable()
+    {
+        if (mobileUILayout != null)
+        {
+            mobileUILayout.onMobileLayout.AddListener(OnMobileLayout);
+            mobileUILayout.onDesktopLayout.AddListener(OnDesktopLayout);
+        }
+    }
+
+    void OnDisable()
+    {
+        if (mobileUILayout != null)
+        {
+            mobileUILayout.onMobileLayout.RemoveListener(OnMobileLayout);
+            mobileUILayout.onDesktopLayout.RemoveListener(OnDesktopLayout);
+        }
+    }
+
+    void OnMobileLayout()
+    {
+        // Adjust the root RectTransform for mobile layout
+        float scaleFactor = 1.5f; // Example scale factor for mobile
+        rootRectTransform.localScale = new Vector3(scaleFactor, scaleFactor, scaleFactor); // Example scale for mobile
+    }
+
+    void OnDesktopLayout()
+    {
+        // Reset the root RectTransform for desktop layout
+        rootRectTransform.localScale = Vector3.one; // Reset to original scale for desktop
     }
 
     void Start()
