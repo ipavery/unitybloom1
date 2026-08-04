@@ -52,12 +52,12 @@ MonoBehaviour:
   - {x: 3, y: 0, z: 0}
   s_life: 1
   splineSymmetry: 5
-  frequency: 8
+  frequency: 20
   lifetimeOffset: 0.05
   lerpLifetimeOffset: 0.1
   lerpTimes: 1
-  lerpColor1: {r: 1, g: 1, b: 1, a: 1}
-  lerpColor2: {r: 0.509434, g: 0.509434, b: 0.509434, a: 1}
+  lerpColor1: {r: 0.8113208, g: 0.8113208, b: 0.8113208, a: 1}
+  lerpColor2: {r: 0.5849056, g: 0.5849056, b: 0.5849056, a: 1}
   startTimeOffset: 0
   activationThreshhold: 0
   musicChannel: 0

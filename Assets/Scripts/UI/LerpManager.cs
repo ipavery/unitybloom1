@@ -56,6 +56,9 @@ public class LerpManager : MonoBehaviour
 
     void Update()
     {
+        // Calculate the camera scale multiplier once per frame
+        float scaleMultiplier = GetCameraScaleMultiplier();
+
         // 1. Update Established Connections
         for (int i = connectionVisuals.Count - 1; i >= 0; i--)
         {
@@ -84,14 +87,14 @@ public class LerpManager : MonoBehaviour
                 continue;
             }
 
-            // Update positions and scroll math (adding points[0] is used to make it start at first spline point)
-            UpdateLineVisuals(visual.lineRenderer, visual.source.transform.position+visual.source.points[0], visual.target.transform.position+visual.target.points[0]);
+            // Update positions and scroll math, passing in the scale multiplier
+            UpdateLineVisuals(visual.lineRenderer, visual.source.transform.position + visual.source.points[0], visual.target.transform.position + visual.target.points[0], scaleMultiplier);
         }
 
         // 2. Update Mouse Tether if connecting
         if (isConnecting && connectingSource != null && activeMouseLine != null)
         {
-            Vector3 sourcePos = connectingSource.transform.position+connectingSource.points[0];
+            Vector3 sourcePos = connectingSource.transform.position + connectingSource.points[0];
             
             // Cast a ray from the mouse to a mathematical plane facing the camera at the source's depth
             Ray ray = Camera.main.ScreenPointToRay(Pointer.current.position.ReadValue());
@@ -100,30 +103,51 @@ public class LerpManager : MonoBehaviour
             if (plane.Raycast(ray, out float enter))
             {
                 Vector3 mouseWorldPos = ray.GetPoint(enter);
-                UpdateLineVisuals(activeMouseLine, sourcePos, mouseWorldPos);
+                UpdateLineVisuals(activeMouseLine, sourcePos, mouseWorldPos, scaleMultiplier);
             }
         }
     }
 
     /// <summary>
+    /// Calculates the scaling multiplier based on the camera's Z distance.
+    /// </summary>
+    private float GetCameraScaleMultiplier()
+    {
+        if (Camera.main == null) return 1f;
+
+        float cameraDistanceToZ = Mathf.Abs(Camera.main.transform.position.z);
+        return Mathf.Max(0.01f, cameraDistanceToZ);
+    }
+
+    /// <summary>
     /// Helper method to apply spacing and scrolling math to any line
     /// </summary>
-    void UpdateLineVisuals(LineRenderer lr, Vector3 startPos, Vector3 endPos)
+    void UpdateLineVisuals(LineRenderer lr, Vector3 startPos, Vector3 endPos, float scaleMultiplier)
     {
         lr.SetPosition(0, startPos);
         lr.SetPosition(1, endPos);
+
+        // Apply dynamic width scaling based on camera distance AND the base lineWidth
+        lr.widthMultiplier = lineWidth * scaleMultiplier;
 
         float distance = Vector3.Distance(startPos, endPos);
         
         // Prevent division by zero if points are perfectly stacked
         if (distance <= 0.01f) return; 
 
-        // Tiling Math
-        float repeats = distance / arrowWorldLength;
-        lr.material.mainTextureScale = new Vector2(repeats, 1f);
+        // 1. Scale the arrow length dynamically so it retains visual size relative to the camera
+        float currentArrowLength = arrowWorldLength * scaleMultiplier;
 
-        // Scrolling Math
-        float offset = (Time.time * scrollSpeed) / arrowWorldLength;
+        // 2. Adjust scroll speed based on camera distance to maintain constant visual speed
+        float currentScrollSpeed = scrollSpeed * scaleMultiplier;
+
+        // Tiling Math: Because LineRenderer is set to LineTextureMode.Tile, 
+        // Unity automatically factors in the line's physical distance. 
+        // We ONLY need to provide the scale per unit length.
+        lr.material.mainTextureScale = new Vector2(1f / currentArrowLength, 1f);
+
+        // Scrolling Math: Use the scaled scroll speed
+        float offset = (Time.time * currentScrollSpeed) / currentArrowLength;
         lr.material.mainTextureOffset = new Vector2(-offset, 0); 
     }
 
@@ -170,11 +194,30 @@ public class LerpManager : MonoBehaviour
         {
             UndoManager.Instance.RecordState(); // Remember to record state before modifying!
             
-            // Connect the data
-            connectingSource.lerpSpline = e.splineClicked;
+            // Check if we are clicking on the exact same spline we are already connected to
+            if (connectingSource.lerpSpline != null && connectingSource.lerpSpline.Guid == e.splineClicked.Guid)
+            {
+                // Sever the connection by resetting the source spline's lerp target back to itself
+                connectingSource.lerpSpline = connectingSource;
 
-            // Connect the visuals
-            CreateVisualLine(connectingSource, e.splineClicked);
+                // Remove the visual line
+                int existingIndex = connectionVisuals.FindIndex(v => v.source == connectingSource);
+                if (existingIndex >= 0)
+                {
+                    if (connectionVisuals[existingIndex].lineRenderer != null) 
+                        Destroy(connectionVisuals[existingIndex].lineRenderer.gameObject);
+                    
+                    connectionVisuals.RemoveAt(existingIndex);
+                }
+            }
+            else
+            {
+                // Connect the data
+                connectingSource.lerpSpline = e.splineClicked;
+
+                // Connect the visuals
+                CreateVisualLine(connectingSource, e.splineClicked);
+            }
 
             SaveLoadUI.Instance.NotifyActionPerformed();
         }
@@ -264,7 +307,7 @@ public class LerpManager : MonoBehaviour
         lr.endWidth = lineWidth;
         lr.startColor = tetherColor;
         lr.endColor = tetherColor;
-        lr.textureMode = LineTextureMode.Tile; 
+        lr.textureMode = LineTextureMode.Tile; // Unity handles the distance math inherently here
         lr.generateLightingData = false;
         return lr;
     }

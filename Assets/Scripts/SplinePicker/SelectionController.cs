@@ -200,7 +200,7 @@ public class SelectionController : MonoBehaviour
         //EventHub.Publish(new SelectionStartEnd(selectionStart, true)); //No listeners for this yet but might need it in future
 
         Ray ray = Camera.main.ScreenPointToRay(selectionStart);
-        if (Physics.Raycast(ray, out RaycastHit hit, 300f))
+        if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
         {
             raycastHit = true;
 

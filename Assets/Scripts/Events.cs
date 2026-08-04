@@ -61,9 +61,11 @@ public struct ControlPointSelected
 public struct ReloadParticles
 {
     public bool reload;
-    public ReloadParticles(bool reload)
+    public bool startCooldown;
+    public ReloadParticles(bool reload, bool startCooldown = true)
     {
         this.reload = reload;
+        this.startCooldown = startCooldown;
     }
 }
 

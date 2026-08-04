@@ -29,6 +29,7 @@ public class CinematicIntro : MonoBehaviour
     private Coroutine introLoopCoroutine;
 
     private Vector3 currentVelocity;
+    private Vector3 rotationVelocity;
     private Transform targetCamTransform;
     private ParticleManager particleManager;
 
@@ -127,14 +128,21 @@ public class CinematicIntro : MonoBehaviour
         Vector3 savedPos = targetCamTransform.position;
         Vector3 offset = Vector3.zero;
 
-        // 50/50 chance to Zoom or Pan
-        bool isZooming = Random.value > 0.5f;
+        bool isZooming = true; //only zoom, i prefer it
 
         if (isZooming)
         {
             // Zoom: Offset backwards or forwards along the camera's forward axis
             float sign = Random.value > 0.5f ? 1f : -1f;
             offset = Camera.main.transform.forward * (maxOffsetDistance * sign);
+            if (Random.value > 0.5f)
+            {
+                float rotation = Random.value > 0.5f ? 1f : -1f;
+                rotationVelocity = new Vector3(0, 0, rotation * 2f); // Rotate around Z-axis
+            } else
+            {
+                rotationVelocity = new Vector3(0, 0, 0);
+            }
         }
         else
         {
@@ -161,6 +169,9 @@ public class CinematicIntro : MonoBehaviour
         if (targetCamTransform != null)
         {
             targetCamTransform.position += currentVelocity * Time.deltaTime;
+
+            // Apply continuous camera rotation
+            targetCamTransform.Rotate(rotationVelocity * Time.deltaTime);
         }
 
         // Listen for a click or tap to interrupt the cycle

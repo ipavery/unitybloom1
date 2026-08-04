@@ -46,6 +46,10 @@ public class ParticleManager : MonoBehaviour
     [Header("Isolation")]
     public bool isPreviewMode = false; // Check this ONLY on the PreviewBoothPrefab
 
+    [Header("Cooldown system to prevent multi-restart")]
+    private bool isRestartOnCooldown = false;
+    private bool pendingRestart = false;
+
     void PrintArray(Vector3[] arr)
     {
         for (int i = 0; i < arr.Length; i++)
@@ -147,16 +151,24 @@ public class ParticleManager : MonoBehaviour
 
     void OnSplineUpdated(SplineUpdated e)
     {
-        RestartParticleSystem();
+        TriggerRestartWithCooldown();
     }
 
     private void OnReloadParticles(ReloadParticles e)
     {
-        RestartParticleSystem();
+        if (e.startCooldown)
+        {
+            TriggerRestartWithCooldown();
+        }
+        else
+        {
+            RestartParticleSystem();
+        }
     }
 
     private void RestartParticleSystem()
     {
+        //Debug.Log("particle system restarted");
         //simple restart of the particle system
         if (spawnMode == ParticleSpawnMode.Instant)
         {
@@ -186,17 +198,50 @@ public class ParticleManager : MonoBehaviour
 
     }
 
+    private void TriggerRestartWithCooldown()
+    {
+        // If we are on cooldown, flag that we need another update when the timer finishes, then abort.
+        if (isRestartOnCooldown)
+        {
+            pendingRestart = true;
+            return;
+        }
+
+        // If not on cooldown, execute the restart immediately for instant visual feedback.
+        RestartParticleSystem();
+        
+        // Start the shield
+        StartCoroutine(CooldownTimer());
+    }
+
+    private IEnumerator CooldownTimer()
+    {
+        isRestartOnCooldown = true;
+        
+        // Block immediate echoes and wait for bulk operations (like loading) to finish
+        yield return new WaitForSeconds(0.4f);
+        
+        isRestartOnCooldown = false;
+
+        // If any events bounced off the shield while we were waiting, run one final clean restart.
+        if (pendingRestart)
+        {
+            pendingRestart = false;
+            TriggerRestartWithCooldown(); 
+        }
+    }
+
     private void OnClipDragEnded(ClipDragEnded e)
     {
 
         e.spline.startTimeOffset = e.timePosition;
-        RestartParticleSystem();
-        Debug.Log($"Clip drag ended for {e.spline.name} at time {e.timePosition}");
+        TriggerRestartWithCooldown();
+        //Debug.Log($"Clip drag ended for {e.spline.name} at time {e.timePosition}");
     }
 
     private void OnGizmoDragEnded(GizmoDragEnded e)
     {
-        RestartParticleSystem();
+        TriggerRestartWithCooldown();
     }
 
     void Start()
@@ -217,6 +262,7 @@ public class ParticleManager : MonoBehaviour
     }
 
     void StartIndependent() {
+        //Debug.Log($"<color=orange>StartIndependent called on Frame: {Time.frameCount}</color>\nTrace: {System.Environment.StackTrace}");
         for (int i = 0; i < splineParticleGroup.Count; i++)
         {
             var group = splineParticleGroup[i];        // capture the group
